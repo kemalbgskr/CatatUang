@@ -2,6 +2,7 @@
 import { useEffect, useState, useCallback } from "react";
 import { formatRupiah, formatDate, getCurrentMonth } from "@/lib/utils";
 import { Plus, Trash2 } from "lucide-react";
+import Modal from "@/components/Modal";
 
 interface Account { id: number; name: string }
 interface Transfer { id: number; date: string; fromAccount: Account; toAccount: Account; amount: number; adminFee: number }
@@ -47,14 +48,14 @@ export default function TransferPage() {
         </div>
         <div className="flex gap-3">
           <input type="month" value={month} onChange={e => setMonth(e.target.value)} className="border rounded-lg px-3 py-2 text-sm bg-white" />
-          <button onClick={() => setShowForm(!showForm)} className="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm flex items-center gap-2 hover:bg-blue-700">
+          <button onClick={() => setShowForm(true)} className="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm flex items-center gap-2 hover:bg-blue-700">
             <Plus size={16} /> Tambah
           </button>
         </div>
       </div>
 
-      {showForm && (
-        <form onSubmit={submit} className="bg-white rounded-xl shadow-sm border p-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+      <Modal open={showForm} onClose={() => setShowForm(false)} title="Tambah Transfer">
+        <form onSubmit={submit} className="flex flex-col gap-4">
           <div>
             <label className="block text-xs text-slate-500 mb-1">Tanggal</label>
             <input type="date" required value={form.date} onChange={e => setForm({...form, date: e.target.value})} className="w-full border rounded-lg px-3 py-2 text-sm" />
@@ -81,11 +82,9 @@ export default function TransferPage() {
             <label className="block text-xs text-slate-500 mb-1">Biaya Admin (Rp)</label>
             <input type="number" min={0} value={form.adminFee} onChange={e => setForm({...form, adminFee: e.target.value})} className="w-full border rounded-lg px-3 py-2 text-sm" />
           </div>
-          <div className="flex items-end">
-            <button type="submit" className="bg-blue-600 text-white px-6 py-2 rounded-lg text-sm hover:bg-blue-700 w-full">Simpan</button>
-          </div>
+          <button type="submit" className="bg-blue-600 text-white px-6 py-2 rounded-lg text-sm hover:bg-blue-700 w-full font-semibold">Simpan</button>
         </form>
-      )}
+      </Modal>
 
       <div className="bg-white rounded-xl shadow-sm border overflow-hidden">
         <div className="overflow-x-auto">

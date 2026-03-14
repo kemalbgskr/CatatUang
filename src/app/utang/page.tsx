@@ -150,16 +150,16 @@ export default function UtangPage() {
                   </button>
                 </div>
               </div>
-              {d.initialAmount > 0 && <p className="text-xs text-slate-400 mb-2">Utang awal: {formatRupiah(d.initialAmount)}</p>}
+              {d.initialAmount > 0 && <p className="text-xs text-slate-600 mb-2">Utang awal: {formatRupiah(d.initialAmount)}</p>}
               {allTx.length > 0 && (
                 <table className="w-full text-sm">
                   <tbody className="divide-y">
                     {allTx.map((t) => (
                       <tr key={`${t.type}-${t.id}`} className="hover:bg-slate-50">
-                        <td className="py-2 text-slate-500">{formatDate(t.date)}</td>
+                        <td className="py-2 text-slate-700">{formatDate(t.date)}</td>
                         <td className="py-2"><span className={t.type === "Bayar" ? "text-emerald-600" : "text-orange-600"}>{t.type}</span></td>
-                        <td className="py-2 text-slate-500">{t.description}</td>
-                        <td className="py-2 text-right font-medium">{formatRupiah(t.amount)}</td>
+                        <td className="py-2 text-slate-700">{t.description}</td>
+                        <td className="py-2 text-right font-semibold text-slate-800">{formatRupiah(t.amount)}</td>
                         <td className="py-2 text-right">
                           <button
                             type="button"

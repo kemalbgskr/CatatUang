@@ -3,6 +3,7 @@ import { useEffect, useState, useCallback } from "react";
 import { formatRupiah, formatDate, getCurrentMonth } from "@/lib/utils";
 import { Plus, Trash2 } from "lucide-react";
 import MonthYearPicker from "@/components/MonthYearPicker";
+import Modal from "@/components/Modal";
 
 interface Category { id: number; name: string }
 interface Income { id: number; date: string; description: string; amount: number; category: Category }
@@ -32,13 +33,11 @@ export default function PendapatanPage() {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ ...form, categoryId: +form.categoryId, amount: +form.amount }),
     });
-
     if (!res.ok) {
       const payload = await res.json().catch(() => ({}));
       setSubmitError(payload.error || "Gagal menambah pendapatan.");
       return;
     }
-
     setForm({ date: new Date().toISOString().split("T")[0], categoryId: "", description: "", amount: "" });
     setShowForm(false);
     load();
@@ -61,37 +60,37 @@ export default function PendapatanPage() {
         </div>
         <div className="flex gap-3">
           <MonthYearPicker value={month} onChange={setMonth} />
-          <button onClick={() => setShowForm(!showForm)} className="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2 rounded-xl text-base font-semibold flex items-center gap-2 shadow transition">
+          <button onClick={() => setShowForm(true)} className="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2 rounded-xl text-base font-semibold flex items-center gap-2 shadow transition">
             <Plus size={18} /> Tambah
           </button>
         </div>
       </div>
 
-      {showForm && (
-        <form onSubmit={submit} className="card mb-4 flex flex-col md:flex-row gap-4 items-end animate-fade-in">
-          <div className="flex flex-col w-full md:w-auto">
-            <label className="text-xs text-slate-500 mb-1">Tanggal</label>
-            <input type="date" required value={form.date} onChange={e => setForm(f => ({ ...f, date: e.target.value }))} className="border border-slate-200 rounded-xl px-4 py-2 text-base bg-white shadow-sm focus:ring-2 focus:ring-blue-200" />
+      <Modal open={showForm} onClose={() => setShowForm(false)} title="Tambah Pendapatan">
+        <form onSubmit={submit} className="flex flex-col gap-4">
+          <div>
+            <label className="block text-xs text-slate-500 mb-1">Tanggal</label>
+            <input type="date" required value={form.date} onChange={e => setForm(f => ({ ...f, date: e.target.value }))} className="w-full border border-slate-200 rounded-xl px-4 py-2 text-sm" />
           </div>
-          <div className="flex flex-col w-full md:w-48">
-            <label className="text-xs text-slate-500 mb-1">Kategori</label>
-            <select required value={form.categoryId} onChange={e => setForm(f => ({ ...f, categoryId: e.target.value }))} className="border border-slate-200 rounded-xl px-4 py-2 text-base bg-white shadow-sm">
+          <div>
+            <label className="block text-xs text-slate-500 mb-1">Kategori</label>
+            <select required value={form.categoryId} onChange={e => setForm(f => ({ ...f, categoryId: e.target.value }))} className="w-full border border-slate-200 rounded-xl px-4 py-2 text-sm">
               <option value="">Pilih Kategori</option>
               {categories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
             </select>
           </div>
-          <div className="flex flex-col w-full md:w-64">
-            <label className="text-xs text-slate-500 mb-1">Deskripsi</label>
-            <input type="text" required value={form.description} onChange={e => setForm(f => ({ ...f, description: e.target.value }))} className="border border-slate-200 rounded-xl px-4 py-2 text-base bg-white shadow-sm" placeholder="Contoh: Gaji, Bonus, dll" />
+          <div>
+            <label className="block text-xs text-slate-500 mb-1">Deskripsi</label>
+            <input type="text" required value={form.description} onChange={e => setForm(f => ({ ...f, description: e.target.value }))} className="w-full border border-slate-200 rounded-xl px-4 py-2 text-sm" placeholder="Contoh: Gaji, Bonus, dll" />
           </div>
-          <div className="flex flex-col w-full md:w-40">
-            <label className="text-xs text-slate-500 mb-1">Jumlah</label>
-            <input type="number" required min={1} value={form.amount} onChange={e => setForm(f => ({ ...f, amount: e.target.value }))} className="border border-slate-200 rounded-xl px-4 py-2 text-base bg-white shadow-sm" placeholder="Rp" />
+          <div>
+            <label className="block text-xs text-slate-500 mb-1">Jumlah (Rp)</label>
+            <input type="number" required min={1} value={form.amount} onChange={e => setForm(f => ({ ...f, amount: e.target.value }))} className="w-full border border-slate-200 rounded-xl px-4 py-2 text-sm" placeholder="0" />
           </div>
-          <button type="submit" className="bg-emerald-600 hover:bg-emerald-700 text-white px-6 py-2 rounded-xl text-base font-semibold shadow transition">Simpan</button>
-          {submitError && <p className="text-sm text-rose-600 md:ml-2">{submitError}</p>}
+          {submitError && <p className="text-sm text-rose-600">{submitError}</p>}
+          <button type="submit" className="bg-emerald-600 hover:bg-emerald-700 text-white px-6 py-2 rounded-xl text-sm font-semibold w-full">Simpan</button>
         </form>
-      )}
+      </Modal>
 
       <div className="bg-white rounded-xl shadow-sm border overflow-hidden">
         <div className="overflow-x-auto">

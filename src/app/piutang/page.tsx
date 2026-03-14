@@ -2,6 +2,7 @@
 import { useEffect, useState } from "react";
 import { formatRupiah, formatDate } from "@/lib/utils";
 import { Plus, Trash2 } from "lucide-react";
+import Modal from "@/components/Modal";
 
 interface Receivable { id: number; date: string; amount: number; type: string }
 interface Person { id: number; name: string; receivables: Receivable[] }
@@ -61,6 +62,30 @@ export default function PiutangPage() {
     return s + given - received;
   }, 0);
 
+  const FormPiutang = ({ type }: { type: "given" | "received" }) => (
+    <div className="flex flex-col gap-4">
+      <div>
+        <label className="block text-xs text-slate-500 mb-1">Tanggal</label>
+        <input type="date" required value={form.date} onChange={e => setForm({...form, date: e.target.value})} className="w-full border rounded-lg px-3 py-2 text-sm" />
+      </div>
+      <div>
+        <label className="block text-xs text-slate-500 mb-1">Peminjam</label>
+        <select required value={form.personId} onChange={e => setForm({...form, personId: e.target.value})} className="w-full border rounded-lg px-3 py-2 text-sm">
+          <option value="">Pilih...</option>
+          {persons.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
+        </select>
+      </div>
+      <div>
+        <label className="block text-xs text-slate-500 mb-1">Nominal (Rp)</label>
+        <input type="number" required min={0} value={form.amount} onChange={e => setForm({...form, amount: e.target.value})} className="w-full border rounded-lg px-3 py-2 text-sm" />
+      </div>
+      {submitError && <p className="text-sm text-rose-600">{submitError}</p>}
+      <button onClick={() => submit(type)} className={(type === "given" ? "bg-orange-600 hover:bg-orange-700" : "bg-emerald-600 hover:bg-emerald-700") + " text-white px-6 py-2 rounded-lg text-sm w-full font-semibold"}>
+        {type === "given" ? "Beri Piutang" : "Terima Piutang"}
+      </button>
+    </div>
+  );
+
   return (
     <div className="space-y-6 pt-12 md:pt-0">
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
@@ -69,33 +94,29 @@ export default function PiutangPage() {
           <p className="text-slate-500 text-sm">Total Sisa Piutang: {formatRupiah(totalPiutang)}</p>
         </div>
         <div className="flex gap-2 flex-wrap">
-          <button onClick={() => setShowNew(!showNew)} className="bg-slate-600 text-white px-3 py-2 rounded-lg text-sm flex items-center gap-1"><Plus size={14} /> Peminjam</button>
-          <button onClick={() => setShowGive(!showGive)} className="bg-orange-600 text-white px-3 py-2 rounded-lg text-sm flex items-center gap-1"><Plus size={14} /> Beri Piutang</button>
-          <button onClick={() => setShowReceive(!showReceive)} className="bg-emerald-600 text-white px-3 py-2 rounded-lg text-sm flex items-center gap-1"><Plus size={14} /> Terima Piutang</button>
+          <button onClick={() => setShowNew(true)} className="bg-slate-600 text-white px-3 py-2 rounded-lg text-sm flex items-center gap-1"><Plus size={14} /> Peminjam</button>
+          <button onClick={() => { setShowGive(true); setShowReceive(false); }} className="bg-orange-600 text-white px-3 py-2 rounded-lg text-sm flex items-center gap-1"><Plus size={14} /> Beri Piutang</button>
+          <button onClick={() => { setShowReceive(true); setShowGive(false); }} className="bg-emerald-600 text-white px-3 py-2 rounded-lg text-sm flex items-center gap-1"><Plus size={14} /> Terima Piutang</button>
         </div>
       </div>
 
-      {showNew && (
-        <form onSubmit={addPerson} className="bg-white rounded-xl shadow-sm border p-6 flex gap-4 items-end">
-          <div><label className="block text-xs text-slate-500 mb-1">Nama Peminjam</label><input type="text" required value={newPerson} onChange={e => setNewPerson(e.target.value)} className="border rounded-lg px-3 py-2 text-sm" /></div>
-          <button type="submit" className="bg-slate-700 text-white px-6 py-2 rounded-lg text-sm">Simpan</button>
+      <Modal open={showNew} onClose={() => setShowNew(false)} title="Tambah Peminjam">
+        <form onSubmit={addPerson} className="flex flex-col gap-4">
+          <div>
+            <label className="block text-xs text-slate-500 mb-1">Nama Peminjam</label>
+            <input type="text" required value={newPerson} onChange={e => setNewPerson(e.target.value)} className="w-full border rounded-lg px-3 py-2 text-sm" />
+          </div>
+          <button type="submit" className="bg-slate-700 text-white px-6 py-2 rounded-lg text-sm font-semibold w-full">Simpan</button>
         </form>
-      )}
+      </Modal>
 
-      {(showGive || showReceive) && (
-        <div className="bg-white rounded-xl shadow-sm border p-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          <div><label className="block text-xs text-slate-500 mb-1">Tanggal</label><input type="date" required value={form.date} onChange={e => setForm({...form, date: e.target.value})} className="w-full border rounded-lg px-3 py-2 text-sm" /></div>
-          <div><label className="block text-xs text-slate-500 mb-1">Peminjam</label><select required value={form.personId} onChange={e => setForm({...form, personId: e.target.value})} className="w-full border rounded-lg px-3 py-2 text-sm"><option value="">Pilih...</option>{persons.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}</select></div>
-          <div><label className="block text-xs text-slate-500 mb-1">Nominal (Rp)</label><input type="number" required min={0} value={form.amount} onChange={e => setForm({...form, amount: e.target.value})} className="w-full border rounded-lg px-3 py-2 text-sm" /></div>
-          <div className="flex items-end"><button onClick={() => submit(showGive ? "given" : "received")} className={(showGive ? "bg-orange-600 hover:bg-orange-700" : "bg-emerald-600 hover:bg-emerald-700") + " text-white px-6 py-2 rounded-lg text-sm w-full"}>{showGive ? "Beri Piutang" : "Terima Piutang"}</button></div>
-        </div>
-      )}
+      <Modal open={showGive} onClose={() => setShowGive(false)} title="Beri Piutang">
+        <FormPiutang type="given" />
+      </Modal>
 
-      {submitError && (
-        <div className="text-sm text-rose-600 bg-rose-50 border border-rose-100 rounded-lg px-3 py-2">
-          {submitError}
-        </div>
-      )}
+      <Modal open={showReceive} onClose={() => setShowReceive(false)} title="Terima Piutang">
+        <FormPiutang type="received" />
+      </Modal>
 
       <div className="space-y-4">
         {persons.map(p => {
@@ -108,13 +129,7 @@ export default function PiutangPage() {
                 <h3 className="font-semibold text-slate-800">{p.name}</h3>
                 <div className="flex items-center gap-3">
                   <span className={"font-bold " + (rem > 0 ? "text-amber-600" : "text-emerald-600")}>{formatRupiah(rem)}</span>
-                  <button
-                    type="button"
-                    onClick={() => removePerson(p.id, p.name)}
-                    className="text-red-400 hover:text-red-600"
-                    title="Hapus peminjam"
-                    aria-label="Hapus peminjam"
-                  >
+                  <button type="button" onClick={() => removePerson(p.id, p.name)} className="text-red-400 hover:text-red-600" title="Hapus peminjam" aria-label="Hapus peminjam">
                     <Trash2 size={16} />
                   </button>
                 </div>
@@ -123,17 +138,11 @@ export default function PiutangPage() {
                 <table className="w-full text-sm"><tbody className="divide-y">
                   {p.receivables.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()).map(r => (
                     <tr key={r.id}>
-                      <td className="py-2 text-slate-500">{formatDate(r.date)}</td>
+                      <td className="py-2 text-slate-700">{formatDate(r.date)}</td>
                       <td className="py-2"><span className={r.type === "given" ? "text-orange-600" : "text-emerald-600"}>{r.type === "given" ? "Beri" : "Terima"}</span></td>
-                      <td className="py-2 text-right font-medium">{formatRupiah(r.amount)}</td>
+                      <td className="py-2 text-right font-semibold text-slate-800">{formatRupiah(r.amount)}</td>
                       <td className="py-2 text-right">
-                        <button
-                          type="button"
-                          onClick={() => removeReceivable(r.id)}
-                          className="text-red-400 hover:text-red-600"
-                          title="Hapus transaksi"
-                          aria-label="Hapus transaksi"
-                        >
+                        <button type="button" onClick={() => removeReceivable(r.id)} className="text-red-400 hover:text-red-600" title="Hapus transaksi" aria-label="Hapus transaksi">
                           <Trash2 size={15} />
                         </button>
                       </td>
