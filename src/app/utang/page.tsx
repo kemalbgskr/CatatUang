@@ -7,6 +7,7 @@ interface DebtSource { id: number; name: string; initialAmount: number; loans: {
 
 export default function UtangPage() {
   const [debts, setDebts] = useState<DebtSource[]>([]);
+  const [submitError, setSubmitError] = useState("");
   const [showPayForm, setShowPayForm] = useState(false);
   const [showLoanForm, setShowLoanForm] = useState(false);
   const [showNewDebt, setShowNewDebt] = useState(false);
@@ -19,7 +20,13 @@ export default function UtangPage() {
 
   const submitPay = async (e: React.FormEvent) => {
     e.preventDefault();
-    await fetch("/api/debts/payments", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ ...payForm, debtSourceId: +payForm.debtSourceId, amount: +payForm.amount }) });
+    setSubmitError("");
+    const res = await fetch("/api/debts/payments", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ ...payForm, debtSourceId: +payForm.debtSourceId, amount: +payForm.amount }) });
+    if (!res.ok) {
+      const payload = await res.json().catch(() => ({}));
+      setSubmitError(payload.error || "Gagal menambah pembayaran utang.");
+      return;
+    }
     setPayForm({ date: new Date().toISOString().split("T")[0], debtSourceId: "", amount: "", description: "" });
     setShowPayForm(false);
     load();
@@ -27,7 +34,13 @@ export default function UtangPage() {
 
   const submitLoan = async (e: React.FormEvent) => {
     e.preventDefault();
-    await fetch("/api/debts/loans", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ ...loanForm, debtSourceId: +loanForm.debtSourceId, amount: +loanForm.amount }) });
+    setSubmitError("");
+    const res = await fetch("/api/debts/loans", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ ...loanForm, debtSourceId: +loanForm.debtSourceId, amount: +loanForm.amount }) });
+    if (!res.ok) {
+      const payload = await res.json().catch(() => ({}));
+      setSubmitError(payload.error || "Gagal menambah pinjaman.");
+      return;
+    }
     setLoanForm({ date: new Date().toISOString().split("T")[0], debtSourceId: "", amount: "", description: "" });
     setShowLoanForm(false);
     load();
@@ -35,7 +48,13 @@ export default function UtangPage() {
 
   const addDebt = async (e: React.FormEvent) => {
     e.preventDefault();
-    await fetch("/api/debts", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ name: newDebt.name, initialAmount: +newDebt.initialAmount }) });
+    setSubmitError("");
+    const res = await fetch("/api/debts", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ name: newDebt.name, initialAmount: +newDebt.initialAmount }) });
+    if (!res.ok) {
+      const payload = await res.json().catch(() => ({}));
+      setSubmitError(payload.error || "Gagal menambah pemberi utang.");
+      return;
+    }
     setNewDebt({ name: "", initialAmount: "0" });
     setShowNewDebt(false);
     load();
@@ -100,6 +119,12 @@ export default function UtangPage() {
           <div><label className="block text-xs text-slate-500 mb-1">Nominal (Rp)</label><input type="number" required min={0} value={loanForm.amount} onChange={e => setLoanForm({...loanForm, amount: e.target.value})} className="w-full border rounded-lg px-3 py-2 text-sm" /></div>
           <div className="flex items-end"><button type="submit" className="bg-orange-600 text-white px-6 py-2 rounded-lg text-sm w-full">Simpan Pinjaman</button></div>
         </form>
+      )}
+
+      {submitError && (
+        <div className="text-sm text-rose-600 bg-rose-50 border border-rose-100 rounded-lg px-3 py-2">
+          {submitError}
+        </div>
       )}
 
       <div className="space-y-4">

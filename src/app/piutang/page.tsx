@@ -8,6 +8,7 @@ interface Person { id: number; name: string; receivables: Receivable[] }
 
 export default function PiutangPage() {
   const [persons, setPersons] = useState<Person[]>([]);
+  const [submitError, setSubmitError] = useState("");
   const [showGive, setShowGive] = useState(false);
   const [showReceive, setShowReceive] = useState(false);
   const [showNew, setShowNew] = useState(false);
@@ -18,7 +19,13 @@ export default function PiutangPage() {
   useEffect(() => { load(); }, []);
 
   const submit = async (type: string) => {
-    await fetch("/api/receivables", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ ...form, personId: +form.personId, amount: +form.amount, type }) });
+    setSubmitError("");
+    const res = await fetch("/api/receivables", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ ...form, personId: +form.personId, amount: +form.amount, type }) });
+    if (!res.ok) {
+      const payload = await res.json().catch(() => ({}));
+      setSubmitError(payload.error || "Gagal menambah data piutang.");
+      return;
+    }
     setForm({ date: new Date().toISOString().split("T")[0], personId: "", amount: "" });
     setShowGive(false); setShowReceive(false);
     load();
@@ -26,7 +33,13 @@ export default function PiutangPage() {
 
   const addPerson = async (e: React.FormEvent) => {
     e.preventDefault();
-    await fetch("/api/receivables/persons", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ name: newPerson }) });
+    setSubmitError("");
+    const res = await fetch("/api/receivables/persons", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ name: newPerson }) });
+    if (!res.ok) {
+      const payload = await res.json().catch(() => ({}));
+      setSubmitError(payload.error || "Gagal menambah peminjam.");
+      return;
+    }
     setNewPerson(""); setShowNew(false); load();
   };
 
@@ -75,6 +88,12 @@ export default function PiutangPage() {
           <div><label className="block text-xs text-slate-500 mb-1">Peminjam</label><select required value={form.personId} onChange={e => setForm({...form, personId: e.target.value})} className="w-full border rounded-lg px-3 py-2 text-sm"><option value="">Pilih...</option>{persons.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}</select></div>
           <div><label className="block text-xs text-slate-500 mb-1">Nominal (Rp)</label><input type="number" required min={0} value={form.amount} onChange={e => setForm({...form, amount: e.target.value})} className="w-full border rounded-lg px-3 py-2 text-sm" /></div>
           <div className="flex items-end"><button onClick={() => submit(showGive ? "given" : "received")} className={(showGive ? "bg-orange-600 hover:bg-orange-700" : "bg-emerald-600 hover:bg-emerald-700") + " text-white px-6 py-2 rounded-lg text-sm w-full"}>{showGive ? "Beri Piutang" : "Terima Piutang"}</button></div>
+        </div>
+      )}
+
+      {submitError && (
+        <div className="text-sm text-rose-600 bg-rose-50 border border-rose-100 rounded-lg px-3 py-2">
+          {submitError}
         </div>
       )}
 
