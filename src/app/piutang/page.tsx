@@ -3,25 +3,23 @@ import { useEffect, useState } from "react";
 import { formatRupiah, formatDate } from "@/lib/utils";
 import { Plus } from "lucide-react";
 
-interface Account { id: number; name: string }
-interface Receivable { id: number; date: string; amount: number; type: string; account: { name: string } }
+interface Receivable { id: number; date: string; amount: number; type: string }
 interface Person { id: number; name: string; receivables: Receivable[] }
 
 export default function PiutangPage() {
   const [persons, setPersons] = useState<Person[]>([]);
-  const [accounts, setAccounts] = useState<Account[]>([]);
   const [showGive, setShowGive] = useState(false);
   const [showReceive, setShowReceive] = useState(false);
   const [showNew, setShowNew] = useState(false);
-  const [form, setForm] = useState({ date: new Date().toISOString().split("T")[0], personId: "", accountId: "", amount: "" });
+  const [form, setForm] = useState({ date: new Date().toISOString().split("T")[0], personId: "", amount: "" });
   const [newPerson, setNewPerson] = useState("");
 
   const load = () => { fetch("/api/receivables").then(r => r.json()).then(setPersons); };
-  useEffect(() => { load(); fetch("/api/accounts").then(r => r.json()).then(setAccounts); }, []);
+  useEffect(() => { load(); }, []);
 
   const submit = async (type: string) => {
-    await fetch("/api/receivables", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ ...form, personId: +form.personId, accountId: +form.accountId, amount: +form.amount, type }) });
-    setForm({ date: new Date().toISOString().split("T")[0], personId: "", accountId: "", amount: "" });
+    await fetch("/api/receivables", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ ...form, personId: +form.personId, amount: +form.amount, type }) });
+    setForm({ date: new Date().toISOString().split("T")[0], personId: "", amount: "" });
     setShowGive(false); setShowReceive(false);
     load();
   };
@@ -63,7 +61,6 @@ export default function PiutangPage() {
         <div className="bg-white rounded-xl shadow-sm border p-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           <div><label className="block text-xs text-slate-500 mb-1">Tanggal</label><input type="date" required value={form.date} onChange={e => setForm({...form, date: e.target.value})} className="w-full border rounded-lg px-3 py-2 text-sm" /></div>
           <div><label className="block text-xs text-slate-500 mb-1">Peminjam</label><select required value={form.personId} onChange={e => setForm({...form, personId: e.target.value})} className="w-full border rounded-lg px-3 py-2 text-sm"><option value="">Pilih...</option>{persons.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}</select></div>
-          <div><label className="block text-xs text-slate-500 mb-1">Rekening</label><select required value={form.accountId} onChange={e => setForm({...form, accountId: e.target.value})} className="w-full border rounded-lg px-3 py-2 text-sm"><option value="">Pilih...</option>{accounts.map(a => <option key={a.id} value={a.id}>{a.name}</option>)}</select></div>
           <div><label className="block text-xs text-slate-500 mb-1">Nominal (Rp)</label><input type="number" required min={0} value={form.amount} onChange={e => setForm({...form, amount: e.target.value})} className="w-full border rounded-lg px-3 py-2 text-sm" /></div>
           <div className="flex items-end"><button onClick={() => submit(showGive ? "given" : "received")} className={(showGive ? "bg-orange-600 hover:bg-orange-700" : "bg-emerald-600 hover:bg-emerald-700") + " text-white px-6 py-2 rounded-lg text-sm w-full"}>{showGive ? "Beri Piutang" : "Terima Piutang"}</button></div>
         </div>
@@ -83,7 +80,7 @@ export default function PiutangPage() {
               {p.receivables.length > 0 && (
                 <table className="w-full text-sm"><tbody className="divide-y">
                   {p.receivables.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()).map(r => (
-                    <tr key={r.id}><td className="py-2 text-slate-500">{formatDate(r.date)}</td><td className="py-2"><span className={r.type === "given" ? "text-orange-600" : "text-emerald-600"}>{r.type === "given" ? "Beri" : "Terima"}</span></td><td className="py-2 text-slate-500">{r.account.name}</td><td className="py-2 text-right font-medium">{formatRupiah(r.amount)}</td></tr>
+                    <tr key={r.id}><td className="py-2 text-slate-500">{formatDate(r.date)}</td><td className="py-2"><span className={r.type === "given" ? "text-orange-600" : "text-emerald-600"}>{r.type === "given" ? "Beri" : "Terima"}</span></td><td className="py-2 text-right font-medium">{formatRupiah(r.amount)}</td></tr>
                   ))}
                 </tbody></table>
               )}

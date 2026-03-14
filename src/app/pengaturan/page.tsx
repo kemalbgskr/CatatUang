@@ -3,30 +3,26 @@ import { useEffect, useState, useCallback } from "react";
 import { formatRupiah } from "@/lib/utils";
 import { Plus, Trash2, Save, Edit2, X, Check } from "lucide-react";
 
-interface Account { id: number; name: string; }
 interface IncomeCategory { id: number; name: string; }
 interface ExpenseCategory { id: number; name: string; }
 interface Budget { id: number; categoryId: number; monthlyAmount: number; category: ExpenseCategory; }
 interface Profile { id: number; monthlyIncome: number; monthlyExpense: number; birthDate: string | null; retirementAge: number; inheritanceAge: number; }
 
 export default function PengaturanPage() {
-  const [accounts, setAccounts] = useState<Account[]>([]);
   const [incomeCats, setIncomeCats] = useState<IncomeCategory[]>([]);
   const [expenseCats, setExpenseCats] = useState<ExpenseCategory[]>([]);
   const [budgets, setBudgets] = useState<Budget[]>([]);
   const [profile, setProfile] = useState<Profile>({ id: 0, monthlyIncome: 0, monthlyExpense: 0, birthDate: null, retirementAge: 60, inheritanceAge: 80 });
 
-  const [newAccount, setNewAccount] = useState("");
   const [newIncomeCat, setNewIncomeCat] = useState("");
   const [newExpenseCat, setNewExpenseCat] = useState("");
   const [newBudgetCatId, setNewBudgetCatId] = useState("");
   const [newBudgetAmt, setNewBudgetAmt] = useState("");
   const [editBudgetId, setEditBudgetId] = useState<number | null>(null);
   const [editBudgetAmt, setEditBudgetAmt] = useState("");
-  const [tab, setTab] = useState<"rekening" | "kategori" | "budget" | "profil">("rekening");
+  const [tab, setTab] = useState<"kategori" | "budget" | "profil">("kategori");
 
   const load = useCallback(() => {
-    fetch("/api/accounts").then(r => r.json()).then(setAccounts);
     fetch("/api/income-categories").then(r => r.json()).then(setIncomeCats);
     fetch("/api/expense-categories").then(r => r.json()).then(setExpenseCats);
     fetch("/api/budgets").then(r => r.json()).then(setBudgets);
@@ -35,11 +31,6 @@ export default function PengaturanPage() {
 
   useEffect(() => { load(); }, [load]);
 
-  const addAccount = async () => {
-    if (!newAccount.trim()) return;
-    await fetch("/api/accounts", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ name: newAccount.trim() }) });
-    setNewAccount(""); load();
-  };
   const addIncomeCat = async () => {
     if (!newIncomeCat.trim()) return;
     await fetch("/api/income-categories", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ name: newIncomeCat.trim() }) });
@@ -69,7 +60,6 @@ export default function PengaturanPage() {
   };
 
   const tabs = [
-    { key: "rekening" as const, label: "Rekening" },
     { key: "kategori" as const, label: "Kategori" },
     { key: "budget" as const, label: "Budget" },
     { key: "profil" as const, label: "Profil Keuangan" },
@@ -79,7 +69,7 @@ export default function PengaturanPage() {
     <div className="space-y-6 pt-12 md:pt-0">
       <div>
         <h1 className="text-2xl font-bold text-slate-800">Pengaturan</h1>
-        <p className="text-slate-500 text-sm">Kelola rekening, kategori, budget, dan profil keuanganmu</p>
+        <p className="text-slate-500 text-sm">Kelola kategori, budget, dan profil keuanganmu</p>
       </div>
 
       {/* Tabs */}
@@ -91,25 +81,6 @@ export default function PengaturanPage() {
           </button>
         ))}
       </div>
-
-      {/* Rekening */}
-      {tab === "rekening" && (
-        <div className="bg-white rounded-xl shadow-sm border p-6">
-          <h2 className="text-lg font-semibold text-slate-800 mb-4">Daftar Rekening</h2>
-          <div className="flex gap-2 mb-4">
-            <input value={newAccount} onChange={e => setNewAccount(e.target.value)} placeholder="Nama rekening..." className="flex-1 border rounded-lg px-3 py-2 text-sm" onKeyDown={e => e.key === "Enter" && addAccount()} />
-            <button onClick={addAccount} className="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm hover:bg-blue-700 flex items-center gap-1"><Plus size={16} />Tambah</button>
-          </div>
-          <div className="space-y-2">
-            {accounts.map(a => (
-              <div key={a.id} className="flex items-center justify-between bg-slate-50 rounded-lg px-4 py-3">
-                <span className="text-sm text-slate-700">{a.name}</span>
-              </div>
-            ))}
-            {accounts.length === 0 && <p className="text-center text-slate-400 py-4">Belum ada rekening</p>}
-          </div>
-        </div>
-      )}
 
       {/* Kategori */}
       {tab === "kategori" && (

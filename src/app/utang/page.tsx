@@ -3,34 +3,32 @@ import { useEffect, useState } from "react";
 import { formatRupiah, formatDate } from "@/lib/utils";
 import { Plus } from "lucide-react";
 
-interface Account { id: number; name: string }
-interface DebtSource { id: number; name: string; initialAmount: number; loans: { id: number; date: string; amount: number; description: string; account: Account }[]; payments: { id: number; date: string; amount: number; description: string; account: Account }[] }
+interface DebtSource { id: number; name: string; initialAmount: number; loans: { id: number; date: string; amount: number; description: string }[]; payments: { id: number; date: string; amount: number; description: string }[] }
 
 export default function UtangPage() {
   const [debts, setDebts] = useState<DebtSource[]>([]);
-  const [accounts, setAccounts] = useState<Account[]>([]);
   const [showPayForm, setShowPayForm] = useState(false);
   const [showLoanForm, setShowLoanForm] = useState(false);
   const [showNewDebt, setShowNewDebt] = useState(false);
-  const [payForm, setPayForm] = useState({ date: new Date().toISOString().split("T")[0], debtSourceId: "", accountId: "", amount: "", description: "" });
-  const [loanForm, setLoanForm] = useState({ date: new Date().toISOString().split("T")[0], debtSourceId: "", accountId: "", amount: "", description: "" });
+  const [payForm, setPayForm] = useState({ date: new Date().toISOString().split("T")[0], debtSourceId: "", amount: "", description: "" });
+  const [loanForm, setLoanForm] = useState({ date: new Date().toISOString().split("T")[0], debtSourceId: "", amount: "", description: "" });
   const [newDebt, setNewDebt] = useState({ name: "", initialAmount: "0" });
 
   const load = () => { fetch("/api/debts").then(r => r.json()).then(setDebts); };
-  useEffect(() => { load(); fetch("/api/accounts").then(r => r.json()).then(setAccounts); }, []);
+  useEffect(() => { load(); }, []);
 
   const submitPay = async (e: React.FormEvent) => {
     e.preventDefault();
-    await fetch("/api/debts/payments", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ ...payForm, debtSourceId: +payForm.debtSourceId, accountId: +payForm.accountId, amount: +payForm.amount }) });
-    setPayForm({ date: new Date().toISOString().split("T")[0], debtSourceId: "", accountId: "", amount: "", description: "" });
+    await fetch("/api/debts/payments", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ ...payForm, debtSourceId: +payForm.debtSourceId, amount: +payForm.amount }) });
+    setPayForm({ date: new Date().toISOString().split("T")[0], debtSourceId: "", amount: "", description: "" });
     setShowPayForm(false);
     load();
   };
 
   const submitLoan = async (e: React.FormEvent) => {
     e.preventDefault();
-    await fetch("/api/debts/loans", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ ...loanForm, debtSourceId: +loanForm.debtSourceId, accountId: +loanForm.accountId, amount: +loanForm.amount }) });
-    setLoanForm({ date: new Date().toISOString().split("T")[0], debtSourceId: "", accountId: "", amount: "", description: "" });
+    await fetch("/api/debts/loans", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ ...loanForm, debtSourceId: +loanForm.debtSourceId, amount: +loanForm.amount }) });
+    setLoanForm({ date: new Date().toISOString().split("T")[0], debtSourceId: "", amount: "", description: "" });
     setShowLoanForm(false);
     load();
   };
@@ -75,7 +73,6 @@ export default function UtangPage() {
         <form onSubmit={submitPay} className="bg-white rounded-xl shadow-sm border p-6 grid grid-cols-1 md:grid-cols-3 gap-4">
           <div><label className="block text-xs text-slate-500 mb-1">Tanggal</label><input type="date" required value={payForm.date} onChange={e => setPayForm({...payForm, date: e.target.value})} className="w-full border rounded-lg px-3 py-2 text-sm" /></div>
           <div><label className="block text-xs text-slate-500 mb-1">Pemberi Utang</label><select required value={payForm.debtSourceId} onChange={e => setPayForm({...payForm, debtSourceId: e.target.value})} className="w-full border rounded-lg px-3 py-2 text-sm"><option value="">Pilih...</option>{debts.map(d => <option key={d.id} value={d.id}>{d.name}</option>)}</select></div>
-          <div><label className="block text-xs text-slate-500 mb-1">Rekening</label><select required value={payForm.accountId} onChange={e => setPayForm({...payForm, accountId: e.target.value})} className="w-full border rounded-lg px-3 py-2 text-sm"><option value="">Pilih...</option>{accounts.map(a => <option key={a.id} value={a.id}>{a.name}</option>)}</select></div>
           <div><label className="block text-xs text-slate-500 mb-1">Rincian</label><input type="text" value={payForm.description} onChange={e => setPayForm({...payForm, description: e.target.value})} className="w-full border rounded-lg px-3 py-2 text-sm" /></div>
           <div><label className="block text-xs text-slate-500 mb-1">Nominal (Rp)</label><input type="number" required min={0} value={payForm.amount} onChange={e => setPayForm({...payForm, amount: e.target.value})} className="w-full border rounded-lg px-3 py-2 text-sm" /></div>
           <div className="flex items-end"><button type="submit" className="bg-emerald-600 text-white px-6 py-2 rounded-lg text-sm w-full">Bayar</button></div>
@@ -86,7 +83,6 @@ export default function UtangPage() {
         <form onSubmit={submitLoan} className="bg-white rounded-xl shadow-sm border p-6 grid grid-cols-1 md:grid-cols-3 gap-4">
           <div><label className="block text-xs text-slate-500 mb-1">Tanggal</label><input type="date" required value={loanForm.date} onChange={e => setLoanForm({...loanForm, date: e.target.value})} className="w-full border rounded-lg px-3 py-2 text-sm" /></div>
           <div><label className="block text-xs text-slate-500 mb-1">Pemberi Utang</label><select required value={loanForm.debtSourceId} onChange={e => setLoanForm({...loanForm, debtSourceId: e.target.value})} className="w-full border rounded-lg px-3 py-2 text-sm"><option value="">Pilih...</option>{debts.map(d => <option key={d.id} value={d.id}>{d.name}</option>)}</select></div>
-          <div><label className="block text-xs text-slate-500 mb-1">Rekening Masuk</label><select required value={loanForm.accountId} onChange={e => setLoanForm({...loanForm, accountId: e.target.value})} className="w-full border rounded-lg px-3 py-2 text-sm"><option value="">Pilih...</option>{accounts.map(a => <option key={a.id} value={a.id}>{a.name}</option>)}</select></div>
           <div><label className="block text-xs text-slate-500 mb-1">Rincian</label><input type="text" value={loanForm.description} onChange={e => setLoanForm({...loanForm, description: e.target.value})} className="w-full border rounded-lg px-3 py-2 text-sm" /></div>
           <div><label className="block text-xs text-slate-500 mb-1">Nominal (Rp)</label><input type="number" required min={0} value={loanForm.amount} onChange={e => setLoanForm({...loanForm, amount: e.target.value})} className="w-full border rounded-lg px-3 py-2 text-sm" /></div>
           <div className="flex items-end"><button type="submit" className="bg-orange-600 text-white px-6 py-2 rounded-lg text-sm w-full">Simpan Pinjaman</button></div>
@@ -114,7 +110,6 @@ export default function UtangPage() {
                         <td className="py-2 text-slate-500">{formatDate(t.date)}</td>
                         <td className="py-2"><span className={t.type === "Bayar" ? "text-emerald-600" : "text-orange-600"}>{t.type}</span></td>
                         <td className="py-2 text-slate-500">{t.description}</td>
-                        <td className="py-2 text-slate-500">{t.account.name}</td>
                         <td className="py-2 text-right font-medium">{formatRupiah(t.amount)}</td>
                       </tr>
                     ))}

@@ -4,16 +4,14 @@ import { formatRupiah, formatDate, getCurrentMonth } from "@/lib/utils";
 import { Plus, Trash2 } from "lucide-react";
 
 interface Category { id: number; name: string }
-interface Account { id: number; name: string }
-interface Expense { id: number; date: string; description: string; amount: number; category: Category; account: Account }
+interface Expense { id: number; date: string; description: string; amount: number; category: Category }
 
 export default function PengeluaranPage() {
   const [expenses, setExpenses] = useState<Expense[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
-  const [accounts, setAccounts] = useState<Account[]>([]);
   const [month, setMonth] = useState(getCurrentMonth());
   const [showForm, setShowForm] = useState(false);
-  const [form, setForm] = useState({ date: new Date().toISOString().split("T")[0], categoryId: "", description: "", accountId: "", amount: "" });
+  const [form, setForm] = useState({ date: new Date().toISOString().split("T")[0], categoryId: "", description: "", amount: "" });
 
   const load = useCallback(() => {
     fetch("/api/expenses?month=" + month).then(r => r.json()).then(setExpenses);
@@ -22,7 +20,6 @@ export default function PengeluaranPage() {
   useEffect(() => { load(); }, [load]);
   useEffect(() => {
     fetch("/api/expense-categories").then(r => r.json()).then(setCategories);
-    fetch("/api/accounts").then(r => r.json()).then(setAccounts);
   }, []);
 
   const submit = async (e: React.FormEvent) => {
@@ -30,9 +27,9 @@ export default function PengeluaranPage() {
     await fetch("/api/expenses", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ ...form, categoryId: +form.categoryId, accountId: +form.accountId, amount: +form.amount }),
+      body: JSON.stringify({ ...form, categoryId: +form.categoryId, amount: +form.amount }),
     });
-    setForm({ date: new Date().toISOString().split("T")[0], categoryId: "", description: "", accountId: "", amount: "" });
+    setForm({ date: new Date().toISOString().split("T")[0], categoryId: "", description: "", amount: "" });
     setShowForm(false);
     load();
   };
@@ -94,13 +91,6 @@ export default function PengeluaranPage() {
             <input type="text" required value={form.description} onChange={e => setForm({...form, description: e.target.value})} className="w-full border rounded-lg px-3 py-2 text-sm" placeholder="Deskripsi" />
           </div>
           <div>
-            <label className="block text-xs text-slate-500 mb-1">Rekening</label>
-            <select required value={form.accountId} onChange={e => setForm({...form, accountId: e.target.value})} className="w-full border rounded-lg px-3 py-2 text-sm">
-              <option value="">Pilih...</option>
-              {accounts.map(a => <option key={a.id} value={a.id}>{a.name}</option>)}
-            </select>
-          </div>
-          <div>
             <label className="block text-xs text-slate-500 mb-1">Nominal (Rp)</label>
             <input type="number" required min={0} value={form.amount} onChange={e => setForm({...form, amount: e.target.value})} className="w-full border rounded-lg px-3 py-2 text-sm" placeholder="0" />
           </div>
@@ -118,7 +108,6 @@ export default function PengeluaranPage() {
                 <th className="text-left px-4 py-3">Tanggal</th>
                 <th className="text-left px-4 py-3">Kategori</th>
                 <th className="text-left px-4 py-3">Rincian</th>
-                <th className="text-left px-4 py-3">Rekening</th>
                 <th className="text-right px-4 py-3">Nominal</th>
                 <th className="px-4 py-3"></th>
               </tr>
@@ -129,12 +118,11 @@ export default function PengeluaranPage() {
                   <td className="px-4 py-3">{formatDate(e.date)}</td>
                   <td className="px-4 py-3"><span className="bg-red-100 text-red-700 px-2 py-0.5 rounded-full text-xs">{e.category.name}</span></td>
                   <td className="px-4 py-3 text-slate-600">{e.description}</td>
-                  <td className="px-4 py-3 text-slate-600">{e.account.name}</td>
                   <td className="px-4 py-3 text-right font-medium text-red-600">{formatRupiah(e.amount)}</td>
                   <td className="px-4 py-3"><button onClick={() => remove(e.id)} className="text-red-400 hover:text-red-600"><Trash2 size={16} /></button></td>
                 </tr>
               ))}
-              {expenses.length === 0 && <tr><td colSpan={6} className="px-4 py-8 text-center text-slate-400">Belum ada pengeluaran bulan ini</td></tr>}
+              {expenses.length === 0 && <tr><td colSpan={5} className="px-4 py-8 text-center text-slate-400">Belum ada pengeluaran bulan ini</td></tr>}
             </tbody>
           </table>
         </div>

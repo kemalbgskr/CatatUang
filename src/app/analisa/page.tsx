@@ -62,7 +62,7 @@ export default function AnalisaPage() {
             <CartesianGrid strokeDasharray="3 3" />
             <XAxis dataKey="name" tick={{ fontSize: 11 }} />
             <YAxis tickFormatter={v => (v / 1e6).toFixed(0) + "jt"} />
-            <Tooltip formatter={(v: number) => formatRupiah(v)} />
+            <Tooltip formatter={(v) => formatRupiah(Number(v))} />
             <Bar dataKey="value" fill="#3b82f6" name="Nilai" />
           </BarChart>
         </ResponsiveContainer>
@@ -120,7 +120,7 @@ export default function AnalisaPage() {
             <CartesianGrid strokeDasharray="3 3" />
             <XAxis dataKey="month" tick={{ fontSize: 10 }} />
             <YAxis tickFormatter={v => (v / 1e6).toFixed(0) + "jt"} />
-            <Tooltip formatter={(v: number) => formatRupiah(v)} />
+            <Tooltip formatter={(v) => formatRupiah(Number(v))} />
             <Legend />
             <Line type="monotone" dataKey="pendapatan" stroke="#10b981" name="Pendapatan" strokeWidth={2} />
             <Line type="monotone" dataKey="kebutuhanPokok" stroke="#ef4444" name="Pengeluaran" strokeWidth={2} />
