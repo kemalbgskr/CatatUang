@@ -11,8 +11,12 @@ import {
   Settings,
   Menu,
   X,
+  LogOut,
+  Moon,
+  Sun,
 } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 
 const navItems = [
   { href: "/", label: "Dashboard", icon: LayoutDashboard },
@@ -26,7 +30,30 @@ const navItems = [
 
 export default function Sidebar() {
   const pathname = usePathname();
+  const router = useRouter();
   const [open, setOpen] = useState(false);
+  const [theme, setTheme] = useState<"light" | "dark">("light");
+
+  useEffect(() => {
+    const saved = localStorage.getItem("theme-mode");
+    const initial = saved === "dark" ? "dark" : "light";
+    document.documentElement.setAttribute("data-theme", initial);
+    const timer = window.setTimeout(() => setTheme(initial), 0);
+    return () => window.clearTimeout(timer);
+  }, []);
+
+  const toggleTheme = () => {
+    const next = theme === "light" ? "dark" : "light";
+    setTheme(next);
+    localStorage.setItem("theme-mode", next);
+    document.documentElement.setAttribute("data-theme", next);
+  };
+
+  const logout = async () => {
+    await fetch("/api/auth/logout", { method: "POST" });
+    router.push("/login");
+    router.refresh();
+  };
 
   return (
     <>
@@ -46,8 +73,21 @@ export default function Sidebar() {
         style={{ boxShadow: "0 4px 32px 0 rgba(0,0,0,0.08)" }}
       >
         <div className="p-6 border-b border-slate-100">
-          <h1 className="text-2xl font-extrabold tracking-tight flex items-center gap-2"><span className="text-blue-600">💰</span> Pencatat Keuangan</h1>
-          <p className="text-xs text-slate-400 mt-1">Wealth Tracker</p>
+          <div className="flex items-start justify-between gap-3">
+            <div>
+              <h1 className="text-2xl font-extrabold tracking-tight flex items-center gap-2"><span className="text-blue-600">💰</span> Pencatat Keuangan</h1>
+              <p className="text-xs text-slate-400 mt-1">Wealth Tracker</p>
+            </div>
+            <button
+              type="button"
+              onClick={toggleTheme}
+              className="inline-flex items-center justify-center w-9 h-9 rounded-full border border-slate-200 bg-white hover:bg-slate-100 text-slate-600"
+              aria-label="Toggle dark mode"
+              title={theme === "light" ? "Aktifkan dark mode" : "Aktifkan light mode"}
+            >
+              {theme === "light" ? <Moon size={16} /> : <Sun size={16} />}
+            </button>
+          </div>
         </div>
         <nav className="p-4 space-y-1 overflow-y-auto h-[calc(100vh-100px)]">
           {navItems.map((item) => {
@@ -67,6 +107,14 @@ export default function Sidebar() {
               </Link>
             );
           })}
+          <button
+            type="button"
+            onClick={logout}
+            className="mt-4 w-full group flex items-center gap-3 px-4 py-3 rounded-xl text-base font-medium transition-all text-rose-600 hover:bg-rose-50"
+          >
+            <span className="text-rose-500"><LogOut size={22} /></span>
+            <span>Logout</span>
+          </button>
         </nav>
       </aside>
 

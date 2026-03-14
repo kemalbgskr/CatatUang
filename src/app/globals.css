@@ -3,6 +3,7 @@
 :root {
   --background: #ffffff;
   --foreground: #171717;
+  --muted-foreground: #475569;
 }
 
 @theme inline {
@@ -28,12 +29,31 @@ body {
   min-height: 100vh;
 }
 
+html[data-theme="dark"] {
+  --background: #020617;
+  --foreground: #e2e8f0;
+  --muted-foreground: #cbd5e1;
+}
+
+html[data-theme="dark"] body {
+  background: radial-gradient(circle at 20% 0%, #172554, #020617 55%);
+  color: var(--foreground);
+}
+
 input, select, textarea, button {
   border-radius: 0.75rem;
   outline: none;
   font-family: inherit;
   font-size: 1rem;
   transition: box-shadow 0.2s, border-color 0.2s;
+}
+
+input, select, textarea {
+  color: #0f172a;
+}
+
+input::placeholder, textarea::placeholder {
+  color: #64748b;
 }
 
 input:focus, select:focus, textarea:focus, button:focus {
@@ -47,4 +67,56 @@ input:focus, select:focus, textarea:focus, button:focus {
   box-shadow: 0 2px 16px 0 rgba(0,0,0,0.06);
   border: 1px solid #f1f5f9;
   padding: 1.5rem;
+}
+
+/* Dark mode utility overrides for existing Tailwind class usage */
+html[data-theme="dark"] .bg-white,
+html[data-theme="dark"] .bg-white\/90,
+html[data-theme="dark"] .bg-white\/95,
+html[data-theme="dark"] .card {
+  background-color: #0f172a !important;
+  border-color: #1e293b !important;
+  color: #e2e8f0 !important;
+}
+
+html[data-theme="dark"] .bg-slate-50,
+html[data-theme="dark"] .bg-slate-100 {
+  background-color: #111827 !important;
+}
+
+html[data-theme="dark"] .text-slate-900,
+html[data-theme="dark"] .text-slate-800,
+html[data-theme="dark"] .text-slate-700,
+html[data-theme="dark"] .text-slate-600,
+html[data-theme="dark"] .text-slate-500,
+html[data-theme="dark"] .text-slate-400 {
+  color: #dbeafe !important;
+}
+
+html[data-theme="dark"] .border,
+html[data-theme="dark"] .border-slate-100,
+html[data-theme="dark"] .border-slate-200,
+html[data-theme="dark"] .border-slate-300 {
+  border-color: #334155 !important;
+}
+
+html[data-theme="dark"] input,
+html[data-theme="dark"] select,
+html[data-theme="dark"] textarea {
+  background-color: #0b1220 !important;
+  border-color: #334155 !important;
+  color: #e2e8f0 !important;
+}
+
+html[data-theme="dark"] input::placeholder,
+html[data-theme="dark"] textarea::placeholder {
+  color: #94a3b8;
+}
+
+html[data-theme="dark"] table thead {
+  background-color: #111827 !important;
+}
+
+html[data-theme="dark"] table tbody tr:hover {
+  background-color: #0b1220 !important;
 }

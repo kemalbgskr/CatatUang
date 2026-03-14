@@ -144,12 +144,15 @@ export async function GET(req: Request) {
 
   const totalPendapatan = monthlyIncomes.reduce((s, i) => s + i.amount, 0);
   const totalKebutuhanPokok = monthlyExpenses.reduce((s, e) => s + e.amount, 0);
+  const totalPengeluaran = totalKebutuhanPokok;
+  const totalPendapatanAll = incomes.reduce((s, i) => s + i.amount, 0);
+  const totalPengeluaranAll = expenses.reduce((s, e) => s + e.amount, 0);
   const totalBeliAset = monthlyAssetBuys.reduce((s, t) => s + t.price * t.quantity, 0);
   const totalBeliBarang = monthlyItemBuys.reduce((s, t) => s + t.price * t.quantity, 0);
   const sisaPendapatan = totalPendapatan - totalKebutuhanPokok - totalBeliAset - totalBeliBarang;
 
   // === LABA RUGI BULANAN (12 bulan) ===
-  const labaRugiBulanan: { month: string; pendapatan: number; kebutuhanPokok: number; beliAset: number; beliBarang: number; sisa: number }[] = [];
+  const labaRugiBulanan: { month: string; pendapatan: number; pengeluaran: number; kebutuhanPokok: number; beliAset: number; beliBarang: number; sisa: number }[] = [];
   const now = new Date();
   for (let i = 11; i >= 0; i--) {
     const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
@@ -162,7 +165,7 @@ export async function GET(req: Request) {
     const k = mExpenses.reduce((s, exp) => s + exp.amount, 0);
     const a = mAssets.reduce((s, t) => s + t.price * t.quantity, 0);
     const b = mItems.reduce((s, t) => s + t.price * t.quantity, 0);
-    labaRugiBulanan.push({ month: m, pendapatan: p, kebutuhanPokok: k, beliAset: a, beliBarang: b, sisa: p - k - a - b });
+    labaRugiBulanan.push({ month: m, pendapatan: p, pengeluaran: k, kebutuhanPokok: k, beliAset: a, beliBarang: b, sisa: p - k - a - b });
   }
 
   // === PENGELUARAN PER KATEGORI (current month) ===
@@ -228,7 +231,10 @@ export async function GET(req: Request) {
     itemSummary,
     currentMonth,
     totalPendapatan,
+    totalPengeluaran,
     totalKebutuhanPokok,
+    totalPendapatanAll,
+    totalPengeluaranAll,
     totalBeliAset,
     totalBeliBarang,
     sisaPendapatan,

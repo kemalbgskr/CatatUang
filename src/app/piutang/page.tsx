@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import { formatRupiah, formatDate } from "@/lib/utils";
-import { Plus } from "lucide-react";
+import { Plus, Trash2 } from "lucide-react";
 
 interface Receivable { id: number; date: string; amount: number; type: string }
 interface Person { id: number; name: string; receivables: Receivable[] }
@@ -28,6 +28,18 @@ export default function PiutangPage() {
     e.preventDefault();
     await fetch("/api/receivables/persons", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ name: newPerson }) });
     setNewPerson(""); setShowNew(false); load();
+  };
+
+  const removeReceivable = async (id: number) => {
+    if (!confirm("Hapus transaksi piutang ini?")) return;
+    await fetch("/api/receivables/" + id, { method: "DELETE" });
+    load();
+  };
+
+  const removePerson = async (id: number, name: string) => {
+    if (!confirm(`Hapus peminjam ${name} beserta semua histori piutang?`)) return;
+    await fetch("/api/receivables/persons/" + id, { method: "DELETE" });
+    load();
   };
 
   const totalPiutang = persons.reduce((s, p) => {
@@ -75,12 +87,38 @@ export default function PiutangPage() {
             <div key={p.id} className="bg-white rounded-xl shadow-sm border p-6">
               <div className="flex justify-between items-center mb-3">
                 <h3 className="font-semibold text-slate-800">{p.name}</h3>
-                <span className={"font-bold " + (rem > 0 ? "text-amber-600" : "text-emerald-600")}>{formatRupiah(rem)}</span>
+                <div className="flex items-center gap-3">
+                  <span className={"font-bold " + (rem > 0 ? "text-amber-600" : "text-emerald-600")}>{formatRupiah(rem)}</span>
+                  <button
+                    type="button"
+                    onClick={() => removePerson(p.id, p.name)}
+                    className="text-red-400 hover:text-red-600"
+                    title="Hapus peminjam"
+                    aria-label="Hapus peminjam"
+                  >
+                    <Trash2 size={16} />
+                  </button>
+                </div>
               </div>
               {p.receivables.length > 0 && (
                 <table className="w-full text-sm"><tbody className="divide-y">
                   {p.receivables.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()).map(r => (
-                    <tr key={r.id}><td className="py-2 text-slate-500">{formatDate(r.date)}</td><td className="py-2"><span className={r.type === "given" ? "text-orange-600" : "text-emerald-600"}>{r.type === "given" ? "Beri" : "Terima"}</span></td><td className="py-2 text-right font-medium">{formatRupiah(r.amount)}</td></tr>
+                    <tr key={r.id}>
+                      <td className="py-2 text-slate-500">{formatDate(r.date)}</td>
+                      <td className="py-2"><span className={r.type === "given" ? "text-orange-600" : "text-emerald-600"}>{r.type === "given" ? "Beri" : "Terima"}</span></td>
+                      <td className="py-2 text-right font-medium">{formatRupiah(r.amount)}</td>
+                      <td className="py-2 text-right">
+                        <button
+                          type="button"
+                          onClick={() => removeReceivable(r.id)}
+                          className="text-red-400 hover:text-red-600"
+                          title="Hapus transaksi"
+                          aria-label="Hapus transaksi"
+                        >
+                          <Trash2 size={15} />
+                        </button>
+                      </td>
+                    </tr>
                   ))}
                 </tbody></table>
               )}

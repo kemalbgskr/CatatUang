@@ -2,6 +2,7 @@
 import { useEffect, useState, useCallback } from "react";
 import { formatRupiah, formatDate, getCurrentMonth } from "@/lib/utils";
 import { Plus, Trash2 } from "lucide-react";
+import MonthYearPicker from "@/components/MonthYearPicker";
 
 interface Category { id: number; name: string }
 interface Expense { id: number; date: string; description: string; amount: number; category: Category }
@@ -54,7 +55,7 @@ export default function PengeluaranPage() {
           <p className="text-slate-500 text-sm">Total: {formatRupiah(total)}</p>
         </div>
         <div className="flex gap-3">
-          <input type="month" value={month} onChange={e => setMonth(e.target.value)} className="border rounded-lg px-3 py-2 text-sm bg-white" />
+          <MonthYearPicker value={month} onChange={setMonth} />
           <button onClick={() => setShowForm(!showForm)} className="bg-red-600 text-white px-4 py-2 rounded-lg text-sm flex items-center gap-2 hover:bg-red-700">
             <Plus size={16} /> Tambah
           </button>
@@ -115,9 +116,9 @@ export default function PengeluaranPage() {
             <tbody className="divide-y">
               {expenses.map(e => (
                 <tr key={e.id} className="hover:bg-slate-50">
-                  <td className="px-4 py-3">{formatDate(e.date)}</td>
+                  <td className="px-4 py-3 text-slate-700 font-medium">{formatDate(e.date)}</td>
                   <td className="px-4 py-3"><span className="bg-red-100 text-red-700 px-2 py-0.5 rounded-full text-xs">{e.category.name}</span></td>
-                  <td className="px-4 py-3 text-slate-600">{e.description}</td>
+                  <td className="px-4 py-3 text-slate-700">{e.description}</td>
                   <td className="px-4 py-3 text-right font-medium text-red-600">{formatRupiah(e.amount)}</td>
                   <td className="px-4 py-3"><button onClick={() => remove(e.id)} className="text-red-400 hover:text-red-600"><Trash2 size={16} /></button></td>
                 </tr>

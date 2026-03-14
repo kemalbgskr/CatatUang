@@ -7,6 +7,7 @@ interface IncomeCategory { id: number; name: string; }
 interface ExpenseCategory { id: number; name: string; }
 interface Budget { id: number; categoryId: number; monthlyAmount: number; category: ExpenseCategory; }
 interface Profile { id: number; monthlyIncome: number; monthlyExpense: number; birthDate: string | null; retirementAge: number; inheritanceAge: number; }
+interface AISettings { baseUrl: string; model: string; apiKey: string; systemPrompt: string; }
 
 export default function PengaturanPage() {
   const [incomeCats, setIncomeCats] = useState<IncomeCategory[]>([]);
@@ -20,13 +21,20 @@ export default function PengaturanPage() {
   const [newBudgetAmt, setNewBudgetAmt] = useState("");
   const [editBudgetId, setEditBudgetId] = useState<number | null>(null);
   const [editBudgetAmt, setEditBudgetAmt] = useState("");
-  const [tab, setTab] = useState<"kategori" | "budget" | "profil">("kategori");
+  const [tab, setTab] = useState<"kategori" | "budget" | "profil" | "ai">("kategori");
+  const [aiSettings, setAiSettings] = useState<AISettings>({
+    baseUrl: "https://api.openai.com/v1",
+    model: "gpt-4o-mini",
+    apiKey: "",
+    systemPrompt: "Kamu adalah analis keuangan pribadi berbahasa Indonesia. Berikan rekomendasi praktis dan bertahap.",
+  });
 
   const load = useCallback(() => {
     fetch("/api/income-categories").then(r => r.json()).then(setIncomeCats);
     fetch("/api/expense-categories").then(r => r.json()).then(setExpenseCats);
     fetch("/api/budgets").then(r => r.json()).then(setBudgets);
     fetch("/api/profile").then(r => r.json()).then(setProfile);
+    fetch("/api/ai-settings").then(r => r.json()).then(setAiSettings);
   }, []);
 
   useEffect(() => { load(); }, [load]);
@@ -40,6 +48,26 @@ export default function PengaturanPage() {
     if (!newExpenseCat.trim()) return;
     await fetch("/api/expense-categories", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ name: newExpenseCat.trim() }) });
     setNewExpenseCat(""); load();
+  };
+  const deleteIncomeCat = async (id: number) => {
+    if (!confirm("Hapus kategori pendapatan ini?")) return;
+    const res = await fetch("/api/income-categories/" + id, { method: "DELETE" });
+    if (!res.ok) {
+      const data = await res.json().catch(() => ({}));
+      alert(data.error || "Gagal menghapus kategori pendapatan.");
+      return;
+    }
+    load();
+  };
+  const deleteExpenseCat = async (id: number) => {
+    if (!confirm("Hapus kategori pengeluaran ini?")) return;
+    const res = await fetch("/api/expense-categories/" + id, { method: "DELETE" });
+    if (!res.ok) {
+      const data = await res.json().catch(() => ({}));
+      alert(data.error || "Gagal menghapus kategori pengeluaran.");
+      return;
+    }
+    load();
   };
   const addBudget = async () => {
     if (!newBudgetCatId || !newBudgetAmt) return;
@@ -59,10 +87,20 @@ export default function PengaturanPage() {
     alert("Profil tersimpan!");
   };
 
+  const saveAISettings = async () => {
+    await fetch("/api/ai-settings", {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(aiSettings),
+    });
+    alert("Konfigurasi AI tersimpan!");
+  };
+
   const tabs = [
     { key: "kategori" as const, label: "Kategori" },
     { key: "budget" as const, label: "Budget" },
     { key: "profil" as const, label: "Profil Keuangan" },
+    { key: "ai" as const, label: "AI" },
   ];
 
   return (
@@ -95,6 +133,9 @@ export default function PengaturanPage() {
               {incomeCats.map(c => (
                 <div key={c.id} className="flex items-center justify-between bg-slate-50 rounded-lg px-4 py-2">
                   <span className="text-sm text-slate-700">{c.name}</span>
+                  <button onClick={() => deleteIncomeCat(c.id)} className="text-slate-400 hover:text-red-600" title="Hapus kategori">
+                    <Trash2 size={14} />
+                  </button>
                 </div>
               ))}
               {incomeCats.length === 0 && <p className="text-center text-slate-400 py-4">Belum ada</p>}
@@ -110,6 +151,9 @@ export default function PengaturanPage() {
               {expenseCats.map(c => (
                 <div key={c.id} className="flex items-center justify-between bg-slate-50 rounded-lg px-4 py-2">
                   <span className="text-sm text-slate-700">{c.name}</span>
+                  <button onClick={() => deleteExpenseCat(c.id)} className="text-slate-400 hover:text-red-600" title="Hapus kategori">
+                    <Trash2 size={14} />
+                  </button>
                 </div>
               ))}
               {expenseCats.length === 0 && <p className="text-center text-slate-400 py-4">Belum ada</p>}
@@ -190,6 +234,63 @@ export default function PengaturanPage() {
           </div>
           <div className="mt-6 flex justify-end">
             <button onClick={saveProfile} className="bg-blue-600 text-white px-6 py-2 rounded-lg text-sm font-medium hover:bg-blue-700 flex items-center gap-2"><Save size={16} />Simpan</button>
+          </div>
+        </div>
+      )}
+
+      {/* AI */}
+      {tab === "ai" && (
+        <div className="bg-white rounded-xl shadow-sm border p-6 space-y-4">
+          <h2 className="text-lg font-semibold text-slate-800">Pengaturan AI Analisis</h2>
+          <p className="text-sm text-slate-500">Masukkan API AI yang ingin dipakai untuk analisis level kekayaan dan rekomendasi otomatis.</p>
+
+          <div className="grid md:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-1">Base URL API</label>
+              <input
+                type="text"
+                value={aiSettings.baseUrl}
+                onChange={e => setAiSettings({ ...aiSettings, baseUrl: e.target.value })}
+                className="w-full border rounded-lg px-3 py-2 text-sm"
+                placeholder="https://api.openai.com/v1"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-1">Model</label>
+              <input
+                type="text"
+                value={aiSettings.model}
+                onChange={e => setAiSettings({ ...aiSettings, model: e.target.value })}
+                className="w-full border rounded-lg px-3 py-2 text-sm"
+                placeholder="gpt-4o-mini"
+              />
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-1">API Key</label>
+            <input
+              type="password"
+              value={aiSettings.apiKey}
+              onChange={e => setAiSettings({ ...aiSettings, apiKey: e.target.value })}
+              className="w-full border rounded-lg px-3 py-2 text-sm"
+              placeholder="sk-..."
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-1">System Prompt</label>
+            <textarea
+              rows={5}
+              value={aiSettings.systemPrompt}
+              onChange={e => setAiSettings({ ...aiSettings, systemPrompt: e.target.value })}
+              className="w-full border rounded-lg px-3 py-2 text-sm"
+              placeholder="Instruksi ke AI"
+            />
+          </div>
+
+          <div className="mt-4 flex justify-end">
+            <button onClick={saveAISettings} className="bg-blue-600 text-white px-6 py-2 rounded-lg text-sm font-medium hover:bg-blue-700 flex items-center gap-2"><Save size={16} />Simpan Konfigurasi AI</button>
           </div>
         </div>
       )}

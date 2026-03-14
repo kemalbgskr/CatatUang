@@ -2,6 +2,7 @@
 import { useEffect, useState } from "react";
 import { formatRupiah, getCurrentMonth, getMonthLabel } from "@/lib/utils";
 import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, LineChart, Line } from "recharts";
+import MonthYearPicker from "@/components/MonthYearPicker";
 
 interface DashboardData {
   accountBalances: Record<string, number>;
@@ -47,7 +48,7 @@ export default function AnalisaPage() {
           <h1 className="text-2xl font-bold text-slate-800">Analisa Keuangan</h1>
           <p className="text-slate-500 text-sm">Analisis mendalam kesehatan keuanganmu</p>
         </div>
-        <input type="month" value={month} onChange={e => setMonth(e.target.value)} className="border rounded-lg px-3 py-2 text-sm bg-white" />
+        <MonthYearPicker value={month} onChange={setMonth} />
       </div>
 
       {/* Kekayaan Bersih */}

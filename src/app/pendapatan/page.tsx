@@ -2,6 +2,7 @@
 import { useEffect, useState, useCallback } from "react";
 import { formatRupiah, formatDate, getCurrentMonth } from "@/lib/utils";
 import { Plus, Trash2 } from "lucide-react";
+import MonthYearPicker from "@/components/MonthYearPicker";
 
 interface Category { id: number; name: string }
 interface Income { id: number; date: string; description: string; amount: number; category: Category }
@@ -50,7 +51,7 @@ export default function PendapatanPage() {
           <p className="text-slate-500 text-base">Total: <span className="font-bold text-emerald-600">{formatRupiah(total)}</span></p>
         </div>
         <div className="flex gap-3">
-          <input type="month" value={month} onChange={e => setMonth(e.target.value)} className="border border-slate-200 rounded-xl px-4 py-2 text-base bg-white shadow-sm focus:ring-2 focus:ring-blue-200" />
+          <MonthYearPicker value={month} onChange={setMonth} />
           <button onClick={() => setShowForm(!showForm)} className="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2 rounded-xl text-base font-semibold flex items-center gap-2 shadow transition">
             <Plus size={18} /> Tambah
           </button>
@@ -97,9 +98,9 @@ export default function PendapatanPage() {
             <tbody className="divide-y">
               {incomes.map(i => (
                 <tr key={i.id} className="hover:bg-slate-50">
-                  <td className="px-4 py-3">{formatDate(i.date)}</td>
+                  <td className="px-4 py-3 text-slate-700 font-medium">{formatDate(i.date)}</td>
                   <td className="px-4 py-3"><span className="bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded-full text-xs">{i.category.name}</span></td>
-                  <td className="px-4 py-3 text-slate-600">{i.description}</td>
+                  <td className="px-4 py-3 text-slate-700">{i.description}</td>
                   <td className="px-4 py-3 text-right font-medium text-emerald-600">{formatRupiah(i.amount)}</td>
                   <td className="px-4 py-3"><button onClick={() => remove(i.id)} className="text-red-400 hover:text-red-600"><Trash2 size={16} /></button></td>
                 </tr>
