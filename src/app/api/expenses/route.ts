@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma";
+import { getDefaultAccountId } from "@/lib/default-account";
 import { NextResponse } from "next/server";
 
 export async function GET(req: Request) {
@@ -24,12 +25,18 @@ export async function GET(req: Request) {
 
 export async function POST(req: Request) {
   const body = await req.json();
+
+  let accountId = Number(body.accountId);
+  if (!Number.isFinite(accountId) || accountId <= 0) {
+    accountId = await getDefaultAccountId();
+  }
+
   const expense = await prisma.expense.create({
     data: {
       date: new Date(body.date),
       categoryId: body.categoryId,
       description: body.description,
-      accountId: body.accountId,
+      accountId,
       amount: body.amount,
     },
     include: { category: true, account: true },

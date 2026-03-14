@@ -26,6 +26,14 @@ interface DashboardData {
   receivableSummary: { name: string; remaining: number }[];
 }
 
+interface SavedAIAnalysis {
+  month: string;
+  generatedAt: string;
+  level: number;
+  levelLabel: string;
+  analysis: string;
+}
+
 const COLORS = [
   "#6366f1","#3b82f6","#10b981","#f59e0b","#ef4444",
   "#8b5cf6","#ec4899","#06b6d4","#84cc16","#f97316",
@@ -36,13 +44,20 @@ export default function Home() {
   const [month, setMonth] = useState(getCurrentMonth());
   const [aiLoading, setAiLoading] = useState(false);
   const [aiError, setAiError] = useState("");
-  const [aiAnalysis, setAiAnalysis] = useState("");
+  const [savedAnalysis, setSavedAnalysis] = useState<SavedAIAnalysis | null>(null);
 
   useEffect(() => {
     fetch("/api/dashboard?month=" + month)
       .then((r) => r.json())
       .then(setData);
   }, [month]);
+
+  useEffect(() => {
+    fetch("/api/ai-analysis")
+      .then((r) => r.json())
+      .then(setSavedAnalysis)
+      .catch(() => setSavedAnalysis(null));
+  }, []);
 
   if (!data)
     return (
@@ -77,7 +92,10 @@ export default function Home() {
       if (!res.ok) {
         setAiError(payload.error || "Gagal menganalisis data dengan AI.");
       } else {
-        setAiAnalysis(payload.analysis || "AI tidak mengembalikan teks analisis.");
+        fetch("/api/ai-analysis")
+          .then((r) => r.json())
+          .then(setSavedAnalysis)
+          .catch(() => setSavedAnalysis(null));
       }
     } catch {
       setAiError("Gagal terhubung ke layanan AI.");
@@ -200,6 +218,20 @@ export default function Home() {
           <div className="mt-4 bg-slate-50 border border-slate-100 rounded-xl p-3 text-xs text-slate-600">
             Tips cepat: pastikan rasio tabungan bersih bulanan minimal 10-20% dari pendapatan agar level naik bertahap.
           </div>
+
+          <div className="mt-4">
+            <h3 className="text-sm font-semibold text-slate-700">Analisis Terakhir Tersimpan</h3>
+            {savedAnalysis ? (
+              <div className="mt-2 bg-slate-50 border border-slate-100 rounded-xl p-4 max-h-72 overflow-y-auto">
+                <p className="text-xs text-slate-500 mb-2">
+                  Bulan {getMonthLabel(savedAnalysis.month)} • {new Date(savedAnalysis.generatedAt).toLocaleString("id-ID")}
+                </p>
+                <pre className="whitespace-pre-wrap text-sm leading-6 text-slate-700 font-sans">{savedAnalysis.analysis}</pre>
+              </div>
+            ) : (
+              <p className="mt-2 text-sm text-slate-400">Belum ada analisis tersimpan. Klik Analisis untuk membuat data pertama.</p>
+            )}
+          </div>
         </div>
 
         <div className="bg-white rounded-3xl shadow-sm border border-slate-100 p-6">
@@ -224,13 +256,7 @@ export default function Home() {
             </div>
           )}
 
-          {aiAnalysis ? (
-            <div className="mt-4 bg-slate-50 border border-slate-100 rounded-xl p-4 max-h-80 overflow-y-auto">
-              <pre className="whitespace-pre-wrap text-sm leading-6 text-slate-700 font-sans">{aiAnalysis}</pre>
-            </div>
-          ) : (
-            <p className="mt-4 text-sm text-slate-400">Klik tombol Analisis untuk mendapatkan rekomendasi otomatis.</p>
-          )}
+          <p className="mt-4 text-sm text-slate-500">Saat tombol Analisis ditekan, hasil terbaru otomatis menggantikan analisis tersimpan sebelumnya.</p>
         </div>
       </div>
 

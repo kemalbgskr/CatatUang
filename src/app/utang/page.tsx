@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import { formatRupiah, formatDate } from "@/lib/utils";
-import { Plus } from "lucide-react";
+import { Plus, Trash2 } from "lucide-react";
 
 interface DebtSource { id: number; name: string; initialAmount: number; loans: { id: number; date: string; amount: number; description: string }[]; payments: { id: number; date: string; amount: number; description: string }[] }
 
@@ -38,6 +38,19 @@ export default function UtangPage() {
     await fetch("/api/debts", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ name: newDebt.name, initialAmount: +newDebt.initialAmount }) });
     setNewDebt({ name: "", initialAmount: "0" });
     setShowNewDebt(false);
+    load();
+  };
+
+  const deleteDebtSource = async (id: number, name: string) => {
+    if (!confirm(`Hapus pemberi utang ${name} beserta seluruh histori utangnya?`)) return;
+    await fetch("/api/debts/" + id, { method: "DELETE" });
+    load();
+  };
+
+  const deleteTransaction = async (type: "Pinjaman" | "Bayar", id: number) => {
+    if (!confirm("Hapus transaksi utang ini?")) return;
+    const endpoint = type === "Pinjaman" ? "/api/debts/loans/" : "/api/debts/payments/";
+    await fetch(endpoint + id, { method: "DELETE" });
     load();
   };
 
@@ -99,18 +112,40 @@ export default function UtangPage() {
             <div key={d.id} className="bg-white rounded-xl shadow-sm border p-6">
               <div className="flex justify-between items-center mb-4">
                 <h3 className="font-semibold text-slate-800">{d.name}</h3>
-                <span className={"font-bold " + (remaining > 0 ? "text-red-600" : "text-emerald-600")}>{formatRupiah(remaining)}</span>
+                <div className="flex items-center gap-3">
+                  <span className={"font-bold " + (remaining > 0 ? "text-red-600" : "text-emerald-600")}>{formatRupiah(remaining)}</span>
+                  <button
+                    type="button"
+                    onClick={() => deleteDebtSource(d.id, d.name)}
+                    className="text-red-400 hover:text-red-600"
+                    title="Hapus pemberi utang"
+                    aria-label="Hapus pemberi utang"
+                  >
+                    <Trash2 size={16} />
+                  </button>
+                </div>
               </div>
               {d.initialAmount > 0 && <p className="text-xs text-slate-400 mb-2">Utang awal: {formatRupiah(d.initialAmount)}</p>}
               {allTx.length > 0 && (
                 <table className="w-full text-sm">
                   <tbody className="divide-y">
-                    {allTx.map((t, i) => (
-                      <tr key={i} className="hover:bg-slate-50">
+                    {allTx.map((t) => (
+                      <tr key={`${t.type}-${t.id}`} className="hover:bg-slate-50">
                         <td className="py-2 text-slate-500">{formatDate(t.date)}</td>
                         <td className="py-2"><span className={t.type === "Bayar" ? "text-emerald-600" : "text-orange-600"}>{t.type}</span></td>
                         <td className="py-2 text-slate-500">{t.description}</td>
                         <td className="py-2 text-right font-medium">{formatRupiah(t.amount)}</td>
+                        <td className="py-2 text-right">
+                          <button
+                            type="button"
+                            onClick={() => deleteTransaction(t.type, t.id)}
+                            className="text-red-400 hover:text-red-600"
+                            title="Hapus transaksi"
+                            aria-label="Hapus transaksi"
+                          >
+                            <Trash2 size={15} />
+                          </button>
+                        </td>
                       </tr>
                     ))}
                   </tbody>

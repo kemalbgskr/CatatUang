@@ -1,7 +1,8 @@
 "use client";
 import { useEffect, useState, useCallback } from "react";
+import { useRef } from "react";
 import { formatRupiah, formatDate, getCurrentMonth } from "@/lib/utils";
-import { Plus, Trash2 } from "lucide-react";
+import { Plus, Trash2, Upload, Loader2 } from "lucide-react";
 import MonthYearPicker from "@/components/MonthYearPicker";
 
 interface Category { id: number; name: string }
@@ -13,6 +14,12 @@ export default function PengeluaranPage() {
   const [month, setMonth] = useState(getCurrentMonth());
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState({ date: new Date().toISOString().split("T")[0], categoryId: "", description: "", amount: "" });
+  const [ocrLoading, setOcrLoading] = useState(false);
+  const [ocrError, setOcrError] = useState("");
+  const [receiptName, setReceiptName] = useState("");
+  const [ocrPreview, setOcrPreview] = useState("");
+  const [submitError, setSubmitError] = useState("");
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   const load = useCallback(() => {
     fetch("/api/expenses?month=" + month).then(r => r.json()).then(setExpenses);
@@ -25,14 +32,75 @@ export default function PengeluaranPage() {
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
-    await fetch("/api/expenses", {
+    setSubmitError("");
+    const res = await fetch("/api/expenses", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ ...form, categoryId: +form.categoryId, amount: +form.amount }),
     });
+
+    if (!res.ok) {
+      const data = await res.json().catch(() => ({}));
+      setSubmitError(data.error || "Gagal menyimpan pengeluaran.");
+      return;
+    }
+
     setForm({ date: new Date().toISOString().split("T")[0], categoryId: "", description: "", amount: "" });
     setShowForm(false);
     load();
+  };
+
+  const triggerUpload = () => {
+    setShowForm(true);
+    setTimeout(() => fileInputRef.current?.click(), 0);
+  };
+
+  const handleReceiptUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setOcrLoading(true);
+    setOcrError("");
+    setReceiptName(file.name);
+
+    try {
+      const { recognize } = await import("tesseract.js");
+      const ocrResult = await recognize(file, "ind+eng");
+      const text = (ocrResult?.data?.text || "").trim();
+      setOcrPreview(text.slice(0, 600));
+
+      if (!text) {
+        setOcrError("Teks dari nota tidak terbaca. Coba foto lebih terang dan fokus.");
+        return;
+      }
+
+      const aiRes = await fetch("/api/ai/receipt", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          ocrText: text,
+          categories: categories.map((c) => ({ id: c.id, name: c.name })),
+        }),
+      });
+
+      const suggestion = await aiRes.json();
+      const nextCategoryId = suggestion.suggestedCategoryId || "";
+      const nextAmount = suggestion.suggestedAmount ? String(Math.round(Number(suggestion.suggestedAmount))) : "";
+      const note = suggestion.noteText ? ` | Catatan OCR: ${suggestion.noteText}` : "";
+      const nextDescription = `${suggestion.suggestedDescription || "Pengeluaran dari nota"} | Bukti: ${file.name}${note}`;
+
+      setForm((prev) => ({
+        ...prev,
+        categoryId: nextCategoryId || prev.categoryId,
+        amount: nextAmount || prev.amount,
+        description: nextDescription,
+      }));
+    } catch {
+      setOcrError("Gagal memproses OCR/AI. Coba ulangi upload.");
+    } finally {
+      setOcrLoading(false);
+      e.target.value = "";
+    }
   };
 
   const remove = async (id: number) => {
@@ -56,11 +124,23 @@ export default function PengeluaranPage() {
         </div>
         <div className="flex gap-3">
           <MonthYearPicker value={month} onChange={setMonth} />
+          <button onClick={triggerUpload} className="bg-indigo-600 text-white px-4 py-2 rounded-lg text-sm flex items-center gap-2 hover:bg-indigo-700">
+            <Upload size={16} /> Upload Nota
+          </button>
           <button onClick={() => setShowForm(!showForm)} className="bg-red-600 text-white px-4 py-2 rounded-lg text-sm flex items-center gap-2 hover:bg-red-700">
             <Plus size={16} /> Tambah
           </button>
         </div>
       </div>
+
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept="image/*"
+        className="hidden"
+        onChange={handleReceiptUpload}
+        disabled={ocrLoading}
+      />
 
       {/* Category summary */}
       {Object.keys(byCategory).length > 0 && (
@@ -76,6 +156,28 @@ export default function PengeluaranPage() {
 
       {showForm && (
         <form onSubmit={submit} className="bg-white rounded-xl shadow-sm border p-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div className="md:col-span-2 lg:col-span-3 bg-slate-50 border border-slate-200 rounded-xl p-4">
+            <div className="flex flex-wrap items-center gap-3">
+              <button
+                type="button"
+                onClick={triggerUpload}
+                className="inline-flex items-center gap-2 cursor-pointer bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg text-sm font-medium"
+              >
+                {ocrLoading ? <Loader2 size={16} className="animate-spin" /> : <Upload size={16} />}
+                {ocrLoading ? "Menganalisis nota..." : "Upload Nota / Resi / Bukti Transfer"}
+              </button>
+              {receiptName && <span className="text-xs text-slate-600">File: {receiptName}</span>}
+            </div>
+            <p className="text-xs text-slate-500 mt-2">Setelah upload, OCR + AI akan mengisi kategori, nominal, dan catatan secara otomatis.</p>
+            {ocrError && <p className="text-xs text-rose-600 mt-2">{ocrError}</p>}
+            {ocrPreview && (
+              <div className="mt-3 bg-white border border-slate-200 rounded-lg p-3">
+                <p className="text-xs font-medium text-slate-600 mb-1">Preview OCR:</p>
+                <p className="text-xs text-slate-500 whitespace-pre-wrap">{ocrPreview}</p>
+              </div>
+            )}
+          </div>
+
           <div>
             <label className="block text-xs text-slate-500 mb-1">Tanggal</label>
             <input type="date" required value={form.date} onChange={e => setForm({...form, date: e.target.value})} className="w-full border rounded-lg px-3 py-2 text-sm" />
@@ -98,6 +200,11 @@ export default function PengeluaranPage() {
           <div className="flex items-end">
             <button type="submit" className="bg-red-600 text-white px-6 py-2 rounded-lg text-sm hover:bg-red-700 w-full">Simpan</button>
           </div>
+          {submitError && (
+            <div className="md:col-span-2 lg:col-span-3 text-sm text-rose-600 bg-rose-50 border border-rose-100 rounded-lg px-3 py-2">
+              {submitError}
+            </div>
+          )}
         </form>
       )}
 

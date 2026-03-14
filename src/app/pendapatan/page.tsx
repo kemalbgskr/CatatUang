@@ -12,6 +12,7 @@ export default function PendapatanPage() {
   const [categories, setCategories] = useState<Category[]>([]);
   const [month, setMonth] = useState(getCurrentMonth());
   const [showForm, setShowForm] = useState(false);
+  const [submitError, setSubmitError] = useState("");
   const [form, setForm] = useState({ date: new Date().toISOString().split("T")[0], categoryId: "", description: "", amount: "" });
 
   const load = useCallback(() => {
@@ -25,11 +26,19 @@ export default function PendapatanPage() {
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
-    await fetch("/api/incomes", {
+    setSubmitError("");
+    const res = await fetch("/api/incomes", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ ...form, categoryId: +form.categoryId, amount: +form.amount }),
     });
+
+    if (!res.ok) {
+      const payload = await res.json().catch(() => ({}));
+      setSubmitError(payload.error || "Gagal menambah pendapatan.");
+      return;
+    }
+
     setForm({ date: new Date().toISOString().split("T")[0], categoryId: "", description: "", amount: "" });
     setShowForm(false);
     load();
@@ -80,6 +89,7 @@ export default function PendapatanPage() {
             <input type="number" required min={1} value={form.amount} onChange={e => setForm(f => ({ ...f, amount: e.target.value }))} className="border border-slate-200 rounded-xl px-4 py-2 text-base bg-white shadow-sm" placeholder="Rp" />
           </div>
           <button type="submit" className="bg-emerald-600 hover:bg-emerald-700 text-white px-6 py-2 rounded-xl text-base font-semibold shadow transition">Simpan</button>
+          {submitError && <p className="text-sm text-rose-600 md:ml-2">{submitError}</p>}
         </form>
       )}
 

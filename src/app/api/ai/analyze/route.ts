@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { readAISettings } from "@/lib/ai-settings";
+import { writeSavedAIAnalysis } from "@/lib/ai-analysis";
 
 function monthOf(date: Date) {
   const d = new Date(date);
@@ -136,6 +137,8 @@ export async function POST(req: Request) {
 
   const endpoint = settings.baseUrl.trim();
   const isResponsesApi = endpoint.includes("/openai/responses");
+  const modelName = settings.model.toLowerCase();
+  const supportsTemperature = !modelName.includes("gpt-5");
 
   const headers: Record<string, string> = {
     "Content-Type": "application/json",
@@ -150,7 +153,7 @@ export async function POST(req: Request) {
   const requestBody = isResponsesApi
     ? {
         model: settings.model,
-        temperature: 0.35,
+        ...(supportsTemperature ? { temperature: 0.35 } : {}),
         input: [
           {
             role: "system",
@@ -174,7 +177,7 @@ export async function POST(req: Request) {
       }
     : {
         model: settings.model,
-        temperature: 0.35,
+        ...(supportsTemperature ? { temperature: 0.35 } : {}),
         messages: [
           { role: "system", content: settings.systemPrompt },
           {
@@ -206,8 +209,27 @@ export async function POST(req: Request) {
       "AI tidak mengembalikan hasil analisis."
     : result?.choices?.[0]?.message?.content || "AI tidak mengembalikan hasil analisis.";
 
+  const levelLabels = [
+    "Level 0 - Pailit",
+    "Level 1 - Terjerat Utang",
+    "Level 2 - Terlihat Kaya",
+    "Level 3 - Gaji ke Gaji",
+    "Level 4 - Punya Dana Darurat",
+    "Level 5 - Dana Pensiun",
+    "Level 6 - Punya Warisan",
+  ];
+
+  const generatedAt = new Date().toISOString();
+  await writeSavedAIAnalysis({
+    month: selectedMonth,
+    generatedAt,
+    level,
+    levelLabel: levelLabels[level] || levelLabels[0],
+    analysis,
+  });
+
   return NextResponse.json({
-    generatedAt: new Date().toISOString(),
+    generatedAt,
     level,
     levelExplanation: levelExplanation(level),
     snapshot: payload.metrics,
