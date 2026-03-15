@@ -24,6 +24,8 @@ export default function PengaturanPage() {
   const [aiBudgetLoading, setAiBudgetLoading] = useState(false);
   const [aiBudgetResult, setAiBudgetResult] = useState<{ theory: string; reason: string; savedCount: number } | null>(null);
   const [aiBudgetError, setAiBudgetError] = useState("");
+  const [autoFillLoading, setAutoFillLoading] = useState(false);
+  const [autoFillMsg, setAutoFillMsg] = useState("");
   const [tab, setTab] = useState<"kategori" | "budget" | "profil" | "ai">("kategori");
   const [aiSettings, setAiSettings] = useState<AISettings>({
     baseUrl: "https://api.openai.com/v1",
@@ -116,6 +118,22 @@ export default function PengaturanPage() {
       setAiBudgetError("Gagal terhubung ke layanan AI.");
     } finally {
       setAiBudgetLoading(false);
+    }
+  };
+
+  const autoFillProfile = async () => {
+    setAutoFillLoading(true);
+    setAutoFillMsg("");
+    try {
+      const res = await fetch("/api/profile/auto-fill", { method: "POST" });
+      const data = await res.json();
+      if (!res.ok) { setAutoFillMsg(data.error || "Gagal menghitung."); return; }
+      setProfile(prev => ({ ...prev, monthlyIncome: data.monthlyIncome, monthlyExpense: data.monthlyExpense }));
+      setAutoFillMsg(`✓ Dihitung dari ${data.incomeMonthsCount} bulan pendapatan & ${data.expenseMonthsCount} bulan pengeluaran.`);
+    } catch {
+      setAutoFillMsg("Gagal terhubung ke server.");
+    } finally {
+      setAutoFillLoading(false);
     }
   };
 
@@ -254,7 +272,24 @@ export default function PengaturanPage() {
       {/* Profil */}
       {tab === "profil" && (
         <div className="bg-white rounded-xl shadow-sm border p-6">
-          <h2 className="text-lg font-semibold text-slate-800 mb-4">Profil Keuangan</h2>
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-lg font-semibold text-slate-800">Profil Keuangan</h2>
+            <button
+              onClick={autoFillProfile}
+              disabled={autoFillLoading}
+              className="flex items-center gap-2 bg-[#1e3a8a] hover:bg-[#1e40af] disabled:opacity-60 text-white px-4 py-2 rounded-xl text-sm font-semibold transition"
+            >
+              {autoFillLoading ? <Loader2 size={15} className="animate-spin" /> : <Sparkles size={15} />}
+              {autoFillLoading ? "Menghitung..." : "Generate dari Laporan"}
+            </button>
+          </div>
+          {autoFillMsg && (
+            <div className={`mb-4 text-xs px-4 py-3 rounded-xl border ${
+              autoFillMsg.startsWith("✓")
+                ? "bg-emerald-950/50 border-emerald-800 text-emerald-300"
+                : "bg-rose-950/50 border-rose-800 text-rose-300"
+            }`}>{autoFillMsg}</div>
+          )}
           <div className="grid md:grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-slate-700 mb-1">Pendapatan Bulanan</label>

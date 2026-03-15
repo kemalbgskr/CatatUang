@@ -1,35 +1,30 @@
-@import "tailwindcss";
 @import url("https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap");
+@import "tailwindcss";
 
 /* ============================
    Dark mode as DEFAULT
    ============================ */
 :root {
   --primary: #3b82f6;
-  --primary-mid: #60a5fa;
-  --primary-light: #93c5fd;
   --surface: #0f172a;
   --surface-2: #111827;
   --surface-3: #1e293b;
   --border: #1e293b;
   --border-2: #334155;
-  --text-1: #f1f5f9;
-  --text-2: #94a3b8;
-  --text-3: #475569;
+  --text-1: #ffffff;
+  --text-2: #e2e8f0;
+  --text-3: #cbd5e1;
   --shadow-card: 0 2px 20px 0 rgba(0,0,0,0.40);
-  --shadow-elevated: 0 8px 32px 0 rgba(0,0,0,0.50);
   --radius-lg: 1.5rem;
 }
 
 * { box-sizing: border-box; }
 
-html { background: #060c18; }
-html, html[data-theme="dark"] { background: #060c18; }
+html, body { background: #060c18; }
 
 body {
   font-family: "Plus Jakarta Sans", Arial, Helvetica, sans-serif;
   font-size: 15px;
-  background: #060c18;
   color: var(--text-1);
   min-height: 100vh;
   -webkit-font-smoothing: antialiased;
@@ -65,7 +60,7 @@ input:focus, select:focus, textarea:focus {
 ::-webkit-scrollbar-thumb:hover { background: #475569; }
 
 /* ============================
-   Tailwind overrides — force dark for all white/light classes
+   Tailwind overrides — force dark
    ============================ */
 .bg-white,
 .bg-white\/90,
@@ -81,16 +76,14 @@ input:focus, select:focus, textarea:focus {
   color: #e2e8f0 !important;
 }
 
-.bg-slate-200 {
-  background-color: #1e293b !important;
-}
+.bg-slate-200 { background-color: #1e293b !important; }
 
-.text-slate-900 { color: #f1f5f9 !important; }
-.text-slate-800 { color: #e2e8f0 !important; }
-.text-slate-700 { color: #cbd5e1 !important; }
-.text-slate-600 { color: #94a3b8 !important; }
-.text-slate-500 { color: #64748b !important; }
-.text-slate-400 { color: #475569 !important; }
+.text-slate-900 { color: #ffffff !important; }
+.text-slate-800 { color: #f1f5f9 !important; }
+.text-slate-700 { color: #e2e8f0 !important; }
+.text-slate-600 { color: #cbd5e1 !important; }
+.text-slate-500 { color: #94a3b8 !important; }
+.text-slate-400 { color: #94a3b8 !important; }
 
 .border-slate-100,
 .border-slate-200,
@@ -98,48 +91,32 @@ input:focus, select:focus, textarea:focus {
 .border { border-color: #1e293b !important; }
 
 table thead,
-table thead tr {
-  background-color: #111827 !important;
-}
+table thead tr { background-color: #111827 !important; }
 
-table tbody tr:hover {
-  background-color: #0c1220 !important;
-}
+table tbody tr:hover { background-color: #0c1220 !important; }
 
-/* Category tags / badges */
+/* Category tags */
 .bg-red-100 { background-color: #450a0a !important; }
 .bg-emerald-100 { background-color: #022c22 !important; }
 .bg-blue-100 { background-color: #0c1a3b !important; }
 .bg-indigo-100 { background-color: #1e1b4b !important; }
 .bg-amber-100 { background-color: #451a03 !important; }
 .bg-orange-100 { background-color: #431407 !important; }
-.bg-purple-100 { background-color: #2e1065 !important; }
 
 /* Info/error banners */
-.bg-blue-50 { background-color: #0c1a3b !important; color: #93c5fd !important; }
+.bg-blue-50 { background-color: #0c1a3b !important; }
 .bg-rose-50 { background-color: #2d0808 !important; }
-.bg-rose-100 { background-color: #3b0808 !important; }
 .bg-orange-50 { background-color: #2c0f03 !important; }
 .bg-amber-50 { background-color: #2c1003 !important; }
 .bg-indigo-50 { background-color: #1e1b4b !important; }
-.bg-green-50 { background-color: #022c22 !important; }
 
 .border-blue-200 { border-color: #1e3a8a !important; }
 .border-rose-100 { border-color: #7f1d1d !important; }
-.border-emerald-200 { border-color: #065f46 !important; }
-.border-orange-100 { border-color: #7c2d12 !important; }
-.border-amber-100 { border-color: #78350f !important; }
-.border-indigo-200 { border-color: #312e81 !important; }
 
-/* Category chip in pengeluaran */
-.bg-red-600 { } /* keep button red */
+/* Progress bar track */
+.bg-slate-100.rounded-full { background-color: #1e293b !important; }
 
-/* Progress bars */
-.bg-slate-100.rounded-full {
-  background-color: #1e293b !important;
-}
-
-/* Cards per halaman */
+/* Card component */
 .card {
   background: #0f172a;
   border-radius: var(--radius-lg);
@@ -148,9 +125,8 @@ table tbody tr:hover {
   padding: 1.5rem;
 }
 
-/* MailTo/button text color fix */
+/* Text color overrides for blue shades */
 .text-blue-600 { color: #60a5fa !important; }
 .text-blue-700 { color: #93c5fd !important; }
 .text-indigo-700 { color: #a5b4fc !important; }
-.text-indigo-500 { color: #818cf8 !important; }
 .text-blue-200 { color: #bfdbfe !important; }

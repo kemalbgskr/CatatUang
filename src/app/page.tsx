@@ -258,11 +258,11 @@ export default function Home() {
         {summaryCards.map((c) => (
           <div key={c.label} className="bg-white rounded-2xl p-5 flex flex-col gap-3 shadow-sm border border-slate-100">
             <div className="flex items-center justify-between">
-              <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">{c.label}</span>
+              <span className="text-xs font-bold text-white/70 uppercase tracking-wider">{c.label}</span>
               <div className={`w-9 h-9 rounded-xl ${c.iconBg} flex items-center justify-center`}>{c.icon}</div>
             </div>
             <p className={`text-xl font-black leading-tight ${c.valueColor}`}>{c.value}</p>
-            <p className="text-xs font-medium text-slate-400">{c.sub}</p>
+            <p className="text-xs font-medium text-white/60">{c.sub}</p>
           </div>
         ))}
       </div>
