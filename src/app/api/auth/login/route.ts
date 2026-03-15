@@ -16,7 +16,7 @@ export async function POST(req: Request) {
   res.cookies.set(AUTH_COOKIE_NAME, token, {
     httpOnly: true,
     sameSite: "lax",
-    secure: process.env.NODE_ENV === "production",
+    secure: false, // Set ke false agar bisa login di HTTP (non-SSL)
     path: "/",
     maxAge: 60 * 60 * 24 * 7,
   });
