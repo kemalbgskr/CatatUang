@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { recognize } from "tesseract.js";
 import { prisma } from "@/lib/prisma";
 import { readAISettings } from "@/lib/ai-settings";
+import { getAuthenticatedUser } from "@/lib/auth";
 
 export const runtime = "nodejs";
 
@@ -38,6 +39,9 @@ function parseJsonResult(raw: string) {
 }
 
 export async function POST(req: Request) {
+  const user = getAuthenticatedUser(req);
+  if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
   const formData = await req.formData();
   const file = formData.get("file");
 
@@ -54,14 +58,14 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Teks pada nota tidak terbaca." }, { status: 422 });
   }
 
-  const categories = await prisma.expenseCategory.findMany({ orderBy: { name: "asc" } });
+  const categories = await prisma.expenseCategory.findMany({ where: { userId: user.userId }, orderBy: { name: "asc" } });
   const fallbackAmount = parseAmountFromText(ocrText);
 
   let suggestedCategoryName = categories[0]?.name || "Lain-lain";
   let suggestedNote = `Catatan dari nota: ${ocrText.slice(0, 180)}`;
   let suggestedAmount = fallbackAmount || 0;
 
-  const settings = await readAISettings();
+  const settings = await readAISettings(user.userId);
   if (settings.apiKey && settings.baseUrl && settings.model && categories.length > 0) {
     const endpoint = settings.baseUrl.trim();
     const isResponsesApi = endpoint.includes("/openai/responses");

@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { readAISettings } from "@/lib/ai-settings";
+import { getAuthenticatedUser } from "@/lib/auth";
 
 type CategoryInput = { id: number; name: string };
 
@@ -41,6 +42,9 @@ function bestCategoryId(name: string | undefined, categories: CategoryInput[]) {
 }
 
 export async function POST(req: Request) {
+  const user = getAuthenticatedUser(req);
+  if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
   const body = await req.json();
   const ocrText = String(body.ocrText || "").trim();
   const categories = (body.categories || []) as CategoryInput[];
@@ -49,7 +53,7 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Teks OCR kosong." }, { status: 400 });
   }
 
-  const settings = await readAISettings();
+  const settings = await readAISettings(user.userId);
   const endpoint = settings.baseUrl.trim();
   const isResponsesApi = endpoint.includes("/openai/responses");
   const modelName = settings.model.toLowerCase();

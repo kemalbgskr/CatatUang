@@ -1,8 +1,12 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { getAuthenticatedUser } from "@/lib/auth";
 import * as xlsx from "xlsx";
 
 export async function POST(req: Request) {
+  const user = getAuthenticatedUser(req);
+  if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
   try {
     const formData = await req.formData();
     const file = formData.get("file") as File;
@@ -23,6 +27,7 @@ export async function POST(req: Request) {
     if (json.length < 2) {
       await prisma.bulkUploadHistory.create({
         data: {
+          userId: user.userId,
           type,
           fileName: file.name,
           rowsProcessed: 0,
@@ -76,11 +81,14 @@ export async function POST(req: Request) {
 
       try {
         if (type === "incomes") {
-          let cat = await prisma.incomeCategory.findUnique({ where: { name: safeCatName } });
-          if (!cat) cat = await prisma.incomeCategory.create({ data: { name: safeCatName } });
+          let cat = await prisma.incomeCategory.findUnique({
+            where: { userId_name: { userId: user.userId, name: safeCatName } }
+          });
+          if (!cat) cat = await prisma.incomeCategory.create({ data: { userId: user.userId, name: safeCatName } });
           
           await prisma.income.create({
             data: {
+              userId: user.userId,
               date: parsedDate,
               categoryId: cat.id,
               description: String(desc),
@@ -88,11 +96,14 @@ export async function POST(req: Request) {
             }
           });
         } else {
-          let cat = await prisma.expenseCategory.findUnique({ where: { name: safeCatName } });
-          if (!cat) cat = await prisma.expenseCategory.create({ data: { name: safeCatName } });
+          let cat = await prisma.expenseCategory.findUnique({
+            where: { userId_name: { userId: user.userId, name: safeCatName } }
+          });
+          if (!cat) cat = await prisma.expenseCategory.create({ data: { userId: user.userId, name: safeCatName } });
           
           await prisma.expense.create({
             data: {
+              userId: user.userId,
               date: parsedDate,
               categoryId: cat.id,
               description: String(desc),
@@ -111,6 +122,7 @@ export async function POST(req: Request) {
 
     const history = await prisma.bulkUploadHistory.create({
       data: {
+        userId: user.userId,
         type,
         fileName: file.name,
         rowsProcessed: successCount,

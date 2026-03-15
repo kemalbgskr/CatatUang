@@ -1,7 +1,11 @@
 import { prisma } from "@/lib/prisma";
 import { NextResponse } from "next/server";
+import { getAuthenticatedUser } from "@/lib/auth";
 
 export async function GET(req: Request) {
+  const user = getAuthenticatedUser(req);
+  if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
   const { searchParams } = new URL(req.url);
   const month = searchParams.get("month"); // format: YYYY-MM
 
@@ -15,14 +19,14 @@ export async function GET(req: Request) {
     budgets,
     receivablePersons,
   ] = await Promise.all([
-    prisma.income.findMany({ include: { category: true }, orderBy: { date: "asc" } }),
-    prisma.expense.findMany({ include: { category: true }, orderBy: { date: "asc" } }),
-    prisma.debtSource.findMany(),
-    prisma.debtPayment.findMany({ include: { debtSource: true } }),
-    prisma.debtLoan.findMany({ include: { debtSource: true } }),
-    prisma.financialProfile.findFirst(),
-    prisma.budget.findMany({ include: { category: true } }),
-    prisma.receivablePerson.findMany({ include: { receivables: true } }),
+    prisma.income.findMany({ where: { userId: user.userId }, include: { category: true }, orderBy: { date: "asc" } }),
+    prisma.expense.findMany({ where: { userId: user.userId }, include: { category: true }, orderBy: { date: "asc" } }),
+    prisma.debtSource.findMany({ where: { userId: user.userId } }),
+    prisma.debtPayment.findMany({ where: { debtSource: { userId: user.userId } }, include: { debtSource: true } }),
+    prisma.debtLoan.findMany({ where: { debtSource: { userId: user.userId } }, include: { debtSource: true } }),
+    prisma.financialProfile.findUnique({ where: { userId: user.userId } }),
+    prisma.budget.findMany({ where: { userId: user.userId }, include: { category: true } }),
+    prisma.receivablePerson.findMany({ where: { userId: user.userId }, include: { receivables: true } }),
   ]);
 
   const filterMonth = (date: Date, m: string) => {

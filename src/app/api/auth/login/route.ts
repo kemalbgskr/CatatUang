@@ -1,18 +1,18 @@
 import { NextResponse } from "next/server";
-import { AUTH_COOKIE_NAME, createAuthToken, getLoginCredentials } from "@/lib/auth";
+import { AUTH_COOKIE_NAME, createAuthToken, validateLogin } from "@/lib/auth";
 
 export async function POST(req: Request) {
   const body = await req.json();
   const username = String(body.username || "");
   const password = String(body.password || "");
 
-  const creds = getLoginCredentials();
-  if (username !== creds.username || password !== creds.password) {
+  const user = await validateLogin(username, password);
+  if (!user) {
     return NextResponse.json({ error: "Username atau password salah" }, { status: 401 });
   }
 
   const res = NextResponse.json({ ok: true });
-  const token = createAuthToken(username);
+  const token = createAuthToken(user.id, user.username, user.role);
   res.cookies.set(AUTH_COOKIE_NAME, token, {
     httpOnly: true,
     sameSite: "lax",

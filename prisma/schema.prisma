@@ -6,105 +6,169 @@ datasource db {
   provider = "postgresql"
 }
 
+model User {
+  id        Int      @id @default(autoincrement())
+  username  String   @unique
+  password  String
+  role      String   @default("USER") // ADMIN or USER
+  createdAt DateTime @default(now())
+
+  incomeCategories  IncomeCategory[]
+  expenseCategories ExpenseCategory[]
+  incomes           Income[]
+  expenses          Expense[]
+  debtSources       DebtSource[]
+  debtLoans         DebtLoan[]
+  debtPayments      DebtPayment[]
+  receivablePersons ReceivablePerson[]
+  receivables       Receivable[]
+  budgets           Budget[]
+  financialProfile  FinancialProfile?
+  aiSettings        AISettings?
+  bulkUploadHistory BulkUploadHistory[]
+}
+
 model IncomeCategory {
   id      Int      @id @default(autoincrement())
-  name    String   @unique
+  userId  Int
+  name    String
   incomes Income[]
+  user    User     @relation(fields: [userId], references: [id])
+
+  @@unique([userId, name])
 }
 
 model ExpenseCategory {
   id       Int       @id @default(autoincrement())
-  name     String    @unique
+  userId   Int
+  name     String
   expenses Expense[]
   budgets  Budget[]
+  user     User      @relation(fields: [userId], references: [id])
+
+  @@unique([userId, name])
 }
 
 model Income {
   id          Int            @id @default(autoincrement())
+  userId      Int
   date        DateTime
   categoryId  Int
   description String
   amount      Float
   createdAt   DateTime       @default(now())
-  category IncomeCategory @relation(fields: [categoryId], references: [id])
+  category    IncomeCategory @relation(fields: [categoryId], references: [id])
+  user        User           @relation(fields: [userId], references: [id])
 }
 
 model Expense {
   id          Int             @id @default(autoincrement())
+  userId      Int
   date        DateTime
   categoryId  Int
   description String
   amount      Float
   createdAt   DateTime        @default(now())
-  category ExpenseCategory @relation(fields: [categoryId], references: [id])
+  category    ExpenseCategory @relation(fields: [categoryId], references: [id])
+  user        User            @relation(fields: [userId], references: [id])
 }
 
 model DebtSource {
   id            Int           @id @default(autoincrement())
-  name          String        @unique
+  userId        Int
+  name          String
   initialAmount Float         @default(0)
   loans         DebtLoan[]
   payments      DebtPayment[]
+  user          User          @relation(fields: [userId], references: [id])
+
+  @@unique([userId, name])
 }
 
 model DebtLoan {
   id           Int        @id @default(autoincrement())
+  userId       Int
   date         DateTime
   debtSourceId Int
   amount       Float
   description  String     @default("")
   createdAt    DateTime   @default(now())
-  debtSource DebtSource @relation(fields: [debtSourceId], references: [id])
+  debtSource   DebtSource @relation(fields: [debtSourceId], references: [id])
+  user         User       @relation(fields: [userId], references: [id])
 }
 
 model DebtPayment {
   id           Int        @id @default(autoincrement())
+  userId       Int
   date         DateTime
   debtSourceId Int
   amount       Float
   description  String     @default("")
   createdAt    DateTime   @default(now())
-  debtSource DebtSource @relation(fields: [debtSourceId], references: [id])
+  debtSource   DebtSource @relation(fields: [debtSourceId], references: [id])
+  user         User       @relation(fields: [userId], references: [id])
 }
 
 model ReceivablePerson {
   id          Int          @id @default(autoincrement())
-  name        String       @unique
+  userId      Int
+  name        String
   receivables Receivable[]
+  user        User         @relation(fields: [userId], references: [id])
+
+  @@unique([userId, name])
 }
 
 model Receivable {
   id        Int              @id @default(autoincrement())
+  userId    Int
   date      DateTime
   personId  Int
   amount    Float
   type      String           // "given" or "received"
   createdAt DateTime         @default(now())
-  person  ReceivablePerson @relation(fields: [personId], references: [id])
+  person    ReceivablePerson @relation(fields: [personId], references: [id])
+  user      User             @relation(fields: [userId], references: [id])
 }
 
 model Budget {
   id            Int             @id @default(autoincrement())
+  userId        Int
   categoryId    Int             @unique
   monthlyAmount Float
   category      ExpenseCategory @relation(fields: [categoryId], references: [id])
+  user          User            @relation(fields: [userId], references: [id])
 }
 
 model FinancialProfile {
   id             Int       @id @default(autoincrement())
+  userId         Int       @unique
   monthlyIncome  Float     @default(0)
   monthlyExpense Float     @default(0)
   birthDate      DateTime?
   retirementAge  Int       @default(60)
   inheritanceAge Int       @default(80)
+  user           User      @relation(fields: [userId], references: [id])
+}
+
+model AISettings {
+  id           Int    @id @default(autoincrement())
+  userId       Int    @unique
+  baseUrl      String @default("https://api.openai.com/v1")
+  model        String @default("gpt-4o-mini")
+  apiKey       String @default("")
+  systemPrompt String @default("Kamu adalah analis keuangan pribadi berbahasa Indonesia. Berikan rekomendasi yang praktis, jelas, terukur, dan berurutan berdasarkan data keuangan pengguna.")
+  user         User   @relation(fields: [userId], references: [id])
 }
 
 model BulkUploadHistory {
   id            Int      @id @default(autoincrement())
+  userId        Int
   createdAt     DateTime @default(now())
   type          String   // "incomes" | "expenses"
   fileName      String
   rowsProcessed Int
   status        String   // "success" | "partial" | "failed"
   message       String?
+  user          User     @relation(fields: [userId], references: [id])
 }

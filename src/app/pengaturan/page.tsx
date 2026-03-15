@@ -9,6 +9,8 @@ interface ExpenseCategory { id: number; name: string; }
 interface Budget { id: number; categoryId: number; monthlyAmount: number; category: ExpenseCategory; }
 interface Profile { id: number; monthlyIncome: number; monthlyExpense: number; birthDate: string | null; retirementAge: number; inheritanceAge: number; }
 interface AISettings { baseUrl: string; model: string; apiKey: string; systemPrompt: string; }
+interface UserData { id: number; username: string; role: string; createdAt: string; }
+interface Session { authenticated: boolean; userId: number; username: string; role: string; }
 
 export default function PengaturanPage() {
   const [incomeCats, setIncomeCats] = useState<IncomeCategory[]>([]);
@@ -27,7 +29,7 @@ export default function PengaturanPage() {
   const [aiBudgetError, setAiBudgetError] = useState("");
   const [autoFillLoading, setAutoFillLoading] = useState(false);
   const [autoFillMsg, setAutoFillMsg] = useState("");
-  const [tab, setTab] = useState<"kategori" | "budget" | "profil" | "ai" | "webhook" | "bulk">("kategori");
+  const [tab, setTab] = useState<"kategori" | "budget" | "profil" | "ai" | "webhook" | "bulk" | "users">("kategori");
   const [aiSettings, setAiSettings] = useState<AISettings>({
     baseUrl: "https://api.openai.com/v1",
     model: "gpt-4o-mini",
@@ -40,6 +42,12 @@ export default function PengaturanPage() {
   const [bulkFile, setBulkFile] = useState<File | null>(null);
   const [bulkLoading, setBulkLoading] = useState(false);
   const [bulkMessage, setBulkMessage] = useState("");
+  
+  const [session, setSession] = useState<Session | null>(null);
+  const [users, setUsers] = useState<UserData[]>([]);
+  const [userForm, setUserForm] = useState({ username: "", password: "", role: "USER" });
+  const [userLoading, setUserLoading] = useState(false);
+  const [editingUserId, setEditingUserId] = useState<number | null>(null);
 
   const load = useCallback(() => {
     fetch("/api/income-categories").then(r => r.json()).then(setIncomeCats);
@@ -48,6 +56,12 @@ export default function PengaturanPage() {
     fetch("/api/profile").then(r => r.json()).then(setProfile);
     fetch("/api/ai-settings").then(r => r.json()).then(setAiSettings);
     fetch("/api/bulk/history").then(r => r.json()).then(setBulkHistory);
+    fetch("/api/auth/me").then(r => r.json()).then(data => {
+      setSession(data);
+      if (data.role === "ADMIN") {
+        fetch("/api/users").then(r => r.json()).then(setUsers);
+      }
+    });
   }, []);
 
   useEffect(() => { load(); }, [load]);
@@ -101,12 +115,47 @@ export default function PengaturanPage() {
   };
 
   const saveAISettings = async () => {
-    await fetch("/api/ai-settings", {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(aiSettings),
-    });
+    await fetch("/api/ai-settings",
+      { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify(aiSettings) });
     alert("Konfigurasi AI tersimpan!");
+  };
+
+  const saveUser = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setUserLoading(true);
+    try {
+      const url = editingUserId ? `/api/users/${editingUserId}` : "/api/users";
+      const method = editingUserId ? "PUT" : "POST";
+      const res = await fetch(url, {
+        method,
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(userForm),
+      });
+      if (!res.ok) {
+        const data = await res.json();
+        alert(data.error || "Gagal menyimpan user");
+      } else {
+        setUserForm({ username: "", password: "", role: "USER" });
+        setEditingUserId(null);
+        fetch("/api/users").then(r => r.json()).then(setUsers);
+      }
+    } catch {
+      alert("Terjadi kesalahan jaringan.");
+    } finally {
+      setUserLoading(false);
+    }
+  };
+
+  const deleteUser = async (id: number) => {
+    if (id === session?.userId) return alert("Anda tidak bisa menghapus diri sendiri.");
+    if (!confirm("Hapus user ini? Catatan keuangannya tidak akan ikut terhapus otomatis di sistem ini (perlu pembersihan manual di DB).")) return;
+    const res = await fetch(`/api/users/${id}`, { method: "DELETE" });
+    if (res.ok) {
+      fetch("/api/users").then(r => r.json()).then(setUsers);
+    } else {
+      const data = await res.json();
+      alert(data.error || "Gagal menghapus user");
+    }
   };
 
   const generateAIBudget = async () => {
@@ -152,6 +201,7 @@ export default function PengaturanPage() {
     { key: "ai" as const, label: "AI" },
     { key: "webhook" as const, label: "Webhook (Bot)" },
     { key: "bulk" as const, label: "Bulk Data" },
+    ...(session?.role === "ADMIN" ? [{ key: "users" as const, label: "User Management" }] : []),
   ];
 
   return (
@@ -541,6 +591,119 @@ export default function PengaturanPage() {
                   {bulkHistory.length === 0 && (
                     <tr><td colSpan={5} className="px-4 py-8 text-center text-slate-400">Belum ada histori upload</td></tr>
                   )}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* User Management (Admin Only) */}
+      {tab === "users" && session?.role === "ADMIN" && (
+        <div className="space-y-6">
+          <div className="bg-white rounded-xl shadow-sm border p-6">
+            <h2 className="text-lg font-semibold text-slate-800 mb-4">
+              {editingUserId ? "Edit User" : "Tambah User Baru"}
+            </h2>
+            <form onSubmit={saveUser} className="grid md:grid-cols-3 gap-4 items-end">
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">Username</label>
+                <input
+                  type="text"
+                  required
+                  value={userForm.username}
+                  onChange={e => setUserForm({ ...userForm, username: e.target.value })}
+                  className="w-full border rounded-lg px-3 py-2 text-sm"
+                  placeholder="Username"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">
+                  Password {editingUserId && "(Kosongkan jika tidak ganti)"}
+                </label>
+                <input
+                  type="password"
+                  required={!editingUserId}
+                  value={userForm.password}
+                  onChange={e => setUserForm({ ...userForm, password: e.target.value })}
+                  className="w-full border rounded-lg px-3 py-2 text-sm"
+                  placeholder="Password"
+                />
+              </div>
+              <div className="flex gap-2">
+                <div className="flex-1">
+                  <label className="block text-sm font-medium text-slate-700 mb-1">Role</label>
+                  <select
+                    value={userForm.role}
+                    onChange={e => setUserForm({ ...userForm, role: e.target.value })}
+                    className="w-full border rounded-lg px-3 py-2 text-sm"
+                  >
+                    <option value="USER">USER</option>
+                    <option value="ADMIN">ADMIN</option>
+                  </select>
+                </div>
+                <button
+                  type="submit"
+                  disabled={userLoading}
+                  className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium disabled:opacity-50 h-[38px]"
+                >
+                  {editingUserId ? "Update" : "Daftar"}
+                </button>
+                {editingUserId && (
+                  <button
+                    type="button"
+                    onClick={() => { setEditingUserId(null); setUserForm({ username: "", password: "", role: "USER" }); }}
+                    className="bg-slate-200 hover:bg-slate-300 text-slate-700 px-3 py-2 rounded-lg text-sm font-medium h-[38px]"
+                  >
+                    Batal
+                  </button>
+                )}
+              </div>
+            </form>
+          </div>
+
+          <div className="bg-white rounded-xl shadow-sm border p-6">
+            <h2 className="text-lg font-semibold text-slate-800 mb-4">Daftar Pengguna</h2>
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm text-left">
+                <thead className="bg-slate-50 text-slate-500 uppercase text-xs">
+                  <tr>
+                    <th className="px-4 py-2 rounded-l-lg">Username</th>
+                    <th className="px-4 py-2">Role</th>
+                    <th className="px-4 py-2">Terdaftar</th>
+                    <th className="px-4 py-2 rounded-r-lg text-right">Aksi</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y">
+                  {users.map(u => (
+                    <tr key={u.id}>
+                      <td className="px-4 py-3 font-medium text-slate-700">{u.username} {u.id === session?.userId && "(Anda)"}</td>
+                      <td className="px-4 py-3">
+                        <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${u.role === "ADMIN" ? "bg-purple-100 text-purple-700" : "bg-blue-100 text-blue-700"}`}>
+                          {u.role}
+                        </span>
+                      </td>
+                      <td className="px-4 py-3 text-slate-500">{new Date(u.createdAt).toLocaleDateString("id-ID")}</td>
+                      <td className="px-4 py-3 text-right space-x-2">
+                        <button
+                          onClick={() => {
+                            setEditingUserId(u.id);
+                            setUserForm({ username: u.username, password: "", role: u.role });
+                          }}
+                          className="text-blue-600 hover:text-blue-800"
+                        >
+                          <Edit2 size={16} />
+                        </button>
+                        <button
+                          onClick={() => deleteUser(u.id)}
+                          disabled={u.id === session?.userId}
+                          className="text-slate-400 hover:text-red-600 disabled:opacity-30"
+                        >
+                          <Trash2 size={16} />
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
                 </tbody>
               </table>
             </div>

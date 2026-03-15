@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { readAISettings } from "@/lib/ai-settings";
+import { getAuthenticatedUser } from "@/lib/auth";
 
 function monthOf(date: Date) {
   const d = new Date(date);
@@ -9,13 +10,12 @@ function monthOf(date: Date) {
 
 /**
  * POST /api/ai/budget
- * Menganalisis data pengeluaran 3 bulan terakhir + profil keuangan,
- * lalu meminta AI menyarankan budget per kategori sesuai teori umum (50/30/20, dll).
- * AI wajib merespons dalam JSON.
- * Setelah dapat respons, langsung simpan ke tabel Budget.
  */
-export async function POST() {
-  const settings = await readAISettings();
+export async function POST(req: Request) {
+  const user = getAuthenticatedUser(req);
+  if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
+  const settings = await readAISettings(user.userId);
   if (!settings.apiKey || !settings.baseUrl || !settings.model) {
     return NextResponse.json(
       { error: "AI belum dikonfigurasi. Isi API Key, Base URL, dan Model di Pengaturan > AI." },
@@ -29,17 +29,17 @@ export async function POST() {
 
   const [expenses, incomes, expenseCats, profile] = await Promise.all([
     prisma.expense.findMany({
-      where: { date: { gte: threeMonthsAgo } },
+      where: { userId: user.userId, date: { gte: threeMonthsAgo } },
       include: { category: true },
       orderBy: { date: "asc" },
     }),
     prisma.income.findMany({
-      where: { date: { gte: threeMonthsAgo } },
+      where: { userId: user.userId, date: { gte: threeMonthsAgo } },
       include: { category: true },
       orderBy: { date: "asc" },
     }),
-    prisma.expenseCategory.findMany(),
-    prisma.financialProfile.findFirst(),
+    prisma.expenseCategory.findMany({ where: { userId: user.userId } }),
+    prisma.financialProfile.findUnique({ where: { userId: user.userId } }),
   ]);
 
   // Hitung rata-rata pengeluaran per kategori per bulan
@@ -79,35 +79,18 @@ export async function POST() {
   const systemPrompt = settings.systemPrompt;
 
   const userPrompt = `Kamu adalah perencana keuangan profesional Indonesia.
-
-Berdasarkan data pengeluaran 3 bulan terakhir pengguna, buatkan rekomendasi budget bulanan realistis per kategori menggunakan teori keuangan yang sesuai (50/30/20, envelope budgeting, atau zero-based budgeting — pilih yang paling cocok dengan kondisi pengguna).
-
+Berdasarkan data pengeluaran 3 bulan terakhir pengguna, buatkan rekomendasi budget bulanan realistis per kategori menggunakan teori keuangan yang sesuai.
 Data pengguna:
 ${JSON.stringify(payload, null, 2)}
-
-PENTING:
-- Budget harus realistis berdasarkan rata-rata pengeluaran aktual
-- Jika suatu kategori tampak terlalu tinggi, berikan sedikit pengurangan (maks 20%) untuk mendorong efisiensi
-- Jika pendapatan mencukupi, alokasikan juga untuk tabungan/investasi dalam kategori yang ada
-- Gunakan istilah Indonesia untuk teori yang dipakai
-- Sebutkan teori yang kamu pakai dan alasannya
-
-Balas HANYA dalam JSON array berikut (tanpa komentar tambahan):
+Balas HANYA dalam JSON:
 {
-  "theory": "nama teori yang dipakai",
-  "reason": "alasan singkat pemilihan teori ini (1-2 kalimat)",
-  "budgets": [
-    { "category": "nama kategori persis", "amount": angka_integer, "note": "catatan singkat" }
-  ]
-}
-
-Hanya sertakan kategori yang ada di expenseCategories. Jumlah dalam Rupiah (integer, tanpa desimal).`;
+  "theory": "nama teori",
+  "reason": "alasan",
+  "budgets": [ { "category": "nama kategori", "amount": angka_integer, "note": "catatan" } ]
+}`;
 
   const endpoint = settings.baseUrl.trim();
   const isResponsesApi = endpoint.includes("/openai/responses");
-  const modelName = settings.model.toLowerCase();
-  const supportsTemperature = !modelName.includes("gpt-5");
-
   const headers: Record<string, string> = { "Content-Type": "application/json" };
   if (isResponsesApi) headers["api-key"] = settings.apiKey;
   else headers.Authorization = `Bearer ${settings.apiKey}`;
@@ -115,18 +98,16 @@ Hanya sertakan kategori yang ada di expenseCategories. Jumlah dalam Rupiah (inte
   const requestBody = isResponsesApi
     ? {
         model: settings.model,
-        ...(supportsTemperature ? { temperature: 0.2 } : {}),
         input: [
-          { role: "system", content: [{ type: "input_text", text: systemPrompt }] },
-          { role: "user", content: [{ type: "input_text", text: userPrompt }] },
+            { role: "system", content: [{ type: "input_text", text: systemPrompt }] },
+            { role: "user", content: [{ type: "input_text", text: userPrompt }] },
         ],
       }
     : {
         model: settings.model,
-        ...(supportsTemperature ? { temperature: 0.2 } : {}),
         messages: [
-          { role: "system", content: systemPrompt },
-          { role: "user", content: userPrompt },
+            { role: "system", content: systemPrompt },
+            { role: "user", content: userPrompt },
         ],
         response_format: { type: "json_object" },
       };
@@ -136,49 +117,30 @@ Hanya sertakan kategori yang ada di expenseCategories. Jumlah dalam Rupiah (inte
     { method: "POST", headers, body: JSON.stringify(requestBody) }
   );
 
-  if (!aiRes.ok) {
-    const text = await aiRes.text();
-    return NextResponse.json({ error: `Gagal memanggil AI: ${text}` }, { status: 500 });
-  }
-
+  if (!aiRes.ok) return NextResponse.json({ error: "Gagal memanggil AI" }, { status: 500 });
   const aiResult = await aiRes.json();
-  const rawText = isResponsesApi
-    ? aiResult?.output_text ||
-      aiResult?.output
-        ?.flatMap((item: { content?: Array<{ text?: string }> }) => item.content || [])
-        ?.map((c: { text?: string }) => c.text || "")
-        ?.join("\n")
-    : aiResult?.choices?.[0]?.message?.content || "";
+  const rawText = isResponsesApi ? (aiResult?.output_text || "") : (aiResult?.choices?.[0]?.message?.content || "");
 
-  // Parse JSON dari respons AI
   let parsed: { theory: string; reason: string; budgets: { category: string; amount: number; note: string }[] };
   try {
-    // Coba parse langsung, atau cari blok JSON dalam teks
     const jsonMatch = rawText.match(/\{[\s\S]*\}/);
     parsed = JSON.parse(jsonMatch ? jsonMatch[0] : rawText);
   } catch {
-    return NextResponse.json(
-      { error: "AI tidak merespons dalam format JSON yang valid. Coba lagi.", raw: rawText },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: "AI tidak merespons JSON valid" }, { status: 500 });
   }
 
-  if (!Array.isArray(parsed.budgets)) {
-    return NextResponse.json(
-      { error: "Format respons AI tidak valid (tidak ada array budgets).", raw: rawText },
-      { status: 500 }
-    );
-  }
-
-  // Simpan budget ke database: upsert per kategori
   const savedBudgets: { category: string; amount: number; note: string }[] = [];
   for (const b of parsed.budgets) {
-    const cat = await prisma.expenseCategory.findFirst({ where: { name: b.category } });
+    const cat = await prisma.expenseCategory.findUnique({
+      where: { userId_name: { userId: user.userId, name: b.category } }
+    });
     if (!cat || !b.amount || b.amount <= 0) continue;
 
-    // Hapus budget lama untuk kategori ini jika ada, lalu buat baru
-    await prisma.budget.deleteMany({ where: { categoryId: cat.id } });
-    await prisma.budget.create({ data: { categoryId: cat.id, monthlyAmount: Math.round(b.amount) } });
+    await prisma.budget.upsert({
+      where: { categoryId: cat.id },
+      create: { userId: user.userId, categoryId: cat.id, monthlyAmount: Math.round(b.amount) },
+      update: { monthlyAmount: Math.round(b.amount) }
+    });
     savedBudgets.push({ category: b.category, amount: Math.round(b.amount), note: b.note || "" });
   }
 

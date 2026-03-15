@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { readAISettings } from "@/lib/ai-settings";
 import { writeSavedAIAnalysis } from "@/lib/ai-analysis";
+import { getAuthenticatedUser } from "@/lib/auth";
 
 function monthOf(date: Date) {
   const d = new Date(date);
@@ -22,10 +23,13 @@ function levelExplanation(level: number) {
 }
 
 export async function POST(req: Request) {
+  const user = getAuthenticatedUser(req);
+  if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
   const { searchParams } = new URL(req.url);
   const selectedMonth = searchParams.get("month") || new Date().toISOString().slice(0, 7);
 
-  const settings = await readAISettings();
+  const settings = await readAISettings(user.userId);
   if (!settings.apiKey || !settings.baseUrl || !settings.model) {
     return NextResponse.json(
       { error: "AI belum dikonfigurasi. Isi API Key, Base URL, dan Model di Pengaturan > AI." },
@@ -43,14 +47,14 @@ export async function POST(req: Request) {
     debtPayments,
     receivablePersons,
   ] = await Promise.all([
-    prisma.financialProfile.findFirst(),
-    prisma.income.findMany({ include: { category: true }, orderBy: { date: "asc" } }),
-    prisma.expense.findMany({ include: { category: true }, orderBy: { date: "asc" } }),
-    prisma.budget.findMany({ include: { category: true } }),
-    prisma.debtSource.findMany(),
-    prisma.debtLoan.findMany(),
-    prisma.debtPayment.findMany(),
-    prisma.receivablePerson.findMany({ include: { receivables: true } }),
+    prisma.financialProfile.findUnique({ where: { userId: user.userId } }),
+    prisma.income.findMany({ where: { userId: user.userId }, include: { category: true }, orderBy: { date: "asc" } }),
+    prisma.expense.findMany({ where: { userId: user.userId }, include: { category: true }, orderBy: { date: "asc" } }),
+    prisma.budget.findMany({ where: { userId: user.userId }, include: { category: true } }),
+    prisma.debtSource.findMany({ where: { userId: user.userId } }),
+    prisma.debtLoan.findMany({ where: { userId: user.userId } }),
+    prisma.debtPayment.findMany({ where: { userId: user.userId } }),
+    prisma.receivablePerson.findMany({ where: { userId: user.userId }, include: { receivables: true } }),
   ]);
 
   const incomesMonth = incomes.filter((i) => monthOf(i.date) === selectedMonth);
@@ -220,7 +224,7 @@ export async function POST(req: Request) {
   ];
 
   const generatedAt = new Date().toISOString();
-  await writeSavedAIAnalysis({
+  await writeSavedAIAnalysis(user.userId, {
     month: selectedMonth,
     generatedAt,
     level,
