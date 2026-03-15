@@ -51,8 +51,18 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Format 'date' tidak valid. Gunakan YYYY-MM-DD." }, { status: 400 });
   }
 
+  // === Default User Mapping ===
+  // Karena webhook mungkin datang tanpa session user, kita default ke user pertama (misal ADMIN)
+  const defaultUser = await prisma.user.findFirst({ where: { role: "ADMIN" } }) || await prisma.user.findFirst();
+  if (!defaultUser) {
+    return NextResponse.json({ error: "System requires at least one user." }, { status: 500 });
+  }
+
   // === Category matching ===
-  const categories = await prisma.expenseCategory.findMany({ orderBy: { name: "asc" } });
+  const categories = await prisma.expenseCategory.findMany({
+    where: { userId: defaultUser.id },
+    orderBy: { name: "asc" },
+  });
   if (categories.length === 0) {
     return NextResponse.json({ error: "Belum ada kategori pengeluaran. Tambahkan dulu di Pengaturan." }, { status: 400 });
   }
@@ -75,6 +85,7 @@ export async function POST(req: Request) {
   // === Simpan ===
   const expense = await prisma.expense.create({
     data: {
+      userId: defaultUser.id,
       date,
       categoryId: matchedCategory.id,
       description,
@@ -86,7 +97,7 @@ export async function POST(req: Request) {
   return NextResponse.json({
     ok: true,
     id: expense.id,
-    category: expense.category.name,
+    category: expense.category?.name || "Lain-lain",
     amount: expense.amount,
     description: expense.description,
     date: expense.date.toISOString().split("T")[0],

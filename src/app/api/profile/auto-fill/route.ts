@@ -1,15 +1,21 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { getAuthenticatedUser } from "@/lib/auth";
 
 /**
  * POST /api/profile/auto-fill
  * Hitung rata-rata pendapatan dan pengeluaran bulanan dari semua data transaksi,
  * lalu simpan ke profil keuangan.
  */
-export async function POST() {
+export async function POST(req: Request) {
+  const user = getAuthenticatedUser(req);
+  if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
+  const userId = user.userId;
+
   const [incomes, expenses] = await Promise.all([
-    prisma.income.findMany({ orderBy: { date: "asc" } }),
-    prisma.expense.findMany({ orderBy: { date: "asc" } }),
+    prisma.income.findMany({ where: { userId }, orderBy: { date: "asc" } }),
+    prisma.expense.findMany({ where: { userId }, orderBy: { date: "asc" } }),
   ]);
 
   function monthOf(date: Date) {
@@ -46,15 +52,15 @@ export async function POST() {
     : 0;
 
   // Upsert profile
-  const existing = await prisma.financialProfile.findFirst();
+  const existing = await prisma.financialProfile.findUnique({ where: { userId } });
   if (existing) {
     await prisma.financialProfile.update({
-      where: { id: existing.id },
+      where: { userId },
       data: { monthlyIncome: avgIncome, monthlyExpense: avgExpense },
     });
   } else {
     await prisma.financialProfile.create({
-      data: { monthlyIncome: avgIncome, monthlyExpense: avgExpense, retirementAge: 60, inheritanceAge: 80 },
+      data: { userId, monthlyIncome: avgIncome, monthlyExpense: avgExpense, retirementAge: 60, inheritanceAge: 80 },
     });
   }
 
