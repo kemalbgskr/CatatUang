@@ -219,7 +219,7 @@ export default function PengeluaranPage() {
               {expenses.map(e => (
                 <tr key={e.id} className="hover:bg-slate-50">
                   <td className="px-4 py-3 text-slate-700 font-medium">{formatDate(e.date)}</td>
-                  <td className="px-4 py-3"><span className="bg-red-100 text-red-700 px-2 py-0.5 rounded-full text-xs">{e.category.name}</span></td>
+                  <td className="px-4 py-3"><span className="bg-blue-900/50 text-blue-200 border border-blue-800/40 px-2 py-0.5 rounded-full text-xs">{e.category.name}</span></td>
                   <td className="px-4 py-3 text-slate-700">{e.description}</td>
                   <td className="px-4 py-3 text-right font-medium text-red-600">{formatRupiah(e.amount)}</td>
                   <td className="px-4 py-3"><button onClick={() => remove(e.id)} className="text-red-400 hover:text-red-600"><Trash2 size={16} /></button></td>
