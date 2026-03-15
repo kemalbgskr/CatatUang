@@ -1,13 +1,28 @@
 version: '3.8'
 
 services:
+  db:
+    image: postgres:15-alpine
+    restart: always
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: pencatat_keuangan
+    ports:
+      - "5432:5432"
+    volumes:
+      - db_data:/var/lib/postgresql/data
+
   web:
     build: .
     ports:
       - "3000:3000"
-    volumes:
-      - ./data:/app/data
+    depends_on:
+      - db
     environment:
-      - DATABASE_URL=file:/app/data/dev.db
+      - DATABASE_URL=postgresql://postgres:password@db:5432/pencatat_keuangan?schema=public
       - WEBHOOK_API_KEY=sk_Y7Pq4lyrN8wX66X7Oqla137r8iMKAEkC
     restart: unless-stopped
+
+volumes:
+  db_data:
