@@ -82,10 +82,6 @@ export default function LoginPage() {
             {loading ? "Memproses..." : "Masuk"}
           </button>
         </form>
-
-        <p className="text-xs text-slate-400 mt-4">
-          Default login: username <strong>admin</strong>, password <strong>admin123</strong> (bisa diganti via env).
-        </p>
       </div>
     </div>
   );

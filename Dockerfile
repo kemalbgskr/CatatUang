@@ -39,6 +39,7 @@ RUN mkdir -p /app/.next/cache && chown nextjs:nodejs /app/.next/cache
 
 COPY --from=builder /app/public ./public
 COPY --from=builder /app/prisma ./prisma
+COPY --from=builder /app/prisma.config.ts ./prisma.config.ts
 # Prisma needs querying engines which usually get placed in .next/standalone/node_modules
 # but better to copy the whole node_modules from builder to be safe or rely on standalone mode.
 # Below copies the generated standalone directories from next build.
