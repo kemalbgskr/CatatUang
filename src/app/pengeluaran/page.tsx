@@ -2,7 +2,7 @@
 import { useEffect, useState, useCallback } from "react";
 import { useRef } from "react";
 import { formatRupiah, formatDate, getCurrentMonth } from "@/lib/utils";
-import { Plus, Trash2, Upload, Loader2 } from "lucide-react";
+import { Plus, Trash2, Upload, Loader2, Edit2, Check, X } from "lucide-react";
 import MonthYearPicker from "@/components/MonthYearPicker";
 import Modal from "@/components/Modal";
 
@@ -23,6 +23,9 @@ export default function PengeluaranPage() {
   const [ocrPreview, setOcrPreview] = useState("");
   const [submitError, setSubmitError] = useState("");
   const fileInputRef = useRef<HTMLInputElement | null>(null);
+  
+  const [editId, setEditId] = useState<number | null>(null);
+  const [editForm, setEditForm] = useState({ date: "", categoryId: "", description: "", amount: "" });
 
   const load = useCallback(() => {
     fetch("/api/expenses?month=" + month).then(r => r.json()).then(setExpenses);
@@ -91,6 +94,31 @@ export default function PengeluaranPage() {
   const remove = async (id: number) => {
     if (!confirm("Hapus pengeluaran ini?")) return;
     await fetch("/api/expenses/" + id, { method: "DELETE" });
+    load();
+  };
+
+  const startEdit = (e: Expense) => {
+    setEditId(e.id);
+    setEditForm({
+      date: e.date.split("T")[0],
+      categoryId: e.category.id.toString(),
+      description: e.description,
+      amount: e.amount.toString(),
+    });
+  };
+
+  const saveEdit = async () => {
+    if (!editId) return;
+    const res = await fetch("/api/expenses/" + editId, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ ...editForm, categoryId: +editForm.categoryId, amount: +editForm.amount }),
+    });
+    if (!res.ok) {
+      alert("Gagal menyimpan perubahan.");
+      return;
+    }
+    setEditId(null);
     load();
   };
 
@@ -218,11 +246,37 @@ export default function PengeluaranPage() {
             <tbody className="divide-y">
               {expenses.map(e => (
                 <tr key={e.id} className="hover:bg-slate-50">
-                  <td className="px-4 py-3 text-slate-700 font-medium">{formatDate(e.date)}</td>
-                  <td className="px-4 py-3"><span className="bg-blue-900/50 text-blue-200 border border-blue-800/40 px-2 py-0.5 rounded-full text-xs">{e.category.name}</span></td>
-                  <td className="px-4 py-3 text-slate-700">{e.description}</td>
-                  <td className="px-4 py-3 text-right font-medium text-red-600">{formatRupiah(e.amount)}</td>
-                  <td className="px-4 py-3"><button onClick={() => remove(e.id)} className="text-red-400 hover:text-red-600"><Trash2 size={16} /></button></td>
+                  {editId === e.id ? (
+                    <>
+                      <td className="px-4 py-2"><input type="date" value={editForm.date} onChange={ev => setEditForm(f => ({ ...f, date: ev.target.value }))} className="w-full border rounded px-2 py-1 text-sm bg-white" /></td>
+                      <td className="px-4 py-2">
+                        <select value={editForm.categoryId} onChange={ev => setEditForm(f => ({ ...f, categoryId: ev.target.value }))} className="w-full border rounded px-2 py-1 text-sm bg-white">
+                          {categories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+                        </select>
+                      </td>
+                      <td className="px-4 py-2"><input type="text" value={editForm.description} onChange={ev => setEditForm(f => ({ ...f, description: ev.target.value }))} className="w-full border rounded px-2 py-1 text-sm bg-white" /></td>
+                      <td className="px-4 py-2"><input type="number" min={0} value={editForm.amount} onChange={ev => setEditForm(f => ({ ...f, amount: ev.target.value }))} className="w-full border rounded px-2 py-1 text-sm bg-white text-right" /></td>
+                      <td className="px-4 py-2">
+                        <div className="flex items-center gap-2">
+                          <button onClick={saveEdit} className="text-emerald-600 hover:text-emerald-800" title="Simpan"><Check size={16} /></button>
+                          <button onClick={() => setEditId(null)} className="text-slate-400 hover:text-slate-600" title="Batal"><X size={16} /></button>
+                        </div>
+                      </td>
+                    </>
+                  ) : (
+                    <>
+                      <td className="px-4 py-3 text-slate-700 font-medium">{formatDate(e.date)}</td>
+                      <td className="px-4 py-3"><span className="bg-blue-900/50 text-blue-200 border border-blue-800/40 px-2 py-0.5 rounded-full text-xs">{e.category.name}</span></td>
+                      <td className="px-4 py-3 text-slate-700">{e.description}</td>
+                      <td className="px-4 py-3 text-right font-medium text-red-600">{formatRupiah(e.amount)}</td>
+                      <td className="px-4 py-3">
+                        <div className="flex items-center gap-2">
+                          <button onClick={() => startEdit(e)} className="text-blue-400 hover:text-blue-600" title="Edit"><Edit2 size={16} /></button>
+                          <button onClick={() => remove(e.id)} className="text-red-400 hover:text-red-600" title="Hapus"><Trash2 size={16} /></button>
+                        </div>
+                      </td>
+                    </>
+                  )}
                 </tr>
               ))}
               {expenses.length === 0 && <tr><td colSpan={5} className="px-4 py-8 text-center text-slate-400">Belum ada pengeluaran bulan ini</td></tr>}

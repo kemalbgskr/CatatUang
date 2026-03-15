@@ -26,7 +26,7 @@ export default function PengaturanPage() {
   const [aiBudgetError, setAiBudgetError] = useState("");
   const [autoFillLoading, setAutoFillLoading] = useState(false);
   const [autoFillMsg, setAutoFillMsg] = useState("");
-  const [tab, setTab] = useState<"kategori" | "budget" | "profil" | "ai">("kategori");
+  const [tab, setTab] = useState<"kategori" | "budget" | "profil" | "ai" | "webhook">("kategori");
   const [aiSettings, setAiSettings] = useState<AISettings>({
     baseUrl: "https://api.openai.com/v1",
     model: "gpt-4o-mini",
@@ -142,6 +142,7 @@ export default function PengaturanPage() {
     { key: "budget" as const, label: "Budget" },
     { key: "profil" as const, label: "Profil Keuangan" },
     { key: "ai" as const, label: "AI" },
+    { key: "webhook" as const, label: "Webhook (Bot)" },
   ];
 
   return (
@@ -371,6 +372,67 @@ export default function PengaturanPage() {
 
           <div className="mt-4 flex justify-end">
             <button onClick={saveAISettings} className="bg-blue-600 text-white px-6 py-2 rounded-lg text-sm font-medium hover:bg-blue-700 flex items-center gap-2"><Save size={16} />Simpan Konfigurasi AI</button>
+          </div>
+        </div>
+      )}
+
+      {/* Webhook */}
+      {tab === "webhook" && (
+        <div className="bg-white rounded-xl shadow-sm border p-6 space-y-5">
+          <div>
+            <h2 className="text-lg font-semibold text-slate-800">Integrasi Webhook (Bot Telegram / OpenClaw)</h2>
+            <p className="text-sm text-slate-500 mt-1">Gunakan API di bawah ini agar bot Telegram / OpenClaw bisa otomatis mencatat pengeluaran ke aplikasi ini.</p>
+          </div>
+
+          <div className="bg-slate-50 border border-slate-200 rounded-xl p-4 space-y-4">
+            <div>
+              <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Daftar Endpoint API</label>
+              <div className="space-y-2">
+                <div className="bg-slate-800 rounded-lg overflow-hidden flex flex-col md:flex-row shadow-sm">
+                  <div className="bg-emerald-600 text-white text-xs font-bold px-3 py-2 flex items-center justify-center w-full md:w-20">POST</div>
+                  <code className="text-blue-300 text-sm px-3 py-2 flex-1 break-all">{"https://<domain-kamu>/api/webhook/expense"}</code>
+                </div>
+                <div className="bg-slate-800 rounded-lg overflow-hidden flex flex-col md:flex-row shadow-sm">
+                  <div className="bg-blue-600 text-white text-xs font-bold px-3 py-2 flex items-center justify-center w-full md:w-20">GET</div>
+                  <code className="text-blue-300 text-sm px-3 py-2 flex-1 break-all">{"https://<domain-kamu>/api/webhook/expense"}</code>
+                </div>
+              </div>
+              <p className="text-xs text-slate-500 mt-2"><b>POST</b> untuk kirim data pengeluaran. <b>GET</b> untuk mengambil opsi daftar nama kategori dalam bentuk array string (biar bot tau kategori terbaru).</p>
+            </div>
+            
+            <div>
+              <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Secret Key (Headers)</label>
+              <div className="bg-slate-800 p-3 rounded-lg text-sm overflow-x-auto">
+                <pre className="text-blue-300">
+                  {`{\n  "x-api-key": "sk_Y7Pq4lyrN8wX66X7Oqla137r8iMKAEkC"\n}`}
+                </pre>
+              </div>
+              <p className="text-xs text-slate-500 mt-1.5">Kunci ini bisa diubah di file <code className="bg-slate-200 px-1 py-0.5 rounded">.env</code> pada variabel <code>WEBHOOK_API_KEY</code>.</p>
+            </div>
+
+            <div>
+              <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Daftar Kategori yang Tersedia</label>
+              <div className="flex flex-wrap gap-2">
+                {expenseCats.length > 0 ? expenseCats.map(c => (
+                  <span key={c.id} className="bg-white border rounded-full px-2.5 py-1 text-xs text-slate-600">{c.name}</span>
+                )) : <span className="text-xs text-slate-400">Belum ada kategori pengeluaran</span>}
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Contoh Body JSON</label>
+              <p className="text-xs text-slate-500 mb-2">Kasih instruksi ini ke bot OpenClaw kamu supaya dia ngirim data dengan format berikut:</p>
+              <div className="bg-slate-800 p-3 rounded-lg text-sm overflow-x-auto">
+                <pre className="text-blue-300">
+{`{
+  "amount": 50000,
+  "description": "Beli makan siang di warteg",
+  "category": "Konsumsi",    // opsional, bot bisa cocokan dari daftar kategori di atas
+  "date": "2026-03-15"       // opsional, default hari ini (YYYY-MM-DD)
+}`}
+                </pre>
+              </div>
+            </div>
           </div>
         </div>
       )}

@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import { formatRupiah, formatDate } from "@/lib/utils";
-import { Plus, Trash2 } from "lucide-react";
+import { Plus, Trash2, Edit2, Check, X } from "lucide-react";
 import Modal from "@/components/Modal";
 
 interface Receivable { id: number; date: string; amount: number; type: string }
@@ -15,6 +15,8 @@ export default function PiutangPage() {
   const [showNew, setShowNew] = useState(false);
   const [form, setForm] = useState({ date: new Date().toISOString().split("T")[0], personId: "", amount: "" });
   const [newPerson, setNewPerson] = useState("");
+  const [editTx, setEditTx] = useState<{id: number, type: "given" | "received"} | null>(null);
+  const [editForm, setEditForm] = useState({ date: "", amount: "" });
 
   const load = () => { fetch("/api/receivables").then(r => r.json()).then(setPersons); };
   useEffect(() => { load(); }, []);
@@ -53,6 +55,29 @@ export default function PiutangPage() {
   const removePerson = async (id: number, name: string) => {
     if (!confirm(`Hapus peminjam ${name} beserta semua histori piutang?`)) return;
     await fetch("/api/receivables/persons/" + id, { method: "DELETE" });
+    load();
+  };
+
+  const startEdit = (r: Receivable) => {
+    setEditTx({ id: r.id, type: r.type as "given" | "received" });
+    setEditForm({
+      date: r.date.split("T")[0],
+      amount: r.amount.toString(),
+    });
+  };
+
+  const saveEdit = async () => {
+    if (!editTx) return;
+    const res = await fetch("/api/receivables/" + editTx.id, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ ...editForm, amount: +editForm.amount }),
+    });
+    if (!res.ok) {
+      alert("Gagal menyimpan perubahan.");
+      return;
+    }
+    setEditTx(null);
     load();
   };
 
@@ -137,15 +162,34 @@ export default function PiutangPage() {
               {p.receivables.length > 0 && (
                 <table className="w-full text-sm"><tbody className="divide-y">
                   {p.receivables.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()).map(r => (
-                    <tr key={r.id}>
-                      <td className="py-2 text-slate-700">{formatDate(r.date)}</td>
-                      <td className="py-2"><span className={r.type === "given" ? "text-orange-600" : "text-emerald-600"}>{r.type === "given" ? "Beri" : "Terima"}</span></td>
-                      <td className="py-2 text-right font-semibold text-slate-800">{formatRupiah(r.amount)}</td>
-                      <td className="py-2 text-right">
-                        <button type="button" onClick={() => removeReceivable(r.id)} className="text-red-400 hover:text-red-600" title="Hapus transaksi" aria-label="Hapus transaksi">
-                          <Trash2 size={15} />
-                        </button>
-                      </td>
+                    <tr key={r.id} className="hover:bg-slate-50">
+                      {editTx?.id === r.id ? (
+                        <>
+                          <td className="py-2"><input type="date" value={editForm.date} onChange={e => setEditForm(f => ({ ...f, date: e.target.value }))} className="w-full border rounded px-2 py-1 text-sm bg-white" /></td>
+                          <td className="py-2"><span className={r.type === "given" ? "text-orange-600" : "text-emerald-600"}>{r.type === "given" ? "Beri" : "Terima"}</span></td>
+                          <td className="py-2"><input type="number" min={0} value={editForm.amount} onChange={e => setEditForm(f => ({ ...f, amount: e.target.value }))} className="w-full border rounded px-2 py-1 text-sm bg-white text-right" /></td>
+                          <td className="py-2 text-right">
+                            <div className="flex items-center justify-end gap-2">
+                              <button onClick={saveEdit} className="text-emerald-600 hover:text-emerald-800" title="Simpan"><Check size={15} /></button>
+                              <button onClick={() => setEditTx(null)} className="text-slate-400 hover:text-slate-600" title="Batal"><X size={15} /></button>
+                            </div>
+                          </td>
+                        </>
+                      ) : (
+                        <>
+                          <td className="py-2 text-slate-700">{formatDate(r.date)}</td>
+                          <td className="py-2"><span className={r.type === "given" ? "text-orange-600" : "text-emerald-600"}>{r.type === "given" ? "Beri" : "Terima"}</span></td>
+                          <td className="py-2 text-right font-semibold text-slate-800">{formatRupiah(r.amount)}</td>
+                          <td className="py-2 text-right">
+                            <div className="flex items-center justify-end gap-2">
+                              <button type="button" onClick={() => startEdit(r)} className="text-blue-400 hover:text-blue-600" title="Edit"><Edit2 size={15} /></button>
+                              <button type="button" onClick={() => removeReceivable(r.id)} className="text-red-400 hover:text-red-600" title="Hapus transaksi" aria-label="Hapus transaksi">
+                                <Trash2 size={15} />
+                              </button>
+                            </div>
+                          </td>
+                        </>
+                      )}
                     </tr>
                   ))}
                 </tbody></table>
