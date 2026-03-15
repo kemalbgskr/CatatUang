@@ -10,7 +10,7 @@ export async function GET(req: Request) {
   const month = searchParams.get("month");
 
   const where: any = { userId: user.userId };
-  if (month) {
+  if (month && month !== "all") {
     where.date = {
       gte: new Date(month + "-01"),
       lt: new Date(new Date(month + "-01").getFullYear(), new Date(month + "-01").getMonth() + 1, 1),

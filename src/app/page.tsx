@@ -99,8 +99,15 @@ export default function Home() {
       </div>
     );
 
+  if (!data || !data.expenseByCategory)
+    return (
+      <div className="flex items-center justify-center h-96">
+        <div className="animate-spin h-10 w-10 border-4 border-blue-600 border-t-transparent rounded-full" />
+      </div>
+    );
+
   const saldoBersih = data.totalPendapatanAll - data.totalPengeluaranAll;
-  const pieData = Object.entries(data.expenseByCategory).map(
+  const pieData = Object.entries(data.expenseByCategory || {}).map(
     ([name, value]) => ({ name, value }),
   );
   const chartData = data.labaRugiBulanan.map((item) => ({

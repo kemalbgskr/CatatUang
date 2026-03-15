@@ -71,6 +71,8 @@ model Expense {
   createdAt   DateTime        @default(now())
   category    ExpenseCategory @relation(fields: [categoryId], references: [id])
   user        User            @relation(fields: [userId], references: [id])
+  debtPaymentId Int?
+  debtPayment   DebtPayment? @relation(fields: [debtPaymentId], references: [id], onDelete: SetNull)
 }
 
 model DebtSource {
@@ -107,6 +109,7 @@ model DebtPayment {
   createdAt    DateTime   @default(now())
   debtSource   DebtSource @relation(fields: [debtSourceId], references: [id])
   user         User       @relation(fields: [userId], references: [id])
+  expenses     Expense[]
 }
 
 model ReceivablePerson {
