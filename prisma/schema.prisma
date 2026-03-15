@@ -6,33 +6,6 @@ datasource db {
   provider = "sqlite"
 }
 
-// Rekening / Bank Accounts
-model Account {
-  id        Int      @id @default(autoincrement())
-  name      String   @unique
-  type      String   @default("cash") // cash, savings, investment, credit
-  createdAt DateTime @default(now())
-
-  incomes       Income[]
-  expenses      Expense[]
-  transfersFrom Transfer[]  @relation("TransferFrom")
-  transfersTo   Transfer[]  @relation("TransferTo")
-  debtPayments  DebtPayment[]
-  debtLoans     DebtLoan[]
-  receivables   Receivable[]
-  assetTx       AssetTransaction[]
-  itemTx        ItemTransaction[]
-  initialBalance InitialBalance?
-}
-
-model InitialBalance {
-  id        Int      @id @default(autoincrement())
-  accountId Int      @unique
-  balance   Float
-  date      DateTime
-  account   Account  @relation(fields: [accountId], references: [id])
-}
-
 model IncomeCategory {
   id      Int      @id @default(autoincrement())
   name    String   @unique
@@ -51,11 +24,9 @@ model Income {
   date        DateTime
   categoryId  Int
   description String
-  accountId   Int
   amount      Float
   createdAt   DateTime       @default(now())
   category IncomeCategory @relation(fields: [categoryId], references: [id])
-  account  Account        @relation(fields: [accountId], references: [id])
 }
 
 model Expense {
@@ -63,55 +34,37 @@ model Expense {
   date        DateTime
   categoryId  Int
   description String
-  accountId   Int
   amount      Float
   createdAt   DateTime        @default(now())
   category ExpenseCategory @relation(fields: [categoryId], references: [id])
-  account  Account         @relation(fields: [accountId], references: [id])
-}
-
-model Transfer {
-  id            Int      @id @default(autoincrement())
-  date          DateTime
-  fromAccountId Int
-  toAccountId   Int
-  amount        Float
-  adminFee      Float    @default(0)
-  createdAt     DateTime @default(now())
-  fromAccount Account @relation("TransferFrom", fields: [fromAccountId], references: [id])
-  toAccount   Account @relation("TransferTo", fields: [toAccountId], references: [id])
 }
 
 model DebtSource {
-  id       Int           @id @default(autoincrement())
-  name     String        @unique
-  initialAmount Float    @default(0)
-  loans    DebtLoan[]
-  payments DebtPayment[]
+  id            Int           @id @default(autoincrement())
+  name          String        @unique
+  initialAmount Float         @default(0)
+  loans         DebtLoan[]
+  payments      DebtPayment[]
 }
 
 model DebtLoan {
   id           Int        @id @default(autoincrement())
   date         DateTime
   debtSourceId Int
-  accountId    Int
   amount       Float
   description  String     @default("")
   createdAt    DateTime   @default(now())
   debtSource DebtSource @relation(fields: [debtSourceId], references: [id])
-  account    Account    @relation(fields: [accountId], references: [id])
 }
 
 model DebtPayment {
   id           Int        @id @default(autoincrement())
   date         DateTime
   debtSourceId Int
-  accountId    Int
   amount       Float
   description  String     @default("")
   createdAt    DateTime   @default(now())
   debtSource DebtSource @relation(fields: [debtSourceId], references: [id])
-  account    Account    @relation(fields: [accountId], references: [id])
 }
 
 model ReceivablePerson {
@@ -124,72 +77,24 @@ model Receivable {
   id        Int              @id @default(autoincrement())
   date      DateTime
   personId  Int
-  accountId Int
   amount    Float
   type      String           // "given" or "received"
   createdAt DateTime         @default(now())
   person  ReceivablePerson @relation(fields: [personId], references: [id])
-  account Account          @relation(fields: [accountId], references: [id])
-}
-
-model InvestmentAsset {
-  id           Int                @id @default(autoincrement())
-  name         String             @unique
-  initialQty   Float              @default(0)
-  initialValue Float              @default(0)
-  transactions AssetTransaction[]
-}
-
-model AssetTransaction {
-  id          Int             @id @default(autoincrement())
-  date        DateTime
-  assetId     Int
-  type        String          // "buy" or "sell"
-  price       Float
-  quantity    Float
-  accountId   Int
-  createdAt   DateTime        @default(now())
-  asset   InvestmentAsset @relation(fields: [assetId], references: [id])
-  account Account         @relation(fields: [accountId], references: [id])
-}
-
-model Item {
-  id           Int               @id @default(autoincrement())
-  name         String            @unique
-  initialQty   Float             @default(0)
-  initialValue Float             @default(0)
-  transactions ItemTransaction[]
-}
-
-model ItemTransaction {
-  id          Int      @id @default(autoincrement())
-  date        DateTime
-  itemId      Int
-  type        String   // "buy" or "sell"
-  price       Float
-  quantity    Float
-  accountId   Int
-  createdAt   DateTime @default(now())
-  item    Item    @relation(fields: [itemId], references: [id])
-  account Account @relation(fields: [accountId], references: [id])
 }
 
 model Budget {
-  id              Int             @id @default(autoincrement())
-  categoryId      Int             @unique
-  monthlyAmount   Float
-  category        ExpenseCategory @relation(fields: [categoryId], references: [id])
+  id            Int             @id @default(autoincrement())
+  categoryId    Int             @unique
+  monthlyAmount Float
+  category      ExpenseCategory @relation(fields: [categoryId], references: [id])
 }
 
 model FinancialProfile {
-  id                    Int      @id @default(autoincrement())
-  monthlyIncome         Float    @default(0)
-  monthlyExpense        Float    @default(0)
-  birthDate             DateTime?
-  retirementAge         Int      @default(60)
-  inheritanceAge        Int      @default(80)
-  budgetKebutuhanPokok  Float    @default(0.5)
-  budgetBeliBarang      Float    @default(0.05)
-  budgetBeliAset        Float    @default(0.06)
-  budgetBayarUtang      Float    @default(0.3)
+  id             Int       @id @default(autoincrement())
+  monthlyIncome  Float     @default(0)
+  monthlyExpense Float     @default(0)
+  birthDate      DateTime?
+  retirementAge  Int       @default(60)
+  inheritanceAge Int       @default(80)
 }

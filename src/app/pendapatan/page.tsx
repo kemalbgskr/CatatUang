@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useState, useCallback } from "react";
 import { formatRupiah, formatDate, getCurrentMonth } from "@/lib/utils";
-import { Plus, Trash2 } from "lucide-react";
+import { TrendingUp, TrendingDown, Minus, Plus, Trash2 } from "lucide-react";
 import MonthYearPicker from "@/components/MonthYearPicker";
 import Modal from "@/components/Modal";
 
@@ -11,6 +11,7 @@ interface Income { id: number; date: string; description: string; amount: number
 export default function PendapatanPage() {
   const [incomes, setIncomes] = useState<Income[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
+  const [prevTotal, setPrevTotal] = useState<number | null>(null);
   const [month, setMonth] = useState(getCurrentMonth());
   const [showForm, setShowForm] = useState(false);
   const [submitError, setSubmitError] = useState("");
@@ -18,6 +19,13 @@ export default function PendapatanPage() {
 
   const load = useCallback(() => {
     fetch("/api/incomes?month=" + month).then(r => r.json()).then(setIncomes);
+    // Hitung bulan sebelumnya
+    const [y, m] = month.split("-").map(Number);
+    const prevDate = new Date(y, m - 2, 1);
+    const prevMonth = prevDate.getFullYear() + "-" + String(prevDate.getMonth() + 1).padStart(2, "0");
+    fetch("/api/incomes?month=" + prevMonth)
+      .then(r => r.json())
+      .then((data: Income[]) => setPrevTotal(data.reduce((s, i) => s + i.amount, 0)));
   }, [month]);
 
   useEffect(() => { load(); }, [load]);
@@ -50,13 +58,32 @@ export default function PendapatanPage() {
   };
 
   const total = incomes.reduce((s, i) => s + i.amount, 0);
+  const diff = prevTotal !== null ? total - prevTotal : null;
+  const diffPct = prevTotal && prevTotal > 0 ? ((diff! / prevTotal) * 100).toFixed(1) : null;
 
   return (
     <div className="space-y-6 pt-12 md:pt-0">
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div>
           <h1 className="text-3xl font-extrabold text-slate-800 tracking-tight mb-1">Catat Pendapatan</h1>
-          <p className="text-slate-500 text-base">Total: <span className="font-bold text-emerald-600">{formatRupiah(total)}</span></p>
+          <div className="flex items-center gap-3 flex-wrap">
+            <p className="text-slate-500 text-base">Total: <span className="font-bold text-emerald-600">{formatRupiah(total)}</span></p>
+            {diff !== null && (
+              <span
+                className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold"
+                style={{
+                  background: diff > 0 ? "#022c22" : diff < 0 ? "#2d0808" : "#1e293b",
+                  color: diff > 0 ? "#34d399" : diff < 0 ? "#f87171" : "#94a3b8",
+                  border: diff > 0 ? "1px solid #065f46" : diff < 0 ? "1px solid #7f1d1d" : "1px solid #334155",
+                }}
+              >
+                {diff > 0 ? <TrendingUp size={12} /> : diff < 0 ? <TrendingDown size={12} /> : <Minus size={12} />}
+                {diff > 0 ? "+" : ""}{formatRupiah(diff)}
+                {diffPct && <span className="opacity-70">({diff > 0 ? "+" : ""}{diffPct}%)</span>}
+                <span className="opacity-50 ml-0.5">vs bln lalu</span>
+              </span>
+            )}
+          </div>
         </div>
         <div className="flex gap-3">
           <MonthYearPicker value={month} onChange={setMonth} />

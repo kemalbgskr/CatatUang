@@ -12,8 +12,6 @@ import {
   Menu,
   X,
   LogOut,
-  Package,
-  PieChart,
 } from "lucide-react";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
@@ -22,11 +20,8 @@ const navItems = [
   { href: "/", label: "Dashboard", icon: LayoutDashboard },
   { href: "/pendapatan", label: "Pendapatan", icon: TrendingUp },
   { href: "/pengeluaran", label: "Pengeluaran", icon: TrendingDown },
-  { href: "/transfer", label: "Transfer", icon: PieChart },
   { href: "/utang", label: "Utang", icon: CreditCard },
   { href: "/piutang", label: "Piutang", icon: HandCoins },
-  { href: "/investasi", label: "Investasi", icon: BarChart3 },
-  { href: "/barang", label: "Barang", icon: Package },
   { href: "/analisa", label: "Analisa", icon: BarChart3 },
   { href: "/pengaturan", label: "Pengaturan", icon: Settings },
 ];
@@ -64,7 +59,7 @@ export default function Sidebar() {
         }}
       >
         {/* Logo */}
-        <div className="px-6 py-6 flex items-center gap-3 border-b" style={{ borderColor: "rgba(255,255,255,0.07)" }}>
+        <div className="px-6 py-6 flex items-center gap-3" style={{ borderBottom: "1px solid rgba(255,255,255,0.07)" }}>
           <div className="w-9 h-9 rounded-2xl flex items-center justify-center text-xl"
             style={{ background: "linear-gradient(135deg, #1d4ed8, #3b82f6)" }}>
             💰
@@ -89,7 +84,6 @@ export default function Sidebar() {
                     ? "bg-white text-[#1e3a8a] shadow-lg"
                     : "text-slate-400 hover:bg-white/8 hover:text-white"
                   }`}
-                style={isActive ? {} : {}}
               >
                 <item.icon size={17} className={isActive ? "text-[#1e3a8a]" : "text-slate-500"} />
                 {item.label}

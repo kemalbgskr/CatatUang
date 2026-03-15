@@ -8,10 +8,12 @@ import Modal from "@/components/Modal";
 
 interface Category { id: number; name: string }
 interface Expense { id: number; date: string; description: string; amount: number; category: Category }
+interface Budget { id: number; categoryId: number; monthlyAmount: number; category: Category }
 
 export default function PengeluaranPage() {
   const [expenses, setExpenses] = useState<Expense[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
+  const [budgets, setBudgets] = useState<Budget[]>([]);
   const [month, setMonth] = useState(getCurrentMonth());
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState({ date: new Date().toISOString().split("T")[0], categoryId: "", description: "", amount: "" });
@@ -29,6 +31,7 @@ export default function PengeluaranPage() {
   useEffect(() => { load(); }, [load]);
   useEffect(() => {
     fetch("/api/expense-categories").then(r => r.json()).then(setCategories);
+    fetch("/api/budgets").then(r => r.json()).then(setBudgets);
   }, []);
 
   const submit = async (e: React.FormEvent) => {
@@ -117,12 +120,42 @@ export default function PengeluaranPage() {
 
       {Object.keys(byCategory).length > 0 && (
         <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3">
-          {Object.entries(byCategory).sort((a, b) => b[1] - a[1]).map(([cat, amt]) => (
-            <div key={cat} className="bg-white rounded-lg shadow-sm border p-3">
-              <p className="text-xs text-slate-500">{cat}</p>
-              <p className="text-sm font-semibold text-red-600">{formatRupiah(amt)}</p>
-            </div>
-          ))}
+          {Object.entries(byCategory).sort((a, b) => b[1] - a[1]).map(([cat, amt]) => {
+            const budget = budgets.find(b => b.category.name === cat);
+            const isOver = budget ? amt > budget.monthlyAmount : false;
+            const pct = budget ? Math.min((amt / budget.monthlyAmount) * 100, 100) : null;
+            return (
+              <div
+                key={cat}
+                className="rounded-xl p-3 relative overflow-hidden"
+                style={{
+                  background: isOver ? "#2d0808" : "#0f172a",
+                  border: isOver ? "1.5px solid #7f1d1d" : "1.5px solid #1e293b",
+                }}
+              >
+                <p className="text-xs text-white/60 mb-1">{cat}</p>
+                <p className={`text-sm font-bold ${isOver ? "text-red-400" : "text-white"}`}>
+                  {formatRupiah(amt)}
+                </p>
+                {budget && (
+                  <>
+                    <div className="mt-2 h-1 rounded-full bg-white/10">
+                      <div
+                        className="h-1 rounded-full transition-all"
+                        style={{ width: `${pct}%`, background: isOver ? "#ef4444" : "#3b82f6" }}
+                      />
+                    </div>
+                    <p className={`text-[10px] mt-1 ${isOver ? "text-red-400" : "text-white/40"}`}>
+                      {isOver
+                        ? `⚠ Melebihi ${formatRupiah(amt - budget.monthlyAmount)}`
+                        : `Sisa ${formatRupiah(budget.monthlyAmount - amt)}`}
+                    </p>
+                  </>
+                )}
+                {!budget && <p className="text-[10px] text-white/30 mt-1">Tanpa budget</p>}
+              </div>
+            );
+          })}
         </div>
       )}
 
