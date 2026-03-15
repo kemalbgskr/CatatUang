@@ -16,6 +16,7 @@ export default function PengeluaranPage() {
   const [categories, setCategories] = useState<Category[]>([]);
   const [budgets, setBudgets] = useState<Budget[]>([]);
   const [month, setMonth] = useState(getCurrentMonth());
+  const [isAll, setIsAll] = useState(false);
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState({ date: new Date().toISOString().split("T")[0], categoryId: "", description: "", amount: "" });
   const [ocrLoading, setOcrLoading] = useState(false);
@@ -29,8 +30,11 @@ export default function PengeluaranPage() {
   const [editForm, setEditForm] = useState({ date: "", categoryId: "", description: "", amount: "" });
 
   const load = useCallback(() => {
-    fetch("/api/expenses?month=" + month).then(r => r.json()).then(setExpenses);
-  }, [month]);
+    const url = isAll ? "/api/expenses" : "/api/expenses?month=" + month;
+    fetch(url).then(r => r.json()).then(setExpenses);
+  }, [month, isAll]);
+
+  const toggleAll = () => setIsAll(!isAll);
 
   useEffect(() => { load(); }, [load]);
   useEffect(() => {
@@ -137,7 +141,15 @@ export default function PengeluaranPage() {
           <p className="text-slate-500 text-sm">Total: {formatRupiah(total)}</p>
         </div>
         <div className="flex gap-3">
-          <MonthYearPicker value={month} onChange={setMonth} />
+          <button
+            onClick={toggleAll}
+            className={`px-4 py-2 rounded-xl text-sm font-semibold transition flex items-center gap-2 ${
+              isAll ? "bg-amber-100 text-amber-700 border border-amber-200" : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+            }`}
+          >
+            {isAll ? "Filter Bulan" : "Lihat Semua"}
+          </button>
+          {!isAll && <MonthYearPicker value={month} onChange={setMonth} />}
           <button onClick={triggerUpload} className="bg-indigo-600 text-white px-4 py-2 rounded-lg text-sm flex items-center gap-2 hover:bg-indigo-700">
             <Upload size={16} /> Upload Nota
           </button>
@@ -280,7 +292,7 @@ export default function PengeluaranPage() {
                   )}
                 </tr>
               ))}
-              {expenses.length === 0 && <tr><td colSpan={5} className="px-4 py-8 text-center text-slate-400">Belum ada pengeluaran bulan ini</td></tr>}
+              {expenses.length === 0 && <tr><td colSpan={5} className="px-4 py-8 text-center text-slate-400">Belum ada pengeluaran {isAll ? "" : "bulan ini"}</td></tr>}
             </tbody>
           </table>
         </div>

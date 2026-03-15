@@ -10,6 +10,7 @@ interface Person { id: number; name: string; receivables: Receivable[] }
 
 export default function PiutangPage() {
   const [persons, setPersons] = useState<Person[]>([]);
+  const [isAll, setIsAll] = useState(false);
   const [submitError, setSubmitError] = useState("");
   const [showGive, setShowGive] = useState(false);
   const [showReceive, setShowReceive] = useState(false);
@@ -87,6 +88,10 @@ export default function PiutangPage() {
     const received = p.receivables.filter(r => r.type === "received").reduce((s2, r) => s2 + r.amount, 0);
     return s + given - received;
   }, 0);
+
+  const allTransactions = persons.flatMap(p => 
+    p.receivables.map(r => ({ ...r, personName: p.name }))
+  ).sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 
   const activePersons = persons.filter(p => {
     const given = p.receivables.filter(r => r.type === "given").reduce((s, r) => s + r.amount, 0);
@@ -186,6 +191,14 @@ export default function PiutangPage() {
           <p className="text-slate-500 text-sm">Total Sisa Piutang: {formatRupiah(totalPiutang)}</p>
         </div>
         <div className="flex gap-2 flex-wrap">
+          <button
+            onClick={() => setIsAll(!isAll)}
+            className={`px-3 py-2 rounded-lg text-sm font-semibold transition flex items-center gap-1 ${
+              isAll ? "bg-amber-100 text-amber-700 border border-amber-200" : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+            }`}
+          >
+            {isAll ? "Grup per Peminjam" : "Lihat Semua Transaksi"}
+          </button>
           <button onClick={() => setShowNew(true)} className="bg-slate-600 text-white px-3 py-2 rounded-lg text-sm flex items-center gap-1"><Plus size={14} /> Peminjam</button>
           <button onClick={() => { setShowGive(true); setShowReceive(false); }} className="bg-orange-600 text-white px-3 py-2 rounded-lg text-sm flex items-center gap-1"><Plus size={14} /> Beri Piutang</button>
           <button onClick={() => { setShowReceive(true); setShowGive(false); }} className="bg-emerald-600 text-white px-3 py-2 rounded-lg text-sm flex items-center gap-1"><Plus size={14} /> Terima Piutang</button>
@@ -210,18 +223,58 @@ export default function PiutangPage() {
         <FormPiutang type="received" />
       </Modal>
 
-      <div className="space-y-4">
-        {activePersons.map(renderPersonCard)}
-        {activePersons.length === 0 && <div className="bg-white rounded-xl shadow-sm border p-8 text-center text-slate-400">Belum ada piutang aktif</div>}
-      </div>
-
-      {historyPersons.length > 0 && (
-        <div className="mt-8">
-          <h2 className="text-lg font-bold text-slate-800 mb-4">Riwayat (Lunas)</h2>
-          <div className="space-y-4 opacity-75">
-            {historyPersons.map(renderPersonCard)}
+      {isAll ? (
+        <div className="bg-white rounded-xl shadow-sm border overflow-hidden">
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead className="bg-slate-50 text-slate-600">
+                <tr>
+                  <th className="text-left px-4 py-3">Tanggal</th>
+                  <th className="text-left px-4 py-3">Peminjam</th>
+                  <th className="text-left px-4 py-3">Tipe</th>
+                  <th className="text-right px-4 py-3">Nominal</th>
+                  <th className="px-4 py-3"></th>
+                </tr>
+              </thead>
+              <tbody className="divide-y">
+                {allTransactions.map((t) => (
+                  <tr key={`${t.type}-${t.id}`} className="hover:bg-slate-50">
+                    <td className="px-4 py-3 text-slate-700">{formatDate(t.date)}</td>
+                    <td className="px-4 py-3 text-slate-700 font-medium">{t.personName}</td>
+                    <td className="px-4 py-3">
+                      <span className={`text-xs px-2 py-0.5 rounded-full ${t.type === "received" ? "bg-emerald-100 text-emerald-700" : "bg-orange-100 text-orange-700"}`}>
+                        {t.type === "received" ? "Terima" : "Beri"}
+                      </span>
+                    </td>
+                    <td className="px-4 py-3 text-right font-semibold text-slate-800">{formatRupiah(t.amount)}</td>
+                    <td className="px-4 py-3 text-right">
+                      <div className="flex items-center justify-end gap-2">
+                        <button type="button" onClick={() => removeReceivable(t.id)} className="text-red-400 hover:text-red-600" title="Hapus"><Trash2 size={16} /></button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+                {allTransactions.length === 0 && <tr><td colSpan={5} className="px-4 py-8 text-center text-slate-400">Belum ada transaksi piutang</td></tr>}
+              </tbody>
+            </table>
           </div>
         </div>
+      ) : (
+        <>
+          <div className="space-y-4">
+            {activePersons.map(renderPersonCard)}
+            {activePersons.length === 0 && <div className="bg-white rounded-xl shadow-sm border p-8 text-center text-slate-400">Belum ada piutang aktif</div>}
+          </div>
+
+          {historyPersons.length > 0 && (
+            <div className="mt-8">
+              <h2 className="text-lg font-bold text-slate-800 mb-4">Riwayat (Lunas)</h2>
+              <div className="space-y-4 opacity-75">
+                {historyPersons.map(renderPersonCard)}
+              </div>
+            </div>
+          )}
+        </>
       )}
     </div>
   );

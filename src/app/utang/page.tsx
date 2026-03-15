@@ -9,6 +9,7 @@ interface DebtSource { id: number; name: string; initialAmount: number; loans: {
 
 export default function UtangPage() {
   const [debts, setDebts] = useState<DebtSource[]>([]);
+  const [isAll, setIsAll] = useState(false);
   const [submitError, setSubmitError] = useState("");
   const [showPayForm, setShowPayForm] = useState(false);
   const [showLoanForm, setShowLoanForm] = useState(false);
@@ -95,6 +96,11 @@ export default function UtangPage() {
     const payments = d.payments.reduce((s2, p) => s2 + p.amount, 0);
     return s + d.initialAmount + loans - payments;
   }, 0);
+
+  const allTransactions = debts.flatMap(d => [
+    ...d.loans.map(l => ({ ...l, type: "Pinjaman" as const, source: d.name })),
+    ...d.payments.map(p => ({ ...p, type: "Bayar" as const, source: d.name }))
+  ]).sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 
   const activeDebts = debts.filter(d => {
     const loans = d.loans.reduce((s, l) => s + l.amount, 0);
@@ -196,6 +202,14 @@ export default function UtangPage() {
           <p className="text-slate-500 text-sm">Total Sisa Utang: {formatRupiah(totalUtang)}</p>
         </div>
         <div className="flex gap-2 flex-wrap">
+          <button
+            onClick={() => setIsAll(!isAll)}
+            className={`px-3 py-2 rounded-lg text-sm font-semibold transition flex items-center gap-1 ${
+              isAll ? "bg-amber-100 text-amber-700 border border-amber-200" : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+            }`}
+          >
+            {isAll ? "Grup per Pemberi" : "Lihat Semua Transaksi"}
+          </button>
           <button onClick={() => setShowNewDebt(true)} className="bg-slate-600 text-white px-3 py-2 rounded-lg text-sm flex items-center gap-1 hover:bg-slate-700"><Plus size={14} /> Pemberi Utang</button>
           <button onClick={() => setShowLoanForm(true)} className="bg-orange-600 text-white px-3 py-2 rounded-lg text-sm flex items-center gap-1 hover:bg-orange-700"><Plus size={14} /> Ambil Pinjaman</button>
           <button onClick={() => setShowPayForm(true)} className="bg-emerald-600 text-white px-3 py-2 rounded-lg text-sm flex items-center gap-1 hover:bg-emerald-700"><Plus size={14} /> Bayar Utang</button>
@@ -236,18 +250,60 @@ export default function UtangPage() {
         </form>
       </Modal>
 
-      <div className="space-y-4">
-        {activeDebts.map(renderDebtCard)}
-        {activeDebts.length === 0 && <div className="bg-white rounded-xl shadow-sm border p-8 text-center text-slate-400">Belum ada utang aktif</div>}
-      </div>
-
-      {historyDebts.length > 0 && (
-        <div className="mt-8">
-          <h2 className="text-lg font-bold text-slate-800 mb-4">Riwayat (Lunas)</h2>
-          <div className="space-y-4 opacity-75">
-            {historyDebts.map(renderDebtCard)}
+      {isAll ? (
+        <div className="bg-white rounded-xl shadow-sm border overflow-hidden">
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead className="bg-slate-50 text-slate-600">
+                <tr>
+                  <th className="text-left px-4 py-3">Tanggal</th>
+                  <th className="text-left px-4 py-3">Pemberi</th>
+                  <th className="text-left px-4 py-3">Tipe</th>
+                  <th className="text-left px-4 py-3">Rincian</th>
+                  <th className="text-right px-4 py-3">Nominal</th>
+                  <th className="px-4 py-3"></th>
+                </tr>
+              </thead>
+              <tbody className="divide-y">
+                {allTransactions.map((t) => (
+                  <tr key={`${t.type}-${t.id}`} className="hover:bg-slate-50">
+                    <td className="px-4 py-3 text-slate-700">{formatDate(t.date)}</td>
+                    <td className="px-4 py-3 text-slate-700 font-medium">{t.source}</td>
+                    <td className="px-4 py-3">
+                      <span className={`text-xs px-2 py-0.5 rounded-full ${t.type === "Bayar" ? "bg-emerald-100 text-emerald-700" : "bg-orange-100 text-orange-700"}`}>
+                        {t.type}
+                      </span>
+                    </td>
+                    <td className="px-4 py-3 text-slate-600">{t.description}</td>
+                    <td className="px-4 py-3 text-right font-semibold text-slate-800">{formatRupiah(t.amount)}</td>
+                    <td className="px-4 py-3 text-right">
+                      <div className="flex items-center justify-end gap-2">
+                        <button type="button" onClick={() => deleteTransaction(t.type, t.id)} className="text-red-400 hover:text-red-600" title="Hapus"><Trash2 size={16} /></button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+                {allTransactions.length === 0 && <tr><td colSpan={6} className="px-4 py-8 text-center text-slate-400">Belum ada transaksi utang</td></tr>}
+              </tbody>
+            </table>
           </div>
         </div>
+      ) : (
+        <>
+          <div className="space-y-4">
+            {activeDebts.map(renderDebtCard)}
+            {activeDebts.length === 0 && <div className="bg-white rounded-xl shadow-sm border p-8 text-center text-slate-400">Belum ada utang aktif</div>}
+          </div>
+
+          {historyDebts.length > 0 && (
+            <div className="mt-8">
+              <h2 className="text-lg font-bold text-slate-800 mb-4">Riwayat (Lunas)</h2>
+              <div className="space-y-4 opacity-75">
+                {historyDebts.map(renderDebtCard)}
+              </div>
+            </div>
+          )}
+        </>
       )}
     </div>
   );

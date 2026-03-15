@@ -14,6 +14,7 @@ export default function PendapatanPage() {
   const [categories, setCategories] = useState<Category[]>([]);
   const [prevTotal, setPrevTotal] = useState<number | null>(null);
   const [month, setMonth] = useState(getCurrentMonth());
+  const [isAll, setIsAll] = useState(false);
   const [showForm, setShowForm] = useState(false);
   const [submitError, setSubmitError] = useState("");
   const [form, setForm] = useState({ date: new Date().toISOString().split("T")[0], categoryId: "", description: "", amount: "" });
@@ -21,7 +22,14 @@ export default function PendapatanPage() {
   const [editForm, setEditForm] = useState({ date: "", categoryId: "", description: "", amount: "" });
 
   const load = useCallback(() => {
-    fetch("/api/incomes?month=" + month).then(r => r.json()).then(setIncomes);
+    const url = isAll ? "/api/incomes" : "/api/incomes?month=" + month;
+    fetch(url).then(r => r.json()).then(setIncomes);
+
+    if (isAll) {
+      setPrevTotal(null);
+      return;
+    }
+
     // Hitung bulan sebelumnya
     const [y, m] = month.split("-").map(Number);
     const prevDate = new Date(y, m - 2, 1);
@@ -29,7 +37,9 @@ export default function PendapatanPage() {
     fetch("/api/incomes?month=" + prevMonth)
       .then(r => r.json())
       .then((data: Income[]) => setPrevTotal(data.reduce((s, i) => s + i.amount, 0)));
-  }, [month]);
+  }, [month, isAll]);
+
+  const toggleAll = () => setIsAll(!isAll);
 
   useEffect(() => { load(); }, [load]);
   useEffect(() => {
@@ -114,7 +124,15 @@ export default function PendapatanPage() {
           </div>
         </div>
         <div className="flex gap-3">
-          <MonthYearPicker value={month} onChange={setMonth} />
+          <button
+            onClick={toggleAll}
+            className={`px-4 py-2 rounded-xl text-sm font-semibold transition flex items-center gap-2 ${
+              isAll ? "bg-amber-100 text-amber-700 border border-amber-200" : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+            }`}
+          >
+            {isAll ? "Filter Bulan" : "Lihat Semua"}
+          </button>
+          {!isAll && <MonthYearPicker value={month} onChange={setMonth} />}
           <button onClick={() => setShowForm(true)} className="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2 rounded-xl text-base font-semibold flex items-center gap-2 shadow transition">
             <Plus size={18} /> Tambah
           </button>
@@ -195,7 +213,7 @@ export default function PendapatanPage() {
                   )}
                 </tr>
               ))}
-              {incomes.length === 0 && <tr><td colSpan={5} className="px-4 py-8 text-center text-slate-400">Belum ada pendapatan bulan ini</td></tr>}
+              {incomes.length === 0 && <tr><td colSpan={5} className="px-4 py-8 text-center text-slate-400">Belum ada pendapatan {isAll ? "" : "bulan ini"}</td></tr>}
             </tbody>
           </table>
         </div>
