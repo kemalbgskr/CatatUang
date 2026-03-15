@@ -23,10 +23,6 @@ export async function PUT(req: Request) {
       birthDate: body.birthDate ? new Date(body.birthDate) : profile.birthDate,
       retirementAge: body.retirementAge ?? profile.retirementAge,
       inheritanceAge: body.inheritanceAge ?? profile.inheritanceAge,
-      budgetKebutuhanPokok: body.budgetKebutuhanPokok ?? profile.budgetKebutuhanPokok,
-      budgetBeliBarang: body.budgetBeliBarang ?? profile.budgetBeliBarang,
-      budgetBeliAset: body.budgetBeliAset ?? profile.budgetBeliAset,
-      budgetBayarUtang: body.budgetBayarUtang ?? profile.budgetBayarUtang,
     },
   });
   return NextResponse.json(updated);

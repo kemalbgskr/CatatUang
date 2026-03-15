@@ -4,8 +4,8 @@ import { NextResponse } from "next/server";
 export async function GET() {
   const sources = await prisma.debtSource.findMany({
     include: {
-      loans: { include: { account: true } },
-      payments: { include: { account: true } },
+      loans: true,
+      payments: true,
     },
     orderBy: { name: "asc" },
   });
