@@ -98,3 +98,13 @@ model FinancialProfile {
   retirementAge  Int       @default(60)
   inheritanceAge Int       @default(80)
 }
+
+model BulkUploadHistory {
+  id            Int      @id @default(autoincrement())
+  createdAt     DateTime @default(now())
+  type          String   // "incomes" | "expenses"
+  fileName      String
+  rowsProcessed Int
+  status        String   // "success" | "partial" | "failed"
+  message       String?
+}

@@ -26,13 +26,19 @@ export default function PengaturanPage() {
   const [aiBudgetError, setAiBudgetError] = useState("");
   const [autoFillLoading, setAutoFillLoading] = useState(false);
   const [autoFillMsg, setAutoFillMsg] = useState("");
-  const [tab, setTab] = useState<"kategori" | "budget" | "profil" | "ai" | "webhook">("kategori");
+  const [tab, setTab] = useState<"kategori" | "budget" | "profil" | "ai" | "webhook" | "bulk">("kategori");
   const [aiSettings, setAiSettings] = useState<AISettings>({
     baseUrl: "https://api.openai.com/v1",
     model: "gpt-4o-mini",
     apiKey: "",
     systemPrompt: "Kamu adalah analis keuangan pribadi berbahasa Indonesia. Berikan rekomendasi praktis dan bertahap.",
   });
+  
+  const [bulkHistory, setBulkHistory] = useState<any[]>([]);
+  const [bulkType, setBulkType] = useState<"incomes" | "expenses">("incomes");
+  const [bulkFile, setBulkFile] = useState<File | null>(null);
+  const [bulkLoading, setBulkLoading] = useState(false);
+  const [bulkMessage, setBulkMessage] = useState("");
 
   const load = useCallback(() => {
     fetch("/api/income-categories").then(r => r.json()).then(setIncomeCats);
@@ -40,6 +46,7 @@ export default function PengaturanPage() {
     fetch("/api/budgets").then(r => r.json()).then(setBudgets);
     fetch("/api/profile").then(r => r.json()).then(setProfile);
     fetch("/api/ai-settings").then(r => r.json()).then(setAiSettings);
+    fetch("/api/bulk/history").then(r => r.json()).then(setBulkHistory);
   }, []);
 
   useEffect(() => { load(); }, [load]);
@@ -143,6 +150,7 @@ export default function PengaturanPage() {
     { key: "profil" as const, label: "Profil Keuangan" },
     { key: "ai" as const, label: "AI" },
     { key: "webhook" as const, label: "Webhook (Bot)" },
+    { key: "bulk" as const, label: "Bulk Data" },
   ];
 
   return (
@@ -432,6 +440,108 @@ export default function PengaturanPage() {
 }`}
                 </pre>
               </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Bulk Data */}
+      {tab === "bulk" && (
+        <div className="bg-white rounded-xl shadow-sm border p-6 space-y-6">
+          <div>
+            <h2 className="text-lg font-semibold text-slate-800">Impor Excel (Bulk Update)</h2>
+            <p className="text-sm text-slate-500 mt-1">Gunakan fitur ini untuk memasukkan data pendapatan/pengeluaran secara massal dari file Excel (.xlsx).</p>
+          </div>
+
+          <div className="grid md:grid-cols-2 gap-6">
+            <div className="border border-slate-200 rounded-xl p-5 bg-slate-50 flex flex-col justify-between">
+              <div>
+                <h3 className="font-semibold text-slate-700 mb-2">1. Download Template Excel</h3>
+                <p className="text-xs text-slate-500 mb-4">Pilih dan download format Excel kosong sesuai kebutuhan.</p>
+              </div>
+              <div className="flex gap-2">
+                <a href="/api/bulk/template?type=incomes" className="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white text-center py-2.5 rounded-lg text-sm font-medium">Template Pendapatan</a>
+                <a href="/api/bulk/template?type=expenses" className="flex-1 bg-red-600 hover:bg-red-700 text-white text-center py-2.5 rounded-lg text-sm font-medium">Template Pengeluaran</a>
+              </div>
+            </div>
+
+            <div className="border border-slate-200 rounded-xl p-5 bg-slate-50">
+              <h3 className="font-semibold text-slate-700 mb-2">2. Upload Data</h3>
+              <div className="space-y-3">
+                <select value={bulkType} onChange={e => setBulkType(e.target.value as any)} className="w-full border rounded-lg px-3 py-2 text-sm">
+                  <option value="incomes">Impor ke Pendapatan</option>
+                  <option value="expenses">Impor ke Pengeluaran</option>
+                </select>
+                <input type="file" accept=".xlsx" onChange={e => setBulkFile(e.target.files?.[0] || null)} className="w-full border rounded-lg px-3 py-2 text-sm bg-white" />
+                <button 
+                  onClick={async () => {
+                    if (!bulkFile) return alert("Pilih file excel dulu");
+                    setBulkLoading(true); setBulkMessage("");
+                    const fd = new FormData();
+                    fd.append("file", bulkFile);
+                    fd.append("type", bulkType);
+                    try {
+                      const res = await fetch("/api/bulk/upload", { method: "POST", body: fd });
+                      const data = await res.json();
+                      if (data.ok) {
+                        setBulkMessage(data.message);
+                        setBulkFile(null);
+                        load();
+                      } else {
+                        setBulkMessage("Error: " + data.error);
+                        load();
+                      }
+                    } catch (e) {
+                      setBulkMessage("Gagal upload file");
+                    }
+                    setBulkLoading(false);
+                  }}
+                  disabled={bulkLoading || !bulkFile}
+                  className="w-full bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white py-2.5 rounded-lg text-sm font-medium flex justify-center items-center gap-2"
+                >
+                  {bulkLoading && <Loader2 size={16} className="animate-spin" />}
+                  Mulai Upload
+                </button>
+                {bulkMessage && <p className="text-xs font-semibold text-slate-700 mt-2">{bulkMessage}</p>}
+              </div>
+            </div>
+          </div>
+
+          <div className="pt-4 border-t">
+            <h3 className="font-semibold text-slate-700 mb-4">Riwayat Bulk Upload</h3>
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm text-left">
+                <thead className="bg-slate-50 text-slate-500 uppercase text-xs">
+                  <tr>
+                    <th className="px-4 py-2 rounded-l-lg">Tanggal Impor</th>
+                    <th className="px-4 py-2">Tipe</th>
+                    <th className="px-4 py-2">File</th>
+                    <th className="px-4 py-2">Baris Sukses</th>
+                    <th className="px-4 py-2 rounded-r-lg">Status & Pesan</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y">
+                  {bulkHistory.map(h => (
+                    <tr key={h.id}>
+                      <td className="px-4 py-3 text-slate-600">{new Date(h.createdAt).toLocaleString("id-ID")}</td>
+                      <td className="px-4 py-3 font-medium capitalize">{h.type.replace("incomes", "Pendapatan").replace("expenses", "Pengeluaran")}</td>
+                      <td className="px-4 py-3 text-blue-600 truncate max-w-[150px]">{h.fileName}</td>
+                      <td className="px-4 py-3 font-semibold">{h.rowsProcessed} Baris</td>
+                      <td className="px-4 py-3">
+                        <div className="flex flex-col">
+                          <span className={`text-xs font-bold w-fit px-2 py-0.5 rounded-full ${h.status === "success" ? "bg-emerald-100 text-emerald-700" : h.status === "partial" ? "bg-amber-100 text-amber-700" : "bg-red-100 text-red-700"}`}>
+                            {h.status.toUpperCase()}
+                          </span>
+                          {h.message && <span className="text-xs text-slate-500 mt-1">{h.message}</span>}
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                  {bulkHistory.length === 0 && (
+                    <tr><td colSpan={5} className="px-4 py-8 text-center text-slate-400">Belum ada histori upload</td></tr>
+                  )}
+                </tbody>
+              </table>
             </div>
           </div>
         </div>

@@ -95,6 +95,74 @@ export default function UtangPage() {
     return s + d.initialAmount + loans - payments;
   }, 0);
 
+  const activeDebts = debts.filter(d => {
+    const loans = d.loans.reduce((s, l) => s + l.amount, 0);
+    const payments = d.payments.reduce((s, p) => s + p.amount, 0);
+    return (d.initialAmount + loans - payments) > 0;
+  });
+
+  const historyDebts = debts.filter(d => {
+    const loans = d.loans.reduce((s, l) => s + l.amount, 0);
+    const payments = d.payments.reduce((s, p) => s + p.amount, 0);
+    return (d.initialAmount + loans - payments) <= 0;
+  });
+
+  const renderDebtCard = (d: DebtSource) => {
+    const loans = d.loans.reduce((s, l) => s + l.amount, 0);
+    const payments = d.payments.reduce((s, p) => s + p.amount, 0);
+    const remaining = d.initialAmount + loans - payments;
+    const allTx = [...d.loans.map(l => ({...l, type: "Pinjaman" as const})), ...d.payments.map(p => ({...p, type: "Bayar" as const}))].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+    return (
+      <div key={d.id} className="bg-white rounded-xl shadow-sm border p-6">
+        <div className="flex justify-between items-center mb-4">
+          <h3 className="font-semibold text-slate-800">{d.name}</h3>
+          <div className="flex items-center gap-3">
+            <span className={"font-bold " + (remaining > 0 ? "text-red-600" : "text-emerald-600")}>{remaining <= 0 ? "Lunas" : formatRupiah(remaining)}</span>
+            <button type="button" onClick={() => deleteDebtSource(d.id, d.name)} className="text-red-400 hover:text-red-600" title="Hapus pemberi utang" aria-label="Hapus pemberi utang"><Trash2 size={16} /></button>
+          </div>
+        </div>
+        {d.initialAmount > 0 && <p className="text-xs text-slate-600 mb-2">Utang awal: {formatRupiah(d.initialAmount)}</p>}
+        {allTx.length > 0 && (
+          <table className="w-full text-sm">
+            <tbody className="divide-y">
+              {allTx.map((t) => (
+                <tr key={`${t.type}-${t.id}`} className="hover:bg-slate-50">
+                  {editTx?.id === t.id && editTx?.type === t.type ? (
+                    <>
+                      <td className="py-2"><input type="date" value={editForm.date} onChange={e => setEditForm(f => ({ ...f, date: e.target.value }))} className="w-full border rounded px-2 py-1 text-sm bg-white" /></td>
+                      <td className="py-2"><span className={t.type === "Bayar" ? "text-emerald-600" : "text-orange-600"}>{t.type}</span></td>
+                      <td className="py-2"><input type="text" value={editForm.description} onChange={e => setEditForm(f => ({ ...f, description: e.target.value }))} className="w-full border rounded px-2 py-1 text-sm bg-white" /></td>
+                      <td className="py-2"><input type="number" min={0} value={editForm.amount} onChange={e => setEditForm(f => ({ ...f, amount: e.target.value }))} className="w-full border rounded px-2 py-1 text-sm bg-white text-right" /></td>
+                      <td className="py-2 text-right">
+                        <div className="flex items-center justify-end gap-2">
+                          <button onClick={saveEdit} className="text-emerald-600 hover:text-emerald-800" title="Simpan"><Check size={15} /></button>
+                          <button onClick={() => setEditTx(null)} className="text-slate-400 hover:text-slate-600" title="Batal"><X size={15} /></button>
+                        </div>
+                      </td>
+                    </>
+                  ) : (
+                    <>
+                      <td className="py-2 text-slate-700">{formatDate(t.date)}</td>
+                      <td className="py-2"><span className={t.type === "Bayar" ? "text-emerald-600" : "text-orange-600"}>{t.type}</span></td>
+                      <td className="py-2 text-slate-700">{t.description}</td>
+                      <td className="py-2 text-right font-semibold text-slate-800">{formatRupiah(t.amount)}</td>
+                      <td className="py-2 text-right">
+                        <div className="flex items-center justify-end gap-2">
+                          <button type="button" onClick={() => startEdit(t)} className="text-blue-400 hover:text-blue-600" title="Edit"><Edit2 size={15} /></button>
+                          <button type="button" onClick={() => deleteTransaction(t.type, t.id)} className="text-red-400 hover:text-red-600" title="Hapus transaksi" aria-label="Hapus transaksi"><Trash2 size={15} /></button>
+                        </div>
+                      </td>
+                    </>
+                  )}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
+      </div>
+    );
+  };
+
   const DebtFormFields = ({ form, setForm }: { form: typeof payForm, setForm: React.Dispatch<React.SetStateAction<typeof payForm>> }) => (
     <>
       <div>
@@ -167,78 +235,19 @@ export default function UtangPage() {
         </form>
       </Modal>
 
-  const activeDebts = debts.filter(d => {
-    const loans = d.loans.reduce((s, l) => s + l.amount, 0);
-    const payments = d.payments.reduce((s, p) => s + p.amount, 0);
-    return (d.initialAmount + loans - payments) > 0;
-  });
+      <div className="space-y-4">
+        {activeDebts.map(renderDebtCard)}
+        {activeDebts.length === 0 && <div className="bg-white rounded-xl shadow-sm border p-8 text-center text-slate-400">Belum ada utang aktif</div>}
+      </div>
 
-  const historyDebts = debts.filter(d => {
-    const loans = d.loans.reduce((s, l) => s + l.amount, 0);
-    const payments = d.payments.reduce((s, p) => s + p.amount, 0);
-    return (d.initialAmount + loans - payments) <= 0;
-  });
-
-  const renderDebtCard = (d: DebtSource) => {
-    const loans = d.loans.reduce((s, l) => s + l.amount, 0);
-    const payments = d.payments.reduce((s, p) => s + p.amount, 0);
-    const remaining = d.initialAmount + loans - payments;
-    const allTx = [...d.loans.map(l => ({...l, type: "Pinjaman" as const})), ...d.payments.map(p => ({...p, type: "Bayar" as const}))].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
-    return (
-      <div key={d.id} className="bg-white rounded-xl shadow-sm border p-6">
-              <div className="flex justify-between items-center mb-4">
-                <h3 className="font-semibold text-slate-800">{d.name}</h3>
-                <div className="flex items-center gap-3">
-                  <span className={"font-bold " + (remaining > 0 ? "text-red-600" : "text-emerald-600")}>{formatRupiah(remaining)}</span>
-                  <button type="button" onClick={() => deleteDebtSource(d.id, d.name)} className="text-red-400 hover:text-red-600" title="Hapus pemberi utang" aria-label="Hapus pemberi utang"><Trash2 size={16} /></button>
-                </div>
-              </div>
-              {d.initialAmount > 0 && <p className="text-xs text-slate-600 mb-2">Utang awal: {formatRupiah(d.initialAmount)}</p>}
-              {allTx.length > 0 && (
-                <table className="w-full text-sm">
-                  <tbody className="divide-y">
-                    {allTx.map((t) => (
-                      <tr key={`${t.type}-${t.id}`} className="hover:bg-slate-50">
-                        {editTx?.id === t.id && editTx?.type === t.type ? (
-                          <>
-                            <td className="py-2"><input type="date" value={editForm.date} onChange={e => setEditForm(f => ({ ...f, date: e.target.value }))} className="w-full border rounded px-2 py-1 text-sm bg-white" /></td>
-                            <td className="py-2"><span className={t.type === "Bayar" ? "text-emerald-600" : "text-orange-600"}>{t.type}</span></td>
-                            <td className="py-2"><input type="text" value={editForm.description} onChange={e => setEditForm(f => ({ ...f, description: e.target.value }))} className="w-full border rounded px-2 py-1 text-sm bg-white" /></td>
-                            <td className="py-2"><input type="number" min={0} value={editForm.amount} onChange={e => setEditForm(f => ({ ...f, amount: e.target.value }))} className="w-full border rounded px-2 py-1 text-sm bg-white text-right" /></td>
-                            <td className="py-2 text-right">
-                              <div className="flex items-center justify-end gap-2">
-                                <button onClick={saveEdit} className="text-emerald-600 hover:text-emerald-800" title="Simpan"><Check size={15} /></button>
-                                <button onClick={() => setEditTx(null)} className="text-slate-400 hover:text-slate-600" title="Batal"><X size={15} /></button>
-                              </div>
-                            </td>
-                          </>
-                        ) : (
-                          <>
-                            <td className="py-2 text-slate-700">{formatDate(t.date)}</td>
-                            <td className="py-2"><span className={t.type === "Bayar" ? "text-emerald-600" : "text-orange-600"}>{t.type}</span></td>
-                            <td className="py-2 text-slate-700">{t.description}</td>
-                            <td className="py-2 text-right font-semibold text-slate-800">{formatRupiah(t.amount)}</td>
-                            <td className="py-2 text-right">
-                              <div className="flex items-center justify-end gap-2">
-                                <button type="button" onClick={() => startEdit(t)} className="text-blue-400 hover:text-blue-600" title="Edit"><Edit2 size={15} /></button>
-                                <button type="button" onClick={() => deleteTransaction(t.type, t.id)} className="text-red-400 hover:text-red-600" title="Hapus transaksi" aria-label="Hapus transaksi"><Trash2 size={15} /></button>
-                              </div>
-                            </td>
-                          </>
-                        )}
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              )}
-            </div>
-          );
-  };
-
-  return (
-    <div className="space-y-6 pt-12 md:pt-0">
-      {/* (Skipped rest to only replace the bottom part that was truncated above but need to keep it wrapped properly) */}
-      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+      {historyDebts.length > 0 && (
+        <div className="mt-8">
+          <h2 className="text-lg font-bold text-slate-800 mb-4">Riwayat (Lunas)</h2>
+          <div className="space-y-4 opacity-75">
+            {historyDebts.map(renderDebtCard)}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
