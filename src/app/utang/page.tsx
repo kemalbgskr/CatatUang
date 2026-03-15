@@ -2,6 +2,7 @@
 import { useEffect, useState } from "react";
 import { formatRupiah, formatDate } from "@/lib/utils";
 import { Plus, Trash2, Edit2, Check, X } from "lucide-react";
+import { CurrencyInput } from "@/components/CurrencyInput";
 import Modal from "@/components/Modal";
 
 interface DebtSource { id: number; name: string; initialAmount: number; loans: { id: number; date: string; amount: number; description: string }[]; payments: { id: number; date: string; amount: number; description: string }[] }
@@ -132,7 +133,7 @@ export default function UtangPage() {
                       <td className="py-2"><input type="date" value={editForm.date} onChange={e => setEditForm(f => ({ ...f, date: e.target.value }))} className="w-full border rounded px-2 py-1 text-sm bg-white" /></td>
                       <td className="py-2"><span className={t.type === "Bayar" ? "text-emerald-600" : "text-orange-600"}>{t.type}</span></td>
                       <td className="py-2"><input type="text" value={editForm.description} onChange={e => setEditForm(f => ({ ...f, description: e.target.value }))} className="w-full border rounded px-2 py-1 text-sm bg-white" /></td>
-                      <td className="py-2"><input type="number" min={0} value={editForm.amount} onChange={e => setEditForm(f => ({ ...f, amount: e.target.value }))} className="w-full border rounded px-2 py-1 text-sm bg-white text-right" /></td>
+                      <td className="py-2"><CurrencyInput min={0} value={editForm.amount} onChangeValue={(val: string) => setEditForm(f => ({ ...f, amount: val }))} className="w-full border rounded px-2 py-1 text-sm bg-white text-right" /></td>
                       <td className="py-2 text-right">
                         <div className="flex items-center justify-end gap-2">
                           <button onClick={saveEdit} className="text-emerald-600 hover:text-emerald-800" title="Simpan"><Check size={15} /></button>
@@ -182,7 +183,7 @@ export default function UtangPage() {
       </div>
       <div>
         <label className="block text-xs text-slate-500 mb-1">Nominal (Rp)</label>
-        <input type="number" required min={0} value={form.amount} onChange={e => setForm(f => ({...f, amount: e.target.value}))} className="w-full border rounded-lg px-3 py-2 text-sm" />
+        <CurrencyInput required min={0} value={form.amount} onChangeValue={(val: string) => setForm(f => ({...f, amount: val}))} className="w-full border rounded-lg px-3 py-2 text-sm" />
       </div>
     </>
   );
@@ -210,7 +211,7 @@ export default function UtangPage() {
           </div>
           <div>
             <label className="block text-xs text-slate-500 mb-1">Utang Awal (Rp)</label>
-            <input type="number" min={0} value={newDebt.initialAmount} onChange={e => setNewDebt({...newDebt, initialAmount: e.target.value})} className="w-full border rounded-lg px-3 py-2 text-sm" />
+            <CurrencyInput min={0} value={newDebt.initialAmount} onChangeValue={(val: string) => setNewDebt({...newDebt, initialAmount: val})} className="w-full border rounded-lg px-3 py-2 text-sm" />
           </div>
           {submitError && <p className="text-sm text-rose-600">{submitError}</p>}
           <button type="submit" className="bg-slate-700 text-white px-6 py-2 rounded-lg text-sm font-semibold w-full">Simpan</button>

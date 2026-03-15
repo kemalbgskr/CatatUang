@@ -2,6 +2,7 @@
 import { useEffect, useState, useCallback } from "react";
 import { formatRupiah } from "@/lib/utils";
 import { Plus, Trash2, Save, Edit2, X, Check, Sparkles, Loader2 } from "lucide-react";
+import { CurrencyInput } from "@/components/CurrencyInput";
 
 interface IncomeCategory { id: number; name: string; }
 interface ExpenseCategory { id: number; name: string; }
@@ -245,7 +246,7 @@ export default function PengaturanPage() {
                 <option key={c.id} value={c.id}>{c.name}</option>
               ))}
             </select>
-            <input type="number" value={newBudgetAmt} onChange={e => setNewBudgetAmt(e.target.value)} placeholder="Jumlah..." className="w-40 border rounded-lg px-3 py-2 text-sm" />
+            <CurrencyInput value={newBudgetAmt} onChangeValue={(val: string) => setNewBudgetAmt(val)} placeholder="Jumlah..." className="w-40 border rounded-lg px-3 py-2 text-sm" />
             <button onClick={addBudget} className="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm hover:bg-blue-700 flex items-center gap-1"><Plus size={16} />Tambah</button>
           </div>
           <div className="space-y-2">
@@ -255,7 +256,7 @@ export default function PengaturanPage() {
                 <div className="flex items-center gap-2">
                   {editBudgetId === b.id ? (
                     <>
-                      <input type="number" value={editBudgetAmt} onChange={e => setEditBudgetAmt(e.target.value)} className="w-32 border rounded px-2 py-1 text-sm" />
+                      <CurrencyInput value={editBudgetAmt} onChangeValue={(val: string) => setEditBudgetAmt(val)} className="w-32 border rounded px-2 py-1 text-sm" />
                       <button onClick={() => updateBudget(b)} className="text-emerald-600 hover:text-emerald-800"><Check size={16} /></button>
                       <button onClick={() => setEditBudgetId(null)} className="text-slate-400 hover:text-slate-600"><X size={16} /></button>
                     </>
@@ -302,11 +303,11 @@ export default function PengaturanPage() {
           <div className="grid md:grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-slate-700 mb-1">Pendapatan Bulanan</label>
-              <input type="number" value={profile.monthlyIncome} onChange={e => setProfile({ ...profile, monthlyIncome: parseFloat(e.target.value) || 0 })} className="w-full border rounded-lg px-3 py-2 text-sm" />
+              <CurrencyInput value={profile.monthlyIncome} onChangeValue={(val: string) => setProfile({ ...profile, monthlyIncome: parseFloat(val) || 0 })} className="w-full border rounded-lg px-3 py-2 text-sm" />
             </div>
             <div>
               <label className="block text-sm font-medium text-slate-700 mb-1">Pengeluaran Bulanan</label>
-              <input type="number" value={profile.monthlyExpense} onChange={e => setProfile({ ...profile, monthlyExpense: parseFloat(e.target.value) || 0 })} className="w-full border rounded-lg px-3 py-2 text-sm" />
+              <CurrencyInput value={profile.monthlyExpense} onChangeValue={(val: string) => setProfile({ ...profile, monthlyExpense: parseFloat(val) || 0 })} className="w-full border rounded-lg px-3 py-2 text-sm" />
             </div>
             <div>
               <label className="block text-sm font-medium text-slate-700 mb-1">Tanggal Lahir</label>

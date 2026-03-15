@@ -4,6 +4,7 @@ import { useRef } from "react";
 import { formatRupiah, formatDate, getCurrentMonth } from "@/lib/utils";
 import { Plus, Trash2, Upload, Loader2, Edit2, Check, X } from "lucide-react";
 import MonthYearPicker from "@/components/MonthYearPicker";
+import { CurrencyInput } from "@/components/CurrencyInput";
 import Modal from "@/components/Modal";
 
 interface Category { id: number; name: string }
@@ -224,7 +225,7 @@ export default function PengeluaranPage() {
           </div>
           <div>
             <label className="block text-xs text-slate-500 mb-1">Nominal (Rp)</label>
-            <input type="number" required min={0} value={form.amount} onChange={e => setForm({...form, amount: e.target.value})} className="w-full border rounded-lg px-3 py-2 text-sm" placeholder="0" />
+            <CurrencyInput required min={0} value={form.amount} onChangeValue={(val: string) => setForm({...form, amount: val})} className="w-full border rounded-lg px-3 py-2 text-sm" placeholder="0" />
           </div>
           {submitError && <p className="text-sm text-rose-600">{submitError}</p>}
           <button type="submit" className="bg-red-600 text-white px-6 py-2 rounded-lg text-sm hover:bg-red-700 w-full font-semibold">Simpan</button>
@@ -255,7 +256,7 @@ export default function PengeluaranPage() {
                         </select>
                       </td>
                       <td className="px-4 py-2"><input type="text" value={editForm.description} onChange={ev => setEditForm(f => ({ ...f, description: ev.target.value }))} className="w-full border rounded px-2 py-1 text-sm bg-white" /></td>
-                      <td className="px-4 py-2"><input type="number" min={0} value={editForm.amount} onChange={ev => setEditForm(f => ({ ...f, amount: ev.target.value }))} className="w-full border rounded px-2 py-1 text-sm bg-white text-right" /></td>
+                      <td className="px-4 py-2"><CurrencyInput min={0} value={editForm.amount} onChangeValue={(val: string) => setEditForm(f => ({ ...f, amount: val }))} className="w-full border rounded px-2 py-1 text-sm bg-white text-right" /></td>
                       <td className="px-4 py-2">
                         <div className="flex items-center gap-2">
                           <button onClick={saveEdit} className="text-emerald-600 hover:text-emerald-800" title="Simpan"><Check size={16} /></button>

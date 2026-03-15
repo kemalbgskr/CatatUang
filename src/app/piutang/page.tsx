@@ -2,6 +2,7 @@
 import { useEffect, useState } from "react";
 import { formatRupiah, formatDate } from "@/lib/utils";
 import { Plus, Trash2, Edit2, Check, X } from "lucide-react";
+import { CurrencyInput } from "@/components/CurrencyInput";
 import Modal from "@/components/Modal";
 
 interface Receivable { id: number; date: string; amount: number; type: string }
@@ -122,7 +123,7 @@ export default function PiutangPage() {
                   <>
                     <td className="py-2"><input type="date" value={editForm.date} onChange={e => setEditForm(f => ({ ...f, date: e.target.value }))} className="w-full border rounded px-2 py-1 text-sm bg-white" /></td>
                     <td className="py-2"><span className={r.type === "given" ? "text-orange-600" : "text-emerald-600"}>{r.type === "given" ? "Beri" : "Terima"}</span></td>
-                    <td className="py-2"><input type="number" min={0} value={editForm.amount} onChange={e => setEditForm(f => ({ ...f, amount: e.target.value }))} className="w-full border rounded px-2 py-1 text-sm bg-white text-right" /></td>
+                    <td className="py-2"><CurrencyInput min={0} value={editForm.amount} onChangeValue={(val: string) => setEditForm(f => ({ ...f, amount: val }))} className="w-full border rounded px-2 py-1 text-sm bg-white text-right" /></td>
                     <td className="py-2 text-right">
                       <div className="flex items-center justify-end gap-2">
                         <button onClick={saveEdit} className="text-emerald-600 hover:text-emerald-800" title="Simpan"><Check size={15} /></button>
@@ -168,7 +169,7 @@ export default function PiutangPage() {
       </div>
       <div>
         <label className="block text-xs text-slate-500 mb-1">Nominal (Rp)</label>
-        <input type="number" required min={0} value={form.amount} onChange={e => setForm({...form, amount: e.target.value})} className="w-full border rounded-lg px-3 py-2 text-sm" />
+        <CurrencyInput required min={0} value={form.amount} onChangeValue={(val: string) => setForm({...form, amount: val})} className="w-full border rounded-lg px-3 py-2 text-sm" />
       </div>
       {submitError && <p className="text-sm text-rose-600">{submitError}</p>}
       <button onClick={() => submit(type)} className={(type === "given" ? "bg-orange-600 hover:bg-orange-700" : "bg-emerald-600 hover:bg-emerald-700") + " text-white px-6 py-2 rounded-lg text-sm w-full font-semibold"}>

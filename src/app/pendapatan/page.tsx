@@ -3,6 +3,7 @@ import { useEffect, useState, useCallback } from "react";
 import { formatRupiah, formatDate, getCurrentMonth } from "@/lib/utils";
 import { TrendingUp, TrendingDown, Minus, Plus, Trash2, Edit2, Check, X } from "lucide-react";
 import MonthYearPicker from "@/components/MonthYearPicker";
+import { CurrencyInput } from "@/components/CurrencyInput";
 import Modal from "@/components/Modal";
 
 interface Category { id: number; name: string }
@@ -139,7 +140,7 @@ export default function PendapatanPage() {
           </div>
           <div>
             <label className="block text-xs text-slate-500 mb-1">Jumlah (Rp)</label>
-            <input type="number" required min={1} value={form.amount} onChange={e => setForm(f => ({ ...f, amount: e.target.value }))} className="w-full border border-slate-200 rounded-xl px-4 py-2 text-sm" placeholder="0" />
+            <CurrencyInput required min={1} value={form.amount} onChangeValue={(val: string) => setForm(f => ({ ...f, amount: val }))} className="w-full border border-slate-200 rounded-xl px-4 py-2 text-sm" placeholder="0" />
           </div>
           {submitError && <p className="text-sm text-rose-600">{submitError}</p>}
           <button type="submit" className="bg-emerald-600 hover:bg-emerald-700 text-white px-6 py-2 rounded-xl text-sm font-semibold w-full">Simpan</button>
@@ -170,7 +171,7 @@ export default function PendapatanPage() {
                         </select>
                       </td>
                       <td className="px-4 py-2"><input type="text" value={editForm.description} onChange={e => setEditForm(f => ({ ...f, description: e.target.value }))} className="w-full border rounded px-2 py-1 text-sm bg-white" /></td>
-                      <td className="px-4 py-2"><input type="number" min={0} value={editForm.amount} onChange={e => setEditForm(f => ({ ...f, amount: e.target.value }))} className="w-full border rounded px-2 py-1 text-sm bg-white text-right" /></td>
+                      <td className="px-4 py-2"><CurrencyInput min={0} value={editForm.amount} onChangeValue={(val: string) => setEditForm(f => ({ ...f, amount: val }))} className="w-full border rounded px-2 py-1 text-sm bg-white text-right" /></td>
                       <td className="px-4 py-2">
                         <div className="flex items-center gap-2">
                           <button onClick={saveEdit} className="text-emerald-600 hover:text-emerald-800" title="Simpan"><Check size={16} /></button>
