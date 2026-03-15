@@ -27,6 +27,8 @@ import MonthYearPicker from "@/components/MonthYearPicker";
 interface DashboardData {
   totalUtang: number;
   totalPiutang: number;
+  saldoBersih: number;
+  kekayaanBersih: number;
   currentMonth: string;
   totalPendapatan: number;
   totalPengeluaran: number;
@@ -37,7 +39,6 @@ interface DashboardData {
     month: string;
     pendapatan: number;
     pengeluaran?: number;
-    kebutuhanPokok?: number;
     sisa: number;
   }[];
   expenseByCategory: Record<string, number>;
@@ -104,7 +105,7 @@ export default function Home() {
   );
   const chartData = data.labaRugiBulanan.map((item) => ({
     ...item,
-    pengeluaran: item.pengeluaran ?? item.kebutuhanPokok ?? 0,
+    pengeluaran: item.pengeluaran ?? 0,
   }));
 
   const levelDescriptions: Record<number, string> = {
@@ -236,7 +237,7 @@ export default function Home() {
           </div>
         </div>
 
-        {/* Mini stats row */}
+        {/* Mini stats row 1 */}
         <div className="mt-6 grid grid-cols-3 gap-4 relative z-10">
           <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-3 text-center">
             <p className="text-blue-200 text-xs font-medium">Pendapatan</p>
@@ -251,20 +252,21 @@ export default function Home() {
             <p className="text-white font-black text-base mt-0.5">{formatRupiah(data.sisaPendapatan)}</p>
           </div>
         </div>
-      </div>
-
-      {/* Summary Cards */}
-      <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-        {summaryCards.map((c) => (
-          <div key={c.label} className="bg-white rounded-2xl p-5 flex flex-col gap-3 shadow-sm border border-slate-100">
-            <div className="flex items-center justify-between">
-              <span className="text-xs font-bold text-white/70 uppercase tracking-wider">{c.label}</span>
-              <div className={`w-9 h-9 rounded-xl ${c.iconBg} flex items-center justify-center`}>{c.icon}</div>
-            </div>
-            <p className={`text-xl font-black leading-tight ${c.valueColor}`}>{c.value}</p>
-            <p className="text-xs font-medium text-white/60">{c.sub}</p>
+        {/* Mini stats row 2 */}
+        <div className="mt-3 grid grid-cols-3 gap-4 relative z-10">
+          <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-3 text-center">
+            <p className="text-blue-200 text-xs font-medium">Saldo Bersih</p>
+            <p className="text-white font-black text-base mt-0.5">{formatRupiah(data.saldoBersih)}</p>
           </div>
-        ))}
+          <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-3 text-center">
+            <p className="text-blue-200 text-xs font-medium">Total Utang</p>
+            <p className={`font-black text-base mt-0.5 ${data.totalUtang > 0 ? "text-red-300" : "text-white"}`}>{formatRupiah(data.totalUtang)}</p>
+          </div>
+          <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-3 text-center">
+            <p className="text-blue-200 text-xs font-medium">Total Piutang</p>
+            <p className={`font-black text-base mt-0.5 ${data.totalPiutang > 0 ? "text-yellow-200" : "text-white"}`}>{formatRupiah(data.totalPiutang)}</p>
+          </div>
+        </div>
       </div>
 
       {/* Laba Rugi Chart */}

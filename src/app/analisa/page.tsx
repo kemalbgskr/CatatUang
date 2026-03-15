@@ -52,9 +52,8 @@ export default function AnalisaPage() {
       </div>
 
       {/* Ringkasan Kekayaan */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-3 gap-4">
         {[
-          { label: "Kekayaan Bersih", value: data.kekayaanBersih, color: data.kekayaanBersih >= 0 ? "#34d399" : "#f87171" },
           { label: "Saldo Bersih", value: data.saldoBersih, color: data.saldoBersih >= 0 ? "#60a5fa" : "#f87171" },
           { label: "Total Utang", value: -data.totalUtang, color: "#fb923c" },
           { label: "Total Piutang", value: data.totalPiutang, color: "#facc15" },
