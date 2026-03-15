@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useState, useCallback } from "react";
 import { formatRupiah } from "@/lib/utils";
-import { Plus, Trash2, Save, Edit2, X, Check } from "lucide-react";
+import { Plus, Trash2, Save, Edit2, X, Check, Sparkles, Loader2 } from "lucide-react";
 
 interface IncomeCategory { id: number; name: string; }
 interface ExpenseCategory { id: number; name: string; }
@@ -21,6 +21,9 @@ export default function PengaturanPage() {
   const [newBudgetAmt, setNewBudgetAmt] = useState("");
   const [editBudgetId, setEditBudgetId] = useState<number | null>(null);
   const [editBudgetAmt, setEditBudgetAmt] = useState("");
+  const [aiBudgetLoading, setAiBudgetLoading] = useState(false);
+  const [aiBudgetResult, setAiBudgetResult] = useState<{ theory: string; reason: string; savedCount: number } | null>(null);
+  const [aiBudgetError, setAiBudgetError] = useState("");
   const [tab, setTab] = useState<"kategori" | "budget" | "profil" | "ai">("kategori");
   const [aiSettings, setAiSettings] = useState<AISettings>({
     baseUrl: "https://api.openai.com/v1",
@@ -96,6 +99,26 @@ export default function PengaturanPage() {
     alert("Konfigurasi AI tersimpan!");
   };
 
+  const generateAIBudget = async () => {
+    setAiBudgetLoading(true);
+    setAiBudgetError("");
+    setAiBudgetResult(null);
+    try {
+      const res = await fetch("/api/ai/budget", { method: "POST" });
+      const data = await res.json();
+      if (!res.ok) {
+        setAiBudgetError(data.error || "Gagal membuat budget dengan AI.");
+        return;
+      }
+      setAiBudgetResult(data);
+      load(); // refresh budget list
+    } catch {
+      setAiBudgetError("Gagal terhubung ke layanan AI.");
+    } finally {
+      setAiBudgetLoading(false);
+    }
+  };
+
   const tabs = [
     { key: "kategori" as const, label: "Kategori" },
     { key: "budget" as const, label: "Budget" },
@@ -165,7 +188,29 @@ export default function PengaturanPage() {
       {/* Budget */}
       {tab === "budget" && (
         <div className="bg-white rounded-xl shadow-sm border p-6">
-          <h2 className="text-lg font-semibold text-slate-800 mb-4">Atur Budget Bulanan</h2>
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-lg font-semibold text-slate-800">Atur Budget Bulanan</h2>
+            <button
+              onClick={generateAIBudget}
+              disabled={aiBudgetLoading}
+              className="flex items-center gap-2 bg-[#1e3a8a] hover:bg-[#1e40af] disabled:opacity-60 text-white px-4 py-2 rounded-xl text-sm font-semibold transition"
+            >
+              {aiBudgetLoading ? <Loader2 size={15} className="animate-spin" /> : <Sparkles size={15} />}
+              {aiBudgetLoading ? "Menganalisis..." : "Set Budget dengan AI"}
+            </button>
+          </div>
+
+          {/* AI result banner */}
+          {aiBudgetResult && (
+            <div className="mb-4 bg-blue-50 border border-blue-200 rounded-xl p-4">
+              <p className="text-xs font-bold text-blue-700 mb-1">✨ Budget berhasil diset oleh AI ({aiBudgetResult.savedCount} kategori)</p>
+              <p className="text-xs text-blue-600"><strong>Teori:</strong> {aiBudgetResult.theory}</p>
+              <p className="text-xs text-blue-600 mt-0.5">{aiBudgetResult.reason}</p>
+            </div>
+          )}
+          {aiBudgetError && (
+            <div className="mb-4 text-sm text-rose-600 bg-rose-50 border border-rose-100 rounded-xl p-3">{aiBudgetError}</div>
+          )}
           <div className="flex gap-2 mb-4">
             <select value={newBudgetCatId} onChange={e => setNewBudgetCatId(e.target.value)} className="flex-1 border rounded-lg px-3 py-2 text-sm">
               <option value="">Pilih kategori...</option>

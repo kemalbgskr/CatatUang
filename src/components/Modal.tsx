@@ -28,21 +28,27 @@ export default function Modal({ open, onClose, title, children }: ModalProps) {
     >
       {/* Backdrop */}
       <div
-        className="absolute inset-0 bg-black/40 backdrop-blur-sm"
+        className="absolute inset-0 bg-black/50 backdrop-blur-sm"
         onClick={onClose}
       />
       {/* Card */}
-      <div className="relative z-10 bg-white rounded-2xl shadow-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
+      <div
+        className="relative z-10 bg-white rounded-3xl w-full max-w-lg max-h-[90vh] overflow-y-auto"
+        style={{ boxShadow: "0 24px 64px 0 rgba(30,58,138,0.22)" }}
+      >
         {/* Header */}
-        <div className="flex items-center justify-between px-6 pt-5 pb-4 border-b border-slate-100">
-          <h2 className="text-base font-bold text-slate-800">{title}</h2>
+        <div
+          className="flex items-center justify-between px-6 pt-5 pb-4"
+          style={{ background: "linear-gradient(135deg, #1e3a8a 0%, #1d4ed8 100%)", borderRadius: "1.5rem 1.5rem 0 0" }}
+        >
+          <h2 className="text-base font-bold text-white">{title}</h2>
           <button
             type="button"
             onClick={onClose}
-            className="text-slate-400 hover:text-slate-700 transition-colors"
+            className="w-8 h-8 rounded-xl bg-white/15 hover:bg-white/30 flex items-center justify-center text-white transition"
             aria-label="Tutup"
           >
-            <X size={20} />
+            <X size={16} />
           </button>
         </div>
         {/* Body */}

@@ -2,6 +2,7 @@
 import { useEffect, useState } from "react";
 import { formatRupiah, formatDate } from "@/lib/utils";
 import { Plus, Trash2 } from "lucide-react";
+import Modal from "@/components/Modal";
 
 interface DebtSource { id: number; name: string; initialAmount: number; loans: { id: number; date: string; amount: number; description: string }[]; payments: { id: number; date: string; amount: number; description: string }[] }
 
@@ -22,11 +23,7 @@ export default function UtangPage() {
     e.preventDefault();
     setSubmitError("");
     const res = await fetch("/api/debts/payments", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ ...payForm, debtSourceId: +payForm.debtSourceId, amount: +payForm.amount }) });
-    if (!res.ok) {
-      const payload = await res.json().catch(() => ({}));
-      setSubmitError(payload.error || "Gagal menambah pembayaran utang.");
-      return;
-    }
+    if (!res.ok) { const payload = await res.json().catch(() => ({})); setSubmitError(payload.error || "Gagal menambah pembayaran utang."); return; }
     setPayForm({ date: new Date().toISOString().split("T")[0], debtSourceId: "", amount: "", description: "" });
     setShowPayForm(false);
     load();
@@ -36,11 +33,7 @@ export default function UtangPage() {
     e.preventDefault();
     setSubmitError("");
     const res = await fetch("/api/debts/loans", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ ...loanForm, debtSourceId: +loanForm.debtSourceId, amount: +loanForm.amount }) });
-    if (!res.ok) {
-      const payload = await res.json().catch(() => ({}));
-      setSubmitError(payload.error || "Gagal menambah pinjaman.");
-      return;
-    }
+    if (!res.ok) { const payload = await res.json().catch(() => ({})); setSubmitError(payload.error || "Gagal menambah pinjaman."); return; }
     setLoanForm({ date: new Date().toISOString().split("T")[0], debtSourceId: "", amount: "", description: "" });
     setShowLoanForm(false);
     load();
@@ -50,11 +43,7 @@ export default function UtangPage() {
     e.preventDefault();
     setSubmitError("");
     const res = await fetch("/api/debts", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ name: newDebt.name, initialAmount: +newDebt.initialAmount }) });
-    if (!res.ok) {
-      const payload = await res.json().catch(() => ({}));
-      setSubmitError(payload.error || "Gagal menambah pemberi utang.");
-      return;
-    }
+    if (!res.ok) { const payload = await res.json().catch(() => ({})); setSubmitError(payload.error || "Gagal menambah pemberi utang."); return; }
     setNewDebt({ name: "", initialAmount: "0" });
     setShowNewDebt(false);
     load();
@@ -79,6 +68,30 @@ export default function UtangPage() {
     return s + d.initialAmount + loans - payments;
   }, 0);
 
+  const DebtFormFields = ({ form, setForm }: { form: typeof payForm, setForm: React.Dispatch<React.SetStateAction<typeof payForm>> }) => (
+    <>
+      <div>
+        <label className="block text-xs text-slate-500 mb-1">Tanggal</label>
+        <input type="date" required value={form.date} onChange={e => setForm(f => ({...f, date: e.target.value}))} className="w-full border rounded-lg px-3 py-2 text-sm" />
+      </div>
+      <div>
+        <label className="block text-xs text-slate-500 mb-1">Pemberi Utang</label>
+        <select required value={form.debtSourceId} onChange={e => setForm(f => ({...f, debtSourceId: e.target.value}))} className="w-full border rounded-lg px-3 py-2 text-sm">
+          <option value="">Pilih...</option>
+          {debts.map(d => <option key={d.id} value={d.id}>{d.name}</option>)}
+        </select>
+      </div>
+      <div>
+        <label className="block text-xs text-slate-500 mb-1">Rincian</label>
+        <input type="text" value={form.description} onChange={e => setForm(f => ({...f, description: e.target.value}))} className="w-full border rounded-lg px-3 py-2 text-sm" />
+      </div>
+      <div>
+        <label className="block text-xs text-slate-500 mb-1">Nominal (Rp)</label>
+        <input type="number" required min={0} value={form.amount} onChange={e => setForm(f => ({...f, amount: e.target.value}))} className="w-full border rounded-lg px-3 py-2 text-sm" />
+      </div>
+    </>
+  );
+
   return (
     <div className="space-y-6 pt-12 md:pt-0">
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
@@ -87,45 +100,45 @@ export default function UtangPage() {
           <p className="text-slate-500 text-sm">Total Sisa Utang: {formatRupiah(totalUtang)}</p>
         </div>
         <div className="flex gap-2 flex-wrap">
-          <button onClick={() => setShowNewDebt(!showNewDebt)} className="bg-slate-600 text-white px-3 py-2 rounded-lg text-sm flex items-center gap-1 hover:bg-slate-700"><Plus size={14} /> Pemberi Utang</button>
-          <button onClick={() => setShowLoanForm(!showLoanForm)} className="bg-orange-600 text-white px-3 py-2 rounded-lg text-sm flex items-center gap-1 hover:bg-orange-700"><Plus size={14} /> Ambil Pinjaman</button>
-          <button onClick={() => setShowPayForm(!showPayForm)} className="bg-emerald-600 text-white px-3 py-2 rounded-lg text-sm flex items-center gap-1 hover:bg-emerald-700"><Plus size={14} /> Bayar Utang</button>
+          <button onClick={() => setShowNewDebt(true)} className="bg-slate-600 text-white px-3 py-2 rounded-lg text-sm flex items-center gap-1 hover:bg-slate-700"><Plus size={14} /> Pemberi Utang</button>
+          <button onClick={() => setShowLoanForm(true)} className="bg-orange-600 text-white px-3 py-2 rounded-lg text-sm flex items-center gap-1 hover:bg-orange-700"><Plus size={14} /> Ambil Pinjaman</button>
+          <button onClick={() => setShowPayForm(true)} className="bg-emerald-600 text-white px-3 py-2 rounded-lg text-sm flex items-center gap-1 hover:bg-emerald-700"><Plus size={14} /> Bayar Utang</button>
         </div>
       </div>
 
-      {showNewDebt && (
-        <form onSubmit={addDebt} className="bg-white rounded-xl shadow-sm border p-6 flex flex-wrap gap-4 items-end">
-          <div><label className="block text-xs text-slate-500 mb-1">Nama Pemberi Utang</label><input type="text" required value={newDebt.name} onChange={e => setNewDebt({...newDebt, name: e.target.value})} className="border rounded-lg px-3 py-2 text-sm" /></div>
-          <div><label className="block text-xs text-slate-500 mb-1">Utang Awal (Rp)</label><input type="number" min={0} value={newDebt.initialAmount} onChange={e => setNewDebt({...newDebt, initialAmount: e.target.value})} className="border rounded-lg px-3 py-2 text-sm" /></div>
-          <button type="submit" className="bg-slate-700 text-white px-6 py-2 rounded-lg text-sm">Simpan</button>
+      {/* Tambah Pemberi Utang */}
+      <Modal open={showNewDebt} onClose={() => setShowNewDebt(false)} title="Tambah Pemberi Utang">
+        <form onSubmit={addDebt} className="flex flex-col gap-4">
+          <div>
+            <label className="block text-xs text-slate-500 mb-1">Nama Pemberi Utang</label>
+            <input type="text" required value={newDebt.name} onChange={e => setNewDebt({...newDebt, name: e.target.value})} className="w-full border rounded-lg px-3 py-2 text-sm" />
+          </div>
+          <div>
+            <label className="block text-xs text-slate-500 mb-1">Utang Awal (Rp)</label>
+            <input type="number" min={0} value={newDebt.initialAmount} onChange={e => setNewDebt({...newDebt, initialAmount: e.target.value})} className="w-full border rounded-lg px-3 py-2 text-sm" />
+          </div>
+          {submitError && <p className="text-sm text-rose-600">{submitError}</p>}
+          <button type="submit" className="bg-slate-700 text-white px-6 py-2 rounded-lg text-sm font-semibold w-full">Simpan</button>
         </form>
-      )}
+      </Modal>
 
-      {showPayForm && (
-        <form onSubmit={submitPay} className="bg-white rounded-xl shadow-sm border p-6 grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div><label className="block text-xs text-slate-500 mb-1">Tanggal</label><input type="date" required value={payForm.date} onChange={e => setPayForm({...payForm, date: e.target.value})} className="w-full border rounded-lg px-3 py-2 text-sm" /></div>
-          <div><label className="block text-xs text-slate-500 mb-1">Pemberi Utang</label><select required value={payForm.debtSourceId} onChange={e => setPayForm({...payForm, debtSourceId: e.target.value})} className="w-full border rounded-lg px-3 py-2 text-sm"><option value="">Pilih...</option>{debts.map(d => <option key={d.id} value={d.id}>{d.name}</option>)}</select></div>
-          <div><label className="block text-xs text-slate-500 mb-1">Rincian</label><input type="text" value={payForm.description} onChange={e => setPayForm({...payForm, description: e.target.value})} className="w-full border rounded-lg px-3 py-2 text-sm" /></div>
-          <div><label className="block text-xs text-slate-500 mb-1">Nominal (Rp)</label><input type="number" required min={0} value={payForm.amount} onChange={e => setPayForm({...payForm, amount: e.target.value})} className="w-full border rounded-lg px-3 py-2 text-sm" /></div>
-          <div className="flex items-end"><button type="submit" className="bg-emerald-600 text-white px-6 py-2 rounded-lg text-sm w-full">Bayar</button></div>
+      {/* Ambil Pinjaman */}
+      <Modal open={showLoanForm} onClose={() => setShowLoanForm(false)} title="Ambil Pinjaman">
+        <form onSubmit={submitLoan} className="flex flex-col gap-4">
+          <DebtFormFields form={loanForm} setForm={setLoanForm} />
+          {submitError && <p className="text-sm text-rose-600">{submitError}</p>}
+          <button type="submit" className="bg-orange-600 text-white px-6 py-2 rounded-lg text-sm font-semibold w-full hover:bg-orange-700">Simpan Pinjaman</button>
         </form>
-      )}
+      </Modal>
 
-      {showLoanForm && (
-        <form onSubmit={submitLoan} className="bg-white rounded-xl shadow-sm border p-6 grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div><label className="block text-xs text-slate-500 mb-1">Tanggal</label><input type="date" required value={loanForm.date} onChange={e => setLoanForm({...loanForm, date: e.target.value})} className="w-full border rounded-lg px-3 py-2 text-sm" /></div>
-          <div><label className="block text-xs text-slate-500 mb-1">Pemberi Utang</label><select required value={loanForm.debtSourceId} onChange={e => setLoanForm({...loanForm, debtSourceId: e.target.value})} className="w-full border rounded-lg px-3 py-2 text-sm"><option value="">Pilih...</option>{debts.map(d => <option key={d.id} value={d.id}>{d.name}</option>)}</select></div>
-          <div><label className="block text-xs text-slate-500 mb-1">Rincian</label><input type="text" value={loanForm.description} onChange={e => setLoanForm({...loanForm, description: e.target.value})} className="w-full border rounded-lg px-3 py-2 text-sm" /></div>
-          <div><label className="block text-xs text-slate-500 mb-1">Nominal (Rp)</label><input type="number" required min={0} value={loanForm.amount} onChange={e => setLoanForm({...loanForm, amount: e.target.value})} className="w-full border rounded-lg px-3 py-2 text-sm" /></div>
-          <div className="flex items-end"><button type="submit" className="bg-orange-600 text-white px-6 py-2 rounded-lg text-sm w-full">Simpan Pinjaman</button></div>
+      {/* Bayar Utang */}
+      <Modal open={showPayForm} onClose={() => setShowPayForm(false)} title="Bayar Utang">
+        <form onSubmit={submitPay} className="flex flex-col gap-4">
+          <DebtFormFields form={payForm} setForm={setPayForm} />
+          {submitError && <p className="text-sm text-rose-600">{submitError}</p>}
+          <button type="submit" className="bg-emerald-600 text-white px-6 py-2 rounded-lg text-sm font-semibold w-full hover:bg-emerald-700">Bayar</button>
         </form>
-      )}
-
-      {submitError && (
-        <div className="text-sm text-rose-600 bg-rose-50 border border-rose-100 rounded-lg px-3 py-2">
-          {submitError}
-        </div>
-      )}
+      </Modal>
 
       <div className="space-y-4">
         {debts.map(d => {
@@ -139,15 +152,7 @@ export default function UtangPage() {
                 <h3 className="font-semibold text-slate-800">{d.name}</h3>
                 <div className="flex items-center gap-3">
                   <span className={"font-bold " + (remaining > 0 ? "text-red-600" : "text-emerald-600")}>{formatRupiah(remaining)}</span>
-                  <button
-                    type="button"
-                    onClick={() => deleteDebtSource(d.id, d.name)}
-                    className="text-red-400 hover:text-red-600"
-                    title="Hapus pemberi utang"
-                    aria-label="Hapus pemberi utang"
-                  >
-                    <Trash2 size={16} />
-                  </button>
+                  <button type="button" onClick={() => deleteDebtSource(d.id, d.name)} className="text-red-400 hover:text-red-600" title="Hapus pemberi utang" aria-label="Hapus pemberi utang"><Trash2 size={16} /></button>
                 </div>
               </div>
               {d.initialAmount > 0 && <p className="text-xs text-slate-600 mb-2">Utang awal: {formatRupiah(d.initialAmount)}</p>}
@@ -161,15 +166,7 @@ export default function UtangPage() {
                         <td className="py-2 text-slate-700">{t.description}</td>
                         <td className="py-2 text-right font-semibold text-slate-800">{formatRupiah(t.amount)}</td>
                         <td className="py-2 text-right">
-                          <button
-                            type="button"
-                            onClick={() => deleteTransaction(t.type, t.id)}
-                            className="text-red-400 hover:text-red-600"
-                            title="Hapus transaksi"
-                            aria-label="Hapus transaksi"
-                          >
-                            <Trash2 size={15} />
-                          </button>
+                          <button type="button" onClick={() => deleteTransaction(t.type, t.id)} className="text-red-400 hover:text-red-600" title="Hapus transaksi" aria-label="Hapus transaksi"><Trash2 size={15} /></button>
                         </td>
                       </tr>
                     ))}

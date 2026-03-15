@@ -2,6 +2,7 @@
 import { useEffect, useState } from "react";
 import { formatRupiah, formatDate } from "@/lib/utils";
 import { Plus } from "lucide-react";
+import Modal from "@/components/Modal";
 
 interface Account { id: number; name: string }
 interface Item { id: number; name: string; initialQty: number; initialValue: number; transactions: { id: number; date: string; type: string; price: number; quantity: number; account: Account }[] }
@@ -36,6 +37,35 @@ export default function BarangPage() {
     return s + i.initialValue + buys - sells;
   }, 0);
 
+  const TxFormFields = () => (
+    <>
+      <div>
+        <label className="block text-xs text-slate-500 mb-1">Tanggal</label>
+        <input type="date" required value={form.date} onChange={e => setForm({...form, date: e.target.value})} className="w-full border rounded-lg px-3 py-2 text-sm" />
+      </div>
+      <div>
+        <label className="block text-xs text-slate-500 mb-1">Barang</label>
+        <select required value={form.itemId} onChange={e => setForm({...form, itemId: e.target.value})} className="w-full border rounded-lg px-3 py-2 text-sm">
+          <option value="">Pilih...</option>{items.map(i => <option key={i.id} value={i.id}>{i.name}</option>)}
+        </select>
+      </div>
+      <div>
+        <label className="block text-xs text-slate-500 mb-1">Harga (Rp)</label>
+        <input type="number" required min={0} value={form.price} onChange={e => setForm({...form, price: e.target.value})} className="w-full border rounded-lg px-3 py-2 text-sm" />
+      </div>
+      <div>
+        <label className="block text-xs text-slate-500 mb-1">Jumlah</label>
+        <input type="number" required min={1} value={form.quantity} onChange={e => setForm({...form, quantity: e.target.value})} className="w-full border rounded-lg px-3 py-2 text-sm" />
+      </div>
+      <div>
+        <label className="block text-xs text-slate-500 mb-1">Rekening</label>
+        <select required value={form.accountId} onChange={e => setForm({...form, accountId: e.target.value})} className="w-full border rounded-lg px-3 py-2 text-sm">
+          <option value="">Pilih...</option>{accounts.map(a => <option key={a.id} value={a.id}>{a.name}</option>)}
+        </select>
+      </div>
+    </>
+  );
+
   return (
     <div className="space-y-6 pt-12 md:pt-0">
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
@@ -44,31 +74,34 @@ export default function BarangPage() {
           <p className="text-slate-500 text-sm">Total Nilai: {formatRupiah(totalValue)}</p>
         </div>
         <div className="flex gap-2 flex-wrap">
-          <button onClick={() => setShowNew(!showNew)} className="bg-slate-600 text-white px-3 py-2 rounded-lg text-sm flex items-center gap-1"><Plus size={14} /> Barang Baru</button>
-          <button onClick={() => {setShowBuy(!showBuy);setShowSell(false)}} className="bg-blue-600 text-white px-3 py-2 rounded-lg text-sm flex items-center gap-1"><Plus size={14} /> Beli</button>
-          <button onClick={() => {setShowSell(!showSell);setShowBuy(false)}} className="bg-emerald-600 text-white px-3 py-2 rounded-lg text-sm flex items-center gap-1"><Plus size={14} /> Jual</button>
+          <button onClick={() => setShowNew(true)} className="bg-slate-600 text-white px-3 py-2 rounded-lg text-sm flex items-center gap-1 hover:bg-slate-700"><Plus size={14} /> Barang Baru</button>
+          <button onClick={() => { setShowBuy(true); setShowSell(false); }} className="bg-blue-600 text-white px-3 py-2 rounded-lg text-sm flex items-center gap-1 hover:bg-blue-700"><Plus size={14} /> Beli</button>
+          <button onClick={() => { setShowSell(true); setShowBuy(false); }} className="bg-emerald-600 text-white px-3 py-2 rounded-lg text-sm flex items-center gap-1 hover:bg-emerald-700"><Plus size={14} /> Jual</button>
         </div>
       </div>
 
-      {showNew && (
-        <form onSubmit={addItem} className="bg-white rounded-xl shadow-sm border p-6 flex flex-wrap gap-4 items-end">
-          <div><label className="block text-xs text-slate-500 mb-1">Nama Barang</label><input type="text" required value={newItem.name} onChange={e => setNewItem({...newItem, name: e.target.value})} className="border rounded-lg px-3 py-2 text-sm" /></div>
-          <div><label className="block text-xs text-slate-500 mb-1">Jumlah Awal</label><input type="number" min={0} value={newItem.initialQty} onChange={e => setNewItem({...newItem, initialQty: e.target.value})} className="border rounded-lg px-3 py-2 text-sm w-24" /></div>
-          <div><label className="block text-xs text-slate-500 mb-1">Nilai Awal (Rp)</label><input type="number" min={0} value={newItem.initialValue} onChange={e => setNewItem({...newItem, initialValue: e.target.value})} className="border rounded-lg px-3 py-2 text-sm" /></div>
-          <button type="submit" className="bg-slate-700 text-white px-6 py-2 rounded-lg text-sm">Simpan</button>
+      <Modal open={showNew} onClose={() => setShowNew(false)} title="Tambah Barang Baru">
+        <form onSubmit={addItem} className="flex flex-col gap-4">
+          <div><label className="block text-xs text-slate-500 mb-1">Nama Barang</label><input type="text" required value={newItem.name} onChange={e => setNewItem({...newItem, name: e.target.value})} className="w-full border rounded-lg px-3 py-2 text-sm" /></div>
+          <div><label className="block text-xs text-slate-500 mb-1">Jumlah Awal</label><input type="number" min={0} value={newItem.initialQty} onChange={e => setNewItem({...newItem, initialQty: e.target.value})} className="w-full border rounded-lg px-3 py-2 text-sm" /></div>
+          <div><label className="block text-xs text-slate-500 mb-1">Nilai Awal (Rp)</label><input type="number" min={0} value={newItem.initialValue} onChange={e => setNewItem({...newItem, initialValue: e.target.value})} className="w-full border rounded-lg px-3 py-2 text-sm" /></div>
+          <button type="submit" className="bg-slate-700 text-white px-6 py-2 rounded-lg text-sm font-semibold w-full">Simpan</button>
         </form>
-      )}
+      </Modal>
 
-      {(showBuy || showSell) && (
-        <div className="bg-white rounded-xl shadow-sm border p-6 grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div><label className="block text-xs text-slate-500 mb-1">Tanggal</label><input type="date" required value={form.date} onChange={e => setForm({...form, date: e.target.value})} className="w-full border rounded-lg px-3 py-2 text-sm" /></div>
-          <div><label className="block text-xs text-slate-500 mb-1">Barang</label><select required value={form.itemId} onChange={e => setForm({...form, itemId: e.target.value})} className="w-full border rounded-lg px-3 py-2 text-sm"><option value="">Pilih...</option>{items.map(i => <option key={i.id} value={i.id}>{i.name}</option>)}</select></div>
-          <div><label className="block text-xs text-slate-500 mb-1">Harga (Rp)</label><input type="number" required min={0} value={form.price} onChange={e => setForm({...form, price: e.target.value})} className="w-full border rounded-lg px-3 py-2 text-sm" /></div>
-          <div><label className="block text-xs text-slate-500 mb-1">Jumlah</label><input type="number" required min={1} value={form.quantity} onChange={e => setForm({...form, quantity: e.target.value})} className="w-full border rounded-lg px-3 py-2 text-sm" /></div>
-          <div><label className="block text-xs text-slate-500 mb-1">Rekening</label><select required value={form.accountId} onChange={e => setForm({...form, accountId: e.target.value})} className="w-full border rounded-lg px-3 py-2 text-sm"><option value="">Pilih...</option>{accounts.map(a => <option key={a.id} value={a.id}>{a.name}</option>)}</select></div>
-          <div className="flex items-end"><button onClick={() => submitTx(showBuy ? "buy" : "sell")} className={(showBuy ? "bg-blue-600 hover:bg-blue-700" : "bg-emerald-600 hover:bg-emerald-700") + " text-white px-6 py-2 rounded-lg text-sm w-full"}>{showBuy ? "Beli" : "Jual"}</button></div>
+      <Modal open={showBuy} onClose={() => setShowBuy(false)} title="Beli Barang">
+        <div className="flex flex-col gap-4">
+          <TxFormFields />
+          <button onClick={() => submitTx("buy")} className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg text-sm font-semibold w-full">Beli</button>
         </div>
-      )}
+      </Modal>
+
+      <Modal open={showSell} onClose={() => setShowSell(false)} title="Jual Barang">
+        <div className="flex flex-col gap-4">
+          <TxFormFields />
+          <button onClick={() => submitTx("sell")} className="bg-emerald-600 hover:bg-emerald-700 text-white px-6 py-2 rounded-lg text-sm font-semibold w-full">Jual</button>
+        </div>
+      </Modal>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {items.map(i => {
@@ -79,14 +112,14 @@ export default function BarangPage() {
           return (
             <div key={i.id} className="bg-white rounded-xl shadow-sm border p-4">
               <h3 className="font-semibold text-slate-800">{i.name}</h3>
-              <p className="text-xs text-slate-400">Qty: {qty}</p>
+              <p className="text-xs text-slate-500">Qty: {qty}</p>
               <p className="text-lg font-bold text-amber-600 mt-1">{formatRupiah(val)}</p>
               {i.transactions.length > 0 && (
                 <div className="mt-3 space-y-1">
                   {i.transactions.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()).map(t => (
                     <div key={t.id} className="flex justify-between text-xs">
-                      <span className="text-slate-400">{formatDate(t.date)} - <span className={t.type === "buy" ? "text-blue-500" : "text-emerald-500"}>{t.type === "buy" ? "Beli" : "Jual"}</span></span>
-                      <span className="text-slate-600">{formatRupiah(t.price * t.quantity)}</span>
+                      <span className="text-slate-600">{formatDate(t.date)} - <span className={t.type === "buy" ? "text-blue-500" : "text-emerald-500"}>{t.type === "buy" ? "Beli" : "Jual"}</span></span>
+                      <span className="text-slate-700 font-medium">{formatRupiah(t.price * t.quantity)}</span>
                     </div>
                   ))}
                 </div>

@@ -94,7 +94,7 @@ export default function Home() {
   if (!data)
     return (
       <div className="flex items-center justify-center h-96">
-        <div className="animate-spin h-10 w-10 border-4 border-indigo-500 border-t-transparent rounded-full" />
+        <div className="animate-spin h-10 w-10 border-4 border-blue-600 border-t-transparent rounded-full" />
       </div>
     );
 
@@ -163,128 +163,119 @@ export default function Home() {
       label: "Pendapatan",
       value: formatRupiah(data.totalPendapatan),
       sub: getMonthLabel(data.currentMonth),
-      color: "text-emerald-700",
-      bg: "bg-emerald-50",
-      border: "border-emerald-200",
-      icon: <TrendingUp size={22} className="text-emerald-500" />,
+      valueColor: "text-emerald-600",
+      iconBg: "bg-emerald-100",
+      icon: <TrendingUp size={20} className="text-emerald-600" />,
     },
     {
       label: "Pengeluaran",
       value: formatRupiah(data.totalPengeluaran),
       sub: getMonthLabel(data.currentMonth),
-      color: "text-rose-600",
-      bg: "bg-rose-50",
-      border: "border-rose-200",
-      icon: <TrendingDown size={22} className="text-rose-400" />,
+      valueColor: "text-rose-600",
+      iconBg: "bg-rose-100",
+      icon: <TrendingDown size={20} className="text-rose-600" />,
     },
     {
       label: "Sisa Bulan Ini",
       value: formatRupiah(data.sisaPendapatan),
       sub: getMonthLabel(data.currentMonth),
-      color: data.sisaPendapatan >= 0 ? "text-indigo-700" : "text-rose-600",
-      bg: data.sisaPendapatan >= 0 ? "bg-indigo-50" : "bg-rose-50",
-      border:
-        data.sisaPendapatan >= 0 ? "border-indigo-200" : "border-rose-200",
-      icon: (
-        <Wallet
-          size={22}
-          className={
-            data.sisaPendapatan >= 0 ? "text-indigo-400" : "text-rose-400"
-          }
-        />
-      ),
+      valueColor: data.sisaPendapatan >= 0 ? "text-blue-700" : "text-rose-600",
+      iconBg: data.sisaPendapatan >= 0 ? "bg-blue-100" : "bg-rose-100",
+      icon: <Wallet size={20} className={data.sisaPendapatan >= 0 ? "text-blue-600" : "text-rose-600"} />,
     },
     {
       label: "Saldo Bersih",
       value: formatRupiah(saldoBersih),
       sub: "Semua waktu",
-      color: saldoBersih >= 0 ? "text-blue-700" : "text-rose-600",
-      bg: saldoBersih >= 0 ? "bg-blue-50" : "bg-rose-50",
-      border: saldoBersih >= 0 ? "border-blue-200" : "border-rose-200",
-      icon: (
-        <Star
-          size={22}
-          className={saldoBersih >= 0 ? "text-blue-400" : "text-rose-400"}
-        />
-      ),
+      valueColor: saldoBersih >= 0 ? "text-indigo-700" : "text-rose-600",
+      iconBg: saldoBersih >= 0 ? "bg-indigo-100" : "bg-rose-100",
+      icon: <Star size={20} className={saldoBersih >= 0 ? "text-indigo-600" : "text-rose-600"} />,
     },
     {
       label: "Total Utang",
       value: formatRupiah(data.totalUtang),
       sub: "Aktif",
-      color: "text-orange-700",
-      bg: "bg-orange-50",
-      border: "border-orange-200",
-      icon: <AlertCircle size={22} className="text-orange-400" />,
+      valueColor: "text-orange-600",
+      iconBg: "bg-orange-100",
+      icon: <AlertCircle size={20} className="text-orange-600" />,
     },
     {
       label: "Total Piutang",
       value: formatRupiah(data.totalPiutang),
       sub: "Aktif",
-      color: "text-amber-700",
-      bg: "bg-amber-50",
-      border: "border-amber-200",
-      icon: <HandCoins size={22} className="text-amber-400" />,
+      valueColor: "text-amber-600",
+      iconBg: "bg-amber-100",
+      icon: <HandCoins size={20} className="text-amber-600" />,
     },
   ];
 
   return (
-    <div className="space-y-8">
-      {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-        <div>
-          <h1 className="text-3xl font-black text-slate-900 tracking-tight leading-tight">
-            Dashboard
-          </h1>
-          <div className="mt-2 inline-flex items-center gap-1.5 bg-indigo-100 text-indigo-700 font-semibold text-sm px-3 py-1 rounded-full">
-            <Star size={13} />
-            {displayLevelLabel}
+    <div className="space-y-6">
+      {/* Hero Header Card */}
+      <div
+        className="rounded-3xl p-6 md:p-8 text-white relative overflow-hidden"
+        style={{ background: "linear-gradient(135deg, #1e3a8a 0%, #1d4ed8 60%, #3b82f6 100%)" }}
+      >
+        {/* Decorative circles */}
+        <div className="absolute -top-10 -right-10 w-48 h-48 rounded-full bg-white/5" />
+        <div className="absolute -bottom-8 -right-4 w-32 h-32 rounded-full bg-white/8" />
+        <div className="absolute top-4 right-20 w-16 h-16 rounded-full bg-white/5" />
+
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 relative z-10">
+          <div>
+            <p className="text-blue-200 text-sm font-medium mb-1">Selamat datang</p>
+            <h1 className="text-2xl md:text-3xl font-black tracking-tight leading-tight">Dashboard Keuangan</h1>
+            <div className="mt-2 inline-flex items-center gap-1.5 bg-white/20 text-white text-xs font-semibold px-3 py-1.5 rounded-full backdrop-blur-sm">
+              <Star size={12} />
+              {displayLevelLabel}
+              {aiLevelForMonth && <span className="opacity-70">(AI)</span>}
+            </div>
+          </div>
+          <div className="flex items-center gap-3">
+            <MonthYearPicker value={month} onChange={setMonth} />
           </div>
         </div>
-        <MonthYearPicker value={month} onChange={setMonth} />
+
+        {/* Mini stats row */}
+        <div className="mt-6 grid grid-cols-3 gap-4 relative z-10">
+          <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-3 text-center">
+            <p className="text-blue-200 text-xs font-medium">Pendapatan</p>
+            <p className="text-white font-black text-base mt-0.5">{formatRupiah(data.totalPendapatan)}</p>
+          </div>
+          <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-3 text-center">
+            <p className="text-blue-200 text-xs font-medium">Pengeluaran</p>
+            <p className="text-white font-black text-base mt-0.5">{formatRupiah(data.totalPengeluaran)}</p>
+          </div>
+          <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-3 text-center">
+            <p className="text-blue-200 text-xs font-medium">Sisa</p>
+            <p className="text-white font-black text-base mt-0.5">{formatRupiah(data.sisaPendapatan)}</p>
+          </div>
+        </div>
       </div>
 
       {/* Summary Cards */}
       <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
         {summaryCards.map((c) => (
-          <div
-            key={c.label}
-            className={`${c.bg} border ${c.border} rounded-2xl p-5 flex flex-col gap-3`}
-          >
+          <div key={c.label} className="bg-white rounded-2xl p-5 flex flex-col gap-3 shadow-sm border border-slate-100">
             <div className="flex items-center justify-between">
-              <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">
-                {c.label}
-              </span>
-              {c.icon}
+              <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">{c.label}</span>
+              <div className={`w-9 h-9 rounded-xl ${c.iconBg} flex items-center justify-center`}>{c.icon}</div>
             </div>
-            <p className={`text-xl font-black leading-tight ${c.color}`}>
-              {c.value}
-            </p>
+            <p className={`text-xl font-black leading-tight ${c.valueColor}`}>{c.value}</p>
             <p className="text-xs font-medium text-slate-400">{c.sub}</p>
           </div>
         ))}
       </div>
 
       {/* Laba Rugi Chart */}
-      <div className="bg-white rounded-3xl shadow-sm border border-slate-100 p-6">
-        <h2 className="text-lg font-bold text-slate-800">Laba Rugi Bulanan</h2>
-        <p className="text-sm text-slate-400 mt-0.5 mb-5">
-          Pendapatan vs pengeluaran 12 bulan terakhir
-        </p>
-        <ResponsiveContainer width="100%" height={280}>
-          <BarChart
-            data={chartData}
-            margin={{ top: 0, right: 0, left: 0, bottom: 0 }}
-          >
-            <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
-            <XAxis
-              dataKey="month"
-              tick={{ fontSize: 11, fill: "#94a3b8", fontWeight: 500 }}
-            />
-            <YAxis
-              tickFormatter={(v) => (v / 1_000_000).toFixed(0) + "jt"}
-              tick={{ fontSize: 11, fill: "#94a3b8" }}
-            />
+      <div className="bg-white rounded-3xl border border-slate-100 p-6" style={{ boxShadow: "0 2px 20px 0 rgba(30,58,138,0.07)" }}>
+        <h2 className="text-base font-bold text-slate-800">Laba Rugi Bulanan</h2>
+        <p className="text-sm text-slate-400 mt-0.5 mb-5">Pendapatan vs pengeluaran 12 bulan terakhir</p>
+        <ResponsiveContainer width="100%" height={260}>
+          <BarChart data={chartData} margin={{ top: 0, right: 0, left: 0, bottom: 0 }}>
+            <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" vertical={false} />
+            <XAxis dataKey="month" tick={{ fontSize: 11, fill: "#94a3b8", fontWeight: 500 }} axisLine={false} tickLine={false} />
+            <YAxis tickFormatter={(v) => (v / 1_000_000).toFixed(0) + "jt"} tick={{ fontSize: 11, fill: "#94a3b8" }} axisLine={false} tickLine={false} />
             <Tooltip
               formatter={(v) => formatRupiah(Number(v))}
               contentStyle={{
@@ -295,32 +286,22 @@ export default function Home() {
               }}
             />
             <Legend wrapperStyle={{ fontSize: 13, paddingTop: 12 }} />
-            <Bar
-              dataKey="pendapatan"
-              fill="#10b981"
-              name="Pendapatan"
-              radius={[6, 6, 0, 0]}
-            />
-            <Bar
-              dataKey="pengeluaran"
-              fill="#f43f5e"
-              name="Pengeluaran"
-              radius={[6, 6, 0, 0]}
-            />
+            <Bar dataKey="pendapatan" fill="#3b82f6" name="Pendapatan" radius={[6, 6, 0, 0]} />
+            <Bar dataKey="pengeluaran" fill="#f43f5e" name="Pengeluaran" radius={[6, 6, 0, 0]} />
           </BarChart>
         </ResponsiveContainer>
       </div>
 
       {/* Level Kekayaan + AI Analysis — merged card */}
-      <div className="bg-white rounded-3xl shadow-sm border border-slate-100 p-6">
+      <div className="bg-white rounded-3xl border border-slate-100 p-6" style={{ boxShadow: "0 2px 20px 0 rgba(30,58,138,0.07)" }}>
         {/* Header row */}
         <div className="flex items-start justify-between gap-4">
           <div>
-            <h2 className="text-lg font-bold text-slate-800">Level Kekayaan &amp; Rekomendasi AI</h2>
+            <h2 className="text-base font-bold text-slate-800">Level Kekayaan &amp; Rekomendasi AI</h2>
             <p className="text-sm text-slate-500 mt-1">
               {displayLevelLabel}
               {aiLevelForMonth && (
-                <span className="ml-2 text-xs text-indigo-500 font-medium">(dari analisis AI)</span>
+                <span className="ml-2 text-xs text-blue-500 font-medium">(dari analisis AI)</span>
               )}
             </p>
           </div>
@@ -328,7 +309,7 @@ export default function Home() {
             type="button"
             onClick={triggerAIAnalysis}
             disabled={aiLoading}
-            className="bg-indigo-600 hover:bg-indigo-700 disabled:opacity-60 text-white text-sm font-semibold px-4 py-2 rounded-xl shrink-0"
+            className="bg-[#1e3a8a] hover:bg-[#1e40af] disabled:opacity-60 text-white text-sm font-semibold px-4 py-2 rounded-xl shrink-0 transition"
           >
             {aiLoading ? "Menganalisis..." : "Analisis"}
           </button>
@@ -375,13 +356,9 @@ export default function Home() {
       {/* Pie + Budget */}
       <div className="grid md:grid-cols-2 gap-6">
         {/* Pie */}
-        <div className="bg-white rounded-3xl shadow-sm border border-slate-100 p-6">
-          <h2 className="text-lg font-bold text-slate-800">
-            Pengeluaran per Kategori
-          </h2>
-          <p className="text-sm text-slate-400 mt-0.5 mb-4">
-            {getMonthLabel(data.currentMonth)}
-          </p>
+        <div className="bg-white rounded-3xl border border-slate-100 p-6" style={{ boxShadow: "0 2px 20px 0 rgba(30,58,138,0.07)" }}>
+          <h2 className="text-base font-bold text-slate-800">Pengeluaran per Kategori</h2>
+          <p className="text-sm text-slate-400 mt-0.5 mb-4">{getMonthLabel(data.currentMonth)}</p>
           {pieData.length > 0 ? (
             <>
               <ResponsiveContainer width="100%" height={200}>
@@ -430,11 +407,9 @@ export default function Home() {
         </div>
 
         {/* Budget */}
-        <div className="bg-white rounded-3xl shadow-sm border border-slate-100 p-6">
-          <h2 className="text-lg font-bold text-slate-800">Budget vs Aktual</h2>
-          <p className="text-sm text-slate-400 mt-0.5 mb-5">
-            {getMonthLabel(data.currentMonth)}
-          </p>
+        <div className="bg-white rounded-3xl border border-slate-100 p-6" style={{ boxShadow: "0 2px 20px 0 rgba(30,58,138,0.07)" }}>
+          <h2 className="text-base font-bold text-slate-800">Budget vs Aktual</h2>
+          <p className="text-sm text-slate-400 mt-0.5 mb-5">{getMonthLabel(data.currentMonth)}</p>
           {data.budgetComparison.length > 0 ? (
             <div className="space-y-4 max-h-72 overflow-y-auto pr-1">
               {data.budgetComparison.map((b) => {
@@ -482,10 +457,8 @@ export default function Home() {
 
       {/* Debt & Receivable */}
       <div className="grid md:grid-cols-2 gap-6">
-        <div className="bg-white rounded-3xl shadow-sm border border-slate-100 p-6">
-          <h2 className="text-lg font-bold text-slate-800 mb-4">
-            Ringkasan Utang
-          </h2>
+        <div className="bg-white rounded-3xl border border-slate-100 p-6" style={{ boxShadow: "0 2px 20px 0 rgba(30,58,138,0.07)" }}>
+          <h2 className="text-base font-bold text-slate-800 mb-4">Ringkasan Utang</h2>
           {data.debtSummary.filter((d) => d.remaining > 0).length > 0 ? (
             <div className="space-y-2">
               {data.debtSummary
@@ -511,10 +484,8 @@ export default function Home() {
             </div>
           )}
         </div>
-        <div className="bg-white rounded-3xl shadow-sm border border-slate-100 p-6">
-          <h2 className="text-lg font-bold text-slate-800 mb-4">
-            Ringkasan Piutang
-          </h2>
+        <div className="bg-white rounded-3xl border border-slate-100 p-6" style={{ boxShadow: "0 2px 20px 0 rgba(30,58,138,0.07)" }}>
+          <h2 className="text-base font-bold text-slate-800 mb-4">Ringkasan Piutang</h2>
           {data.receivableSummary.filter((r) => r.remaining > 0).length > 0 ? (
             <div className="space-y-2">
               {data.receivableSummary
