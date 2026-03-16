@@ -1,6 +1,6 @@
-# 💰 Pencatat Keuangan & Analisa AI
+# 💰 CatatUang Project & Analisa AI
 
-Aplikasi **Pencatat Keuangan Personal** berbasis web yang dirancang khusus untuk mempermudah Anda dalam mencatat pemasukan, pengeluaran, utang, piutang, serta menyediakan analisa keuangan mendalam berbasis _Artificial Intelligence_ (AI) dengan Azure OpenAI.
+Aplikasi **CatatUang Project** berbasis web yang dirancang khusus untuk mempermudah Anda dalam mencatat pemasukan, pengeluaran, utang, piutang, serta menyediakan analisa keuangan mendalam berbasis _Artificial Intelligence_ (AI) dengan Azure OpenAI.
 
 Seluruh data transaksi dan kalkulasi finansial di aplikasi ini didukung oleh infrastruktur solid dengan Framework **Next.js (App Router)**, **PostgreSQL**, dan **Prisma ORM**.
 

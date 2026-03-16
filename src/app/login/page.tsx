@@ -40,7 +40,7 @@ export default function LoginPage() {
     <div className="min-h-screen flex items-center justify-center bg-[radial-gradient(circle_at_top,_#dbeafe,_#f8fafc_50%,_#eff6ff)] px-4">
       <div className="w-full max-w-md bg-white/95 backdrop-blur border border-slate-100 rounded-3xl shadow-2xl p-8">
         <h1 className="text-3xl font-black text-slate-900 tracking-tight">Masuk Aplikasi</h1>
-        <p className="text-sm text-slate-500 mt-1">Pencatat Keuangan Pribadi</p>
+        <p className="text-sm text-slate-500 mt-1">CatatUang Project</p>
 
         <form onSubmit={submit} className="mt-6 space-y-4">
           <div>

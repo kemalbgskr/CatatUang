@@ -65,8 +65,8 @@ export default function Sidebar() {
             💰
           </div>
           <div>
-            <p className="text-white font-extrabold text-sm leading-none">Pencatat</p>
-            <p className="text-blue-300 font-bold text-sm leading-none mt-0.5">Keuangan</p>
+            <p className="text-white font-extrabold text-sm leading-none">CatatUang</p>
+            <p className="text-blue-300 font-bold text-sm leading-none mt-0.5">Project</p>
           </div>
         </div>
 

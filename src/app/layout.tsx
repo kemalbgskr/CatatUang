@@ -3,7 +3,7 @@ import "./globals.css";
 import AppShell from "@/components/AppShell";
 
 export const metadata: Metadata = {
-  title: "Pencatat Keuangan",
+  title: "CatatUang Project",
   description: "Aplikasi pencatatan keuangan pribadi",
 };
 
