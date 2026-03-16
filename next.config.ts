@@ -6,7 +6,7 @@ const nextConfig: NextConfig = {
 } as any;
 
 (nextConfig as any).turbopack = {
-  root: '.',
+  root: '/Users/kemalbagaskoro/Desktop/Pencatat Keuangan/app',
 };
 
 export default nextConfig;
