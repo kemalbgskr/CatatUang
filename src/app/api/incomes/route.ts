@@ -29,16 +29,21 @@ export async function POST(req: Request) {
   const user = getAuthenticatedUser(req);
   if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-  const body = await req.json();
-  const income = await prisma.income.create({
-    data: {
-      userId: user.userId,
-      date: new Date(body.date),
-      categoryId: body.categoryId,
-      description: body.description,
-      amount: body.amount,
-    },
-    include: { category: true },
-  });
-  return NextResponse.json(income);
+  try {
+    const body = await req.json();
+    const income = await prisma.income.create({
+      data: {
+        userId: user.userId,
+        date: new Date(body.date),
+        categoryId: Number(body.categoryId),
+        description: String(body.description || ""),
+        amount: Number(body.amount),
+      },
+      include: { category: true },
+    });
+    return NextResponse.json(income);
+  } catch (error: any) {
+    console.error("POST /api/incomes error:", error);
+    return NextResponse.json({ error: error.message || "Gagal membuat pendapatan" }, { status: 500 });
+  }
 }

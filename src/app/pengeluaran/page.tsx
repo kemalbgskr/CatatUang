@@ -16,6 +16,8 @@ export default function PengeluaranPage() {
   const [categories, setCategories] = useState<Category[]>([]);
   const [budgets, setBudgets] = useState<Budget[]>([]);
   const [month, setMonth] = useState(getCurrentMonth());
+  const [viewAll, setViewAll] = useState(false);
+  const [selectedIds, setSelectedIds] = useState<number[]>([]);
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState({ date: new Date().toISOString().split("T")[0], categoryId: "", description: "", amount: "" });
   const [ocrLoading, setOcrLoading] = useState(false);
@@ -29,8 +31,9 @@ export default function PengeluaranPage() {
   const [editForm, setEditForm] = useState({ date: "", categoryId: "", description: "", amount: "" });
 
   const load = useCallback(() => {
-    fetch("/api/expenses?month=" + month).then(r => r.json()).then(setExpenses);
-  }, [month]);
+    const queryMonth = viewAll ? "all" : month;
+    fetch("/api/expenses?month=" + queryMonth).then(r => r.json()).then(setExpenses);
+  }, [month, viewAll]);
 
   useEffect(() => { load(); }, [load]);
   useEffect(() => {
@@ -98,6 +101,24 @@ export default function PengeluaranPage() {
     load();
   };
 
+  const bulkDelete = async () => {
+    if (selectedIds.length === 0) return;
+    if (!confirm(`Hapus ${selectedIds.length} data terpilih?`)) return;
+    for (const id of selectedIds) {
+      await fetch("/api/expenses/" + id, { method: "DELETE" });
+    }
+    setSelectedIds([]);
+    load();
+  };
+
+  const toggleSelect = (id: number) => {
+    setSelectedIds(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]);
+  };
+
+  const toggleSelectAll = () => {
+    setSelectedIds(selectedIds.length === expenses.length ? [] : expenses.map(e => e.id));
+  };
+
   const startEdit = (e: Expense) => {
     setEditId(e.id);
     setEditForm({
@@ -134,10 +155,19 @@ export default function PengeluaranPage() {
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold text-slate-800">Catat Pengeluaran</h1>
-          <p className="text-slate-500 text-sm">Total: {formatRupiah(total)}</p>
+          <div className="flex items-center gap-3 flex-wrap">
+            <p className="text-slate-500 text-sm">Total: <span className="font-bold text-red-600">{formatRupiah(total)}</span></p>
+            {viewAll && <span className="bg-blue-100 text-blue-700 px-2.5 py-1 rounded-full text-xs font-bold">Mode: Semua Data</span>}
+          </div>
         </div>
-        <div className="flex gap-3">
-          <MonthYearPicker value={month} onChange={setMonth} />
+        <div className="flex gap-3 flex-wrap">
+          <button 
+            onClick={() => setViewAll(!viewAll)} 
+            className={`px-4 py-2 rounded-xl text-sm font-semibold transition ${viewAll ? "bg-slate-200 text-slate-700 hover:bg-slate-300" : "bg-blue-50 text-blue-600 hover:bg-blue-100 border border-blue-200"}`}
+          >
+            {viewAll ? "Tutup Semua" : "Lihat Semua"}
+          </button>
+          {!viewAll && <MonthYearPicker value={month} onChange={setMonth} />}
           <button onClick={triggerUpload} className="bg-indigo-600 text-white px-4 py-2 rounded-lg text-sm flex items-center gap-2 hover:bg-indigo-700">
             <Upload size={16} /> Upload Nota
           </button>
@@ -147,7 +177,21 @@ export default function PengeluaranPage() {
         </div>
       </div>
 
-      {Object.keys(byCategory).length > 0 && (
+      {selectedIds.length > 0 && (
+        <div className="bg-indigo-50 border border-indigo-100 rounded-xl p-3 flex items-center justify-between animate-in fade-in slide-in-from-top-2">
+          <p className="text-sm font-medium text-indigo-700">{selectedIds.length} data dipilih</p>
+          <div className="flex gap-2">
+            <button onClick={bulkDelete} className="bg-red-600 hover:bg-red-700 text-white px-4 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1.5 transition">
+              <Trash2 size={14} /> Hapus Terpilih
+            </button>
+            <button onClick={() => setSelectedIds([])} className="bg-white hover:bg-slate-50 text-slate-500 border border-slate-200 px-4 py-1.5 rounded-lg text-xs font-bold transition">
+              Batal
+            </button>
+          </div>
+        </div>
+      )}
+
+      {!viewAll && Object.keys(byCategory).length > 0 && (
         <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3">
           {Object.entries(byCategory).sort((a, b) => b[1] - a[1]).map(([cat, amt]) => {
             const budget = budgets.find(b => b.category.name === cat);
@@ -237,6 +281,9 @@ export default function PengeluaranPage() {
           <table className="w-full text-sm">
             <thead className="bg-slate-50 text-slate-600">
               <tr>
+                <th className="px-4 py-3 w-10">
+                   <input type="checkbox" checked={expenses.length > 0 && selectedIds.length === expenses.length} onChange={toggleSelectAll} className="rounded border-slate-300 text-blue-600 focus:ring-blue-500 w-4 h-4 cursor-pointer" />
+                </th>
                 <th className="text-left px-4 py-3">Tanggal</th>
                 <th className="text-left px-4 py-3">Kategori</th>
                 <th className="text-left px-4 py-3">Rincian</th>
@@ -246,7 +293,10 @@ export default function PengeluaranPage() {
             </thead>
             <tbody className="divide-y">
               {expenses.map(e => (
-                <tr key={e.id} className="hover:bg-slate-50">
+                <tr key={e.id} className={`hover:bg-slate-50 transition-colors ${selectedIds.includes(e.id) ? "bg-red-50/50" : ""}`}>
+                  <td className="px-4 py-3 text-center">
+                    <input type="checkbox" checked={selectedIds.includes(e.id)} onChange={() => toggleSelect(e.id)} className="rounded border-slate-300 text-blue-600 focus:ring-blue-500 w-4 h-4 cursor-pointer" />
+                  </td>
                   {editId === e.id ? (
                     <>
                       <td className="px-4 py-2"><input type="date" value={editForm.date} onChange={ev => setEditForm(f => ({ ...f, date: ev.target.value }))} className="w-full border rounded px-2 py-1 text-sm bg-white" /></td>
@@ -280,7 +330,7 @@ export default function PengeluaranPage() {
                   )}
                 </tr>
               ))}
-              {expenses.length === 0 && <tr><td colSpan={5} className="px-4 py-8 text-center text-slate-400">Belum ada pengeluaran bulan ini</td></tr>}
+              {expenses.length === 0 && <tr><td colSpan={6} className="px-4 py-8 text-center text-slate-400">Belum ada pengeluaran {viewAll ? "sama sekali" : "bulan ini"}</td></tr>}
             </tbody>
           </table>
         </div>

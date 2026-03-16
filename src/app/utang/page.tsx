@@ -9,6 +9,8 @@ interface DebtSource { id: number; name: string; initialAmount: number; loans: {
 
 export default function UtangPage() {
   const [debts, setDebts] = useState<DebtSource[]>([]);
+  const [viewMode, setViewMode] = useState<"grouped" | "flat">("grouped");
+  const [selectedIds, setSelectedIds] = useState<{ id: number, type: "Pinjaman" | "Bayar" }[]>([]);
   const [submitError, setSubmitError] = useState("");
   const [showPayForm, setShowPayForm] = useState(false);
   const [showLoanForm, setShowLoanForm] = useState(false);
@@ -65,6 +67,25 @@ export default function UtangPage() {
     load();
   };
 
+  const bulkDelete = async () => {
+    if (selectedIds.length === 0) return;
+    if (!confirm(`Hapus ${selectedIds.length} transaksi terpilih?`)) return;
+    for (const item of selectedIds) {
+      const endpoint = item.type === "Pinjaman" ? "/api/debts/loans/" : "/api/debts/payments/";
+      await fetch(endpoint + item.id, { method: "DELETE" });
+    }
+    setSelectedIds([]);
+    load();
+  };
+
+  const toggleSelect = (id: number, type: "Pinjaman" | "Bayar") => {
+    setSelectedIds(prev => {
+      const exists = prev.find(x => x.id === id && x.type === type);
+      if (exists) return prev.filter(x => !(x.id === id && x.type === type));
+      return [...prev, { id, type }];
+    });
+  };
+
   const startEdit = (t: { id: number; date: string; amount: number; description: string; type: "Pinjaman" | "Bayar" }) => {
     setEditTx({ id: t.id, type: t.type });
     setEditForm({
@@ -107,6 +128,11 @@ export default function UtangPage() {
     const payments = d.payments.reduce((s, p) => s + p.amount, 0);
     return (d.initialAmount + loans - payments) <= 0;
   });
+
+  const allTransactions = debts.flatMap(d => [
+    ...d.loans.map(l => ({ ...l, type: "Pinjaman" as const, sourceName: d.name })),
+    ...d.payments.map(p => ({ ...p, type: "Bayar" as const, sourceName: d.name }))
+  ]).sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 
   const renderDebtCard = (d: DebtSource) => {
     const loans = d.loans.reduce((s, l) => s + l.amount, 0);
@@ -196,13 +222,82 @@ export default function UtangPage() {
           <p className="text-slate-500 text-sm">Total Sisa Utang: {formatRupiah(totalUtang)}</p>
         </div>
         <div className="flex gap-2 flex-wrap">
-          <button onClick={() => setShowNewDebt(true)} className="bg-slate-600 text-white px-3 py-2 rounded-lg text-sm flex items-center gap-1 hover:bg-slate-700"><Plus size={14} /> Pemberi Utang</button>
-          <button onClick={() => setShowLoanForm(true)} className="bg-orange-600 text-white px-3 py-2 rounded-lg text-sm flex items-center gap-1 hover:bg-orange-700"><Plus size={14} /> Ambil Pinjaman</button>
-          <button onClick={() => setShowPayForm(true)} className="bg-emerald-600 text-white px-3 py-2 rounded-lg text-sm flex items-center gap-1 hover:bg-emerald-700"><Plus size={14} /> Bayar Utang</button>
+          <button onClick={() => setViewMode(viewMode === "grouped" ? "flat" : "grouped")} className="bg-blue-50 text-blue-600 border border-blue-200 px-3 py-2 rounded-lg text-sm font-semibold hover:bg-blue-100 transition">
+            {viewMode === "grouped" ? "Lihat Semua Transaksi" : "Lihat Grup Kartu"}
+          </button>
+          <button onClick={() => setShowNewDebt(true)} className="bg-slate-600 text-white px-3 py-2 rounded-lg text-sm flex items-center gap-1 hover:bg-slate-700 transition"><Plus size={14} /> Pemberi Utang</button>
+          <button onClick={() => setShowLoanForm(true)} className="bg-orange-600 text-white px-3 py-2 rounded-lg text-sm flex items-center gap-1 hover:bg-orange-700 transition"><Plus size={14} /> Ambil Pinjaman</button>
+          <button onClick={() => setShowPayForm(true)} className="bg-emerald-600 text-white px-3 py-2 rounded-lg text-sm flex items-center gap-1 hover:bg-emerald-700 transition"><Plus size={14} /> Bayar Utang</button>
         </div>
       </div>
 
-      {/* Tambah Pemberi Utang */}
+      {selectedIds.length > 0 && (
+        <div className="bg-indigo-50 border border-indigo-100 rounded-xl p-3 flex items-center justify-between">
+          <p className="text-sm font-medium text-indigo-700">{selectedIds.length} transaksi dipilih</p>
+          <div className="flex gap-2">
+            <button onClick={bulkDelete} className="bg-red-600 hover:bg-red-700 text-white px-4 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5"><Trash2 size={14} /> Hapus Terpilih</button>
+            <button onClick={() => setSelectedIds([])} className="bg-white text-slate-500 border border-slate-200 px-3 py-1.5 rounded-lg text-xs font-bold transition">Batal</button>
+          </div>
+        </div>
+      )}
+
+      {viewMode === "grouped" ? (
+        <div className="space-y-4">
+          {activeDebts.map(renderDebtCard)}
+          {activeDebts.length === 0 && <div className="bg-white rounded-xl shadow-sm border p-8 text-center text-slate-400">Belum ada utang aktif</div>}
+          
+          {historyDebts.length > 0 && (
+            <div className="mt-8">
+              <h2 className="text-lg font-bold text-slate-800 mb-4">Riwayat (Lunas)</h2>
+              <div className="space-y-4 opacity-75">
+                {historyDebts.map(renderDebtCard)}
+              </div>
+            </div>
+          )}
+        </div>
+      ) : (
+        <div className="bg-white rounded-xl shadow-sm border overflow-hidden">
+          <table className="w-full text-sm">
+            <thead className="bg-slate-50 text-slate-600">
+              <tr>
+                <th className="px-4 py-3 w-10"></th>
+                <th className="text-left px-4 py-3">Tanggal</th>
+                <th className="text-left px-4 py-3">Pemberi</th>
+                <th className="text-left px-4 py-3">Tipe</th>
+                <th className="text-left px-4 py-3">Rincian</th>
+                <th className="text-right px-4 py-3">Nominal</th>
+                <th className="px-4 py-3"></th>
+              </tr>
+            </thead>
+            <tbody className="divide-y">
+              {allTransactions.map(t => {
+                const isSelected = selectedIds.some(x => x.id === t.id && x.type === t.type);
+                return (
+                  <tr key={`${t.type}-${t.id}`} className={`hover:bg-slate-50 ${isSelected ? "bg-blue-50/50" : ""}`}>
+                    <td className="px-4 py-3 text-center">
+                      <input type="checkbox" checked={isSelected} onChange={() => toggleSelect(t.id, t.type)} className="rounded border-slate-300 text-blue-600 focus:ring-blue-500 w-4 h-4 cursor-pointer" />
+                    </td>
+                    <td className="px-4 py-3 text-slate-700">{formatDate(t.date)}</td>
+                    <td className="px-4 py-3 font-medium text-slate-800">{t.sourceName}</td>
+                    <td className="px-4 py-3"><span className={t.type === "Bayar" ? "text-emerald-600" : "text-orange-600"}>{t.type}</span></td>
+                    <td className="px-4 py-3 text-slate-600">{t.description}</td>
+                    <td className="px-4 py-3 text-right font-bold text-slate-800">{formatRupiah(t.amount)}</td>
+                    <td className="px-4 py-3">
+                      <div className="flex items-center justify-end gap-2">
+                         <button type="button" onClick={() => startEdit({...t, type: t.type})} className="text-blue-400 hover:text-blue-600"><Edit2 size={16} /></button>
+                         <button type="button" onClick={() => deleteTransaction(t.type, t.id)} className="text-red-400 hover:text-red-600"><Trash2 size={16} /></button>
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })}
+              {allTransactions.length === 0 && <tr><td colSpan={7} className="px-4 py-8 text-center text-slate-400">Belum ada transaksi</td></tr>}
+            </tbody>
+          </table>
+        </div>
+      )}
+
+      {/* Modals remain same */}
       <Modal open={showNewDebt} onClose={() => setShowNewDebt(false)} title="Tambah Pemberi Utang">
         <form onSubmit={addDebt} className="flex flex-col gap-4">
           <div>
@@ -218,7 +313,6 @@ export default function UtangPage() {
         </form>
       </Modal>
 
-      {/* Ambil Pinjaman */}
       <Modal open={showLoanForm} onClose={() => setShowLoanForm(false)} title="Ambil Pinjaman">
         <form onSubmit={submitLoan} className="flex flex-col gap-4">
           <DebtFormFields form={loanForm} setForm={setLoanForm} />
@@ -227,7 +321,6 @@ export default function UtangPage() {
         </form>
       </Modal>
 
-      {/* Bayar Utang */}
       <Modal open={showPayForm} onClose={() => setShowPayForm(false)} title="Bayar Utang">
         <form onSubmit={submitPay} className="flex flex-col gap-4">
           <DebtFormFields form={payForm} setForm={setPayForm} />
@@ -235,20 +328,6 @@ export default function UtangPage() {
           <button type="submit" className="bg-emerald-600 text-white px-6 py-2 rounded-lg text-sm font-semibold w-full hover:bg-emerald-700">Bayar</button>
         </form>
       </Modal>
-
-      <div className="space-y-4">
-        {activeDebts.map(renderDebtCard)}
-        {activeDebts.length === 0 && <div className="bg-white rounded-xl shadow-sm border p-8 text-center text-slate-400">Belum ada utang aktif</div>}
-      </div>
-
-      {historyDebts.length > 0 && (
-        <div className="mt-8">
-          <h2 className="text-lg font-bold text-slate-800 mb-4">Riwayat (Lunas)</h2>
-          <div className="space-y-4 opacity-75">
-            {historyDebts.map(renderDebtCard)}
-          </div>
-        </div>
-      )}
     </div>
   );
 }

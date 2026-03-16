@@ -18,16 +18,21 @@ export async function POST(req: Request) {
   const user = getAuthenticatedUser(req);
   if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-  const body = await req.json();
-  const receivable = await prisma.receivable.create({
-    data: {
-      userId: user.userId,
-      date: new Date(body.date),
-      personId: body.personId,
-      amount: body.amount,
-      type: body.type,
-    },
-    include: { person: true },
-  });
-  return NextResponse.json(receivable);
+  try {
+    const body = await req.json();
+    const receivable = await prisma.receivable.create({
+      data: {
+        userId: user.userId,
+        date: new Date(body.date),
+        personId: Number(body.personId),
+        amount: Number(body.amount),
+        type: String(body.type),
+      },
+      include: { person: true },
+    });
+    return NextResponse.json(receivable);
+  } catch (error: any) {
+    console.error("POST /api/receivables error:", error);
+    return NextResponse.json({ error: error.message || "Gagal membuat piutang" }, { status: 500 });
+  }
 }

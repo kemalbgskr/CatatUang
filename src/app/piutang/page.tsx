@@ -10,6 +10,8 @@ interface Person { id: number; name: string; receivables: Receivable[] }
 
 export default function PiutangPage() {
   const [persons, setPersons] = useState<Person[]>([]);
+  const [viewMode, setViewMode] = useState<"grouped" | "flat">("grouped");
+  const [selectedIds, setSelectedIds] = useState<number[]>([]);
   const [submitError, setSubmitError] = useState("");
   const [showGive, setShowGive] = useState(false);
   const [showReceive, setShowReceive] = useState(false);
@@ -51,6 +53,20 @@ export default function PiutangPage() {
     if (!confirm("Hapus transaksi piutang ini?")) return;
     await fetch("/api/receivables/" + id, { method: "DELETE" });
     load();
+  };
+
+  const bulkDelete = async () => {
+    if (selectedIds.length === 0) return;
+    if (!confirm(`Hapus ${selectedIds.length} transaksi terpilih?`)) return;
+    for (const id of selectedIds) {
+      await fetch("/api/receivables/" + id, { method: "DELETE" });
+    }
+    setSelectedIds([]);
+    load();
+  };
+
+  const toggleSelect = (id: number) => {
+    setSelectedIds(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]);
   };
 
   const removePerson = async (id: number, name: string) => {
@@ -100,7 +116,11 @@ export default function PiutangPage() {
     return (given - received) <= 0;
   });
 
-  const renderPersonCard = (p: typeof persons[0]) => {
+  const allTransactions = persons.flatMap(p => 
+    p.receivables.map(r => ({ ...r, personName: p.name }))
+  ).sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+
+  const renderPersonCard = (p: Person) => {
     const given = p.receivables.filter(r => r.type === "given").reduce((s, r) => s + r.amount, 0);
     const received = p.receivables.filter(r => r.type === "received").reduce((s, r) => s + r.amount, 0);
     const rem = given - received;
@@ -164,7 +184,7 @@ export default function PiutangPage() {
         <label className="block text-xs text-slate-500 mb-1">Peminjam</label>
         <select required value={form.personId} onChange={e => setForm({...form, personId: e.target.value})} className="w-full border rounded-lg px-3 py-2 text-sm">
           <option value="">Pilih...</option>
-          {activePersons.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
+          {persons.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
         </select>
       </div>
       <div>
@@ -186,11 +206,75 @@ export default function PiutangPage() {
           <p className="text-slate-500 text-sm">Total Sisa Piutang: {formatRupiah(totalPiutang)}</p>
         </div>
         <div className="flex gap-2 flex-wrap">
-          <button onClick={() => setShowNew(true)} className="bg-slate-600 text-white px-3 py-2 rounded-lg text-sm flex items-center gap-1"><Plus size={14} /> Peminjam</button>
-          <button onClick={() => { setShowGive(true); setShowReceive(false); }} className="bg-orange-600 text-white px-3 py-2 rounded-lg text-sm flex items-center gap-1"><Plus size={14} /> Beri Piutang</button>
-          <button onClick={() => { setShowReceive(true); setShowGive(false); }} className="bg-emerald-600 text-white px-3 py-2 rounded-lg text-sm flex items-center gap-1"><Plus size={14} /> Terima Piutang</button>
+          <button onClick={() => setViewMode(viewMode === "grouped" ? "flat" : "grouped")} className="bg-blue-50 text-blue-600 border border-blue-200 px-3 py-2 rounded-lg text-sm font-semibold hover:bg-blue-100 transition">
+            {viewMode === "grouped" ? "Lihat Semua Transaksi" : "Lihat Grup Kartu"}
+          </button>
+          <button onClick={() => setShowNew(true)} className="bg-slate-600 text-white px-3 py-2 rounded-lg text-sm flex items-center gap-1 transition-all hover:bg-slate-700"><Plus size={14} /> Peminjam</button>
+          <button onClick={() => { setShowGive(true); setShowReceive(false); }} className="bg-orange-600 text-white px-3 py-2 rounded-lg text-sm flex items-center gap-1 transition-all hover:bg-orange-700"><Plus size={14} /> Beri Piutang</button>
+          <button onClick={() => { setShowReceive(true); setShowGive(false); }} className="bg-emerald-600 text-white px-3 py-2 rounded-lg text-sm flex items-center gap-1 transition-all hover:bg-emerald-700"><Plus size={14} /> Terima Piutang</button>
         </div>
       </div>
+
+      {selectedIds.length > 0 && (
+        <div className="bg-indigo-50 border border-indigo-100 rounded-xl p-3 flex items-center justify-between">
+          <p className="text-sm font-medium text-indigo-700">{selectedIds.length} transaksi dipilih</p>
+          <div className="flex gap-2">
+            <button onClick={bulkDelete} className="bg-red-600 hover:bg-red-700 text-white px-4 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5"><Trash2 size={14} /> Hapus Terpilih</button>
+            <button onClick={() => setSelectedIds([])} className="bg-white text-slate-500 border border-slate-200 px-3 py-1.5 rounded-lg text-xs font-bold transition">Batal</button>
+          </div>
+        </div>
+      )}
+
+      {viewMode === "grouped" ? (
+        <div className="space-y-4">
+          {activePersons.map(renderPersonCard)}
+          {activePersons.length === 0 && <div className="bg-white rounded-xl shadow-sm border p-8 text-center text-slate-400">Belum ada piutang aktif</div>}
+          
+          {historyPersons.length > 0 && (
+            <div className="mt-8">
+              <h2 className="text-lg font-bold text-slate-800 mb-4">Riwayat (Lunas)</h2>
+              <div className="space-y-4 opacity-75">
+                {historyPersons.map(renderPersonCard)}
+              </div>
+            </div>
+          )}
+        </div>
+      ) : (
+        <div className="bg-white rounded-xl shadow-sm border overflow-hidden">
+          <table className="w-full text-sm">
+            <thead className="bg-slate-50 text-slate-600">
+              <tr>
+                <th className="px-4 py-3 w-10"></th>
+                <th className="text-left px-4 py-3">Tanggal</th>
+                <th className="text-left px-4 py-3">Peminjam</th>
+                <th className="text-left px-4 py-3">Tipe</th>
+                <th className="text-right px-4 py-3">Nominal</th>
+                <th className="px-4 py-3"></th>
+              </tr>
+            </thead>
+            <tbody className="divide-y">
+              {allTransactions.map(t => (
+                <tr key={t.id} className={`hover:bg-slate-50 ${selectedIds.includes(t.id) ? "bg-blue-50/50" : ""}`}>
+                  <td className="px-4 py-3 text-center">
+                    <input type="checkbox" checked={selectedIds.includes(t.id)} onChange={() => toggleSelect(t.id)} className="rounded border-slate-300 text-blue-600 focus:ring-blue-500 w-4 h-4 cursor-pointer" />
+                  </td>
+                  <td className="px-4 py-3 text-slate-700 font-medium">{formatDate(t.date)}</td>
+                  <td className="px-4 py-3 text-slate-800">{t.personName}</td>
+                  <td className="px-4 py-3"><span className={t.type === "given" ? "text-orange-600" : "text-emerald-600"}>{t.type === "given" ? "Beri" : "Terima"}</span></td>
+                  <td className="px-4 py-3 text-right font-bold text-slate-800">{formatRupiah(t.amount)}</td>
+                  <td className="px-4 py-3">
+                    <div className="flex items-center justify-end gap-2">
+                      <button type="button" onClick={() => startEdit(t)} className="text-blue-400 hover:text-blue-600"><Edit2 size={16} /></button>
+                      <button type="button" onClick={() => removeReceivable(t.id)} className="text-red-400 hover:text-red-600"><Trash2 size={16} /></button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+              {allTransactions.length === 0 && <tr><td colSpan={6} className="px-4 py-8 text-center text-slate-400">Belum ada transaksi</td></tr>}
+            </tbody>
+          </table>
+        </div>
+      )}
 
       <Modal open={showNew} onClose={() => setShowNew(false)} title="Tambah Peminjam">
         <form onSubmit={addPerson} className="flex flex-col gap-4">
@@ -209,20 +293,6 @@ export default function PiutangPage() {
       <Modal open={showReceive} onClose={() => setShowReceive(false)} title="Terima Piutang">
         <FormPiutang type="received" />
       </Modal>
-
-      <div className="space-y-4">
-        {activePersons.map(renderPersonCard)}
-        {activePersons.length === 0 && <div className="bg-white rounded-xl shadow-sm border p-8 text-center text-slate-400">Belum ada piutang aktif</div>}
-      </div>
-
-      {historyPersons.length > 0 && (
-        <div className="mt-8">
-          <h2 className="text-lg font-bold text-slate-800 mb-4">Riwayat (Lunas)</h2>
-          <div className="space-y-4 opacity-75">
-            {historyPersons.map(renderPersonCard)}
-          </div>
-        </div>
-      )}
     </div>
   );
 }
