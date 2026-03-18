@@ -42,13 +42,23 @@ export async function POST(req: Request) {
 
   try {
     const body = await req.json();
+    const categoryId = Number(body.categoryId);
+    const amount = Number(body.amount);
+
+    if (isNaN(categoryId)) {
+      return NextResponse.json({ error: "Kategori tidak valid" }, { status: 400 });
+    }
+    if (isNaN(amount)) {
+      return NextResponse.json({ error: "Nominal tidak valid" }, { status: 400 });
+    }
+
     const income = await prisma.income.create({
       data: {
         userId: user.userId,
-        date: new Date(body.date),
-        categoryId: Number(body.categoryId),
+        date: new Date(body.date || new Date()),
+        categoryId: categoryId,
         description: String(body.description || ""),
-        amount: Number(body.amount),
+        amount: amount,
       },
       include: { category: true },
     });
