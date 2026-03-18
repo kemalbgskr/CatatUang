@@ -11,10 +11,21 @@ export async function GET(req: Request) {
 
   const where: any = { userId: user.userId };
   if (month && month !== "all") {
-    where.date = {
-      gte: new Date(month + "-01"),
-      lt: new Date(new Date(month + "-01").getFullYear(), new Date(month + "-01").getMonth() + 1, 1),
-    };
+    try {
+      const year = parseInt(month.split("-")[0]);
+      const monthIdx = parseInt(month.split("-")[1]) - 1;
+      const startDate = new Date(year, monthIdx, 1);
+      const endDate = new Date(year, monthIdx + 1, 1);
+
+      if (!isNaN(startDate.getTime()) && !isNaN(endDate.getTime())) {
+        where.date = {
+          gte: startDate,
+          lt: endDate,
+        };
+      }
+    } catch (e) {
+      console.error("Invalid month filter:", month);
+    }
   }
 
   const incomes = await prisma.income.findMany({

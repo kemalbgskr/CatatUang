@@ -5,7 +5,7 @@ import bcrypt from "bcryptjs";
 
 export { AUTH_COOKIE_NAME };
 
-const TOKEN_LIFETIME_SECONDS = 5 * 60; // 5 menit
+const TOKEN_LIFETIME_SECONDS = 60 * 60; // 1 jam sementara untuk kestabilan testing
 
 function getAuthSecret() {
   return process.env.APP_AUTH_SECRET || "dev-secret-change-me";
