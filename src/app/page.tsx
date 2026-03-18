@@ -73,11 +73,6 @@ const COLORS = [
 export default function Home() {
   const [data, setData] = useState<DashboardData | null>(null);
   const [month, setMonth] = useState(getCurrentMonth());
-  const [aiLoading, setAiLoading] = useState(false);
-  const [aiError, setAiError] = useState("");
-  const [savedAnalysis, setSavedAnalysis] = useState<SavedAIAnalysis | null>(
-    null,
-  );
 
   useEffect(() => {
     fetch("/api/dashboard?month=" + month)
@@ -85,12 +80,6 @@ export default function Home() {
       .then(setData);
   }, [month]);
 
-  useEffect(() => {
-    fetch("/api/ai-analysis")
-      .then((r) => r.json())
-      .then(setSavedAnalysis)
-      .catch(() => setSavedAnalysis(null));
-  }, []);
 
   if (!data)
     return (
@@ -115,56 +104,10 @@ export default function Home() {
     pengeluaran: item.pengeluaran ?? 0,
   }));
 
-  const levelDescriptions: Record<number, string> = {
-    0: "Aset belum mampu menutup utang. Fokus utama: hentikan kebocoran dan stabilkan arus kas.",
-    1: "Utang masih mendominasi. Prioritas: bayar utang berbunga tinggi dan hindari utang baru.",
-    2: "Sudah ada aset, tapi fondasi belum aman. Bangun cashflow positif secara konsisten.",
-    3: "Keuangan cukup stabil bulanan. Selanjutnya: siapkan dana darurat minimal 6 bulan.",
-    4: "Dana darurat sudah terbentuk. Naik level dengan investasi terukur dan disiplin.",
-    5: "Arah pensiun sudah aman. Optimalkan alokasi aset, lindungi dari inflasi dan risiko.",
-    6: "Kondisi sangat kuat. Fokus pada keberlanjutan, proteksi aset, dan perencanaan warisan.",
-  };
+  // Kalkulasi display level dari data dashboard.
+  const displayLevel = data.level;
+  const displayLevelLabel = data.levelLabel;
 
-  // Gunakan level dari AI analysis jika sudah dibuat untuk bulan yang dipilih,
-  // fallback ke kalkulasi otomatis dari dashboard.
-  const aiLevelForMonth = savedAnalysis?.month === month ? savedAnalysis : null;
-  const displayLevel = aiLevelForMonth?.level ?? data.level;
-  const displayLevelLabel = aiLevelForMonth?.levelLabel ?? data.levelLabel;
-
-  // Ekstrak bagian Ringkasan dari teks analisis AI
-  const aiRingkasan = aiLevelForMonth
-    ? (() => {
-        const text = aiLevelForMonth.analysis;
-        const start = text.indexOf("# Ringkasan");
-        if (start === -1) return null;
-        const afterHeader = text.slice(start + "# Ringkasan".length).trimStart();
-        const nextHeader = afterHeader.search(/^#\s/m);
-        return nextHeader === -1 ? afterHeader.trim() : afterHeader.slice(0, nextHeader).trim();
-      })()
-    : null;
-
-  const triggerAIAnalysis = async () => {
-    setAiLoading(true);
-    setAiError("");
-    try {
-      const res = await fetch(`/api/ai/analyze?month=${month}`, {
-        method: "POST",
-      });
-      const payload = await res.json();
-      if (!res.ok) {
-        setAiError(payload.error || "Gagal menganalisis data dengan AI.");
-      } else {
-        fetch("/api/ai-analysis")
-          .then((r) => r.json())
-          .then(setSavedAnalysis)
-          .catch(() => setSavedAnalysis(null));
-      }
-    } catch {
-      setAiError("Gagal terhubung ke layanan AI.");
-    } finally {
-      setAiLoading(false);
-    }
-  };
 
   const summaryCards = [
     {
@@ -236,7 +179,6 @@ export default function Home() {
             <div className="mt-2 inline-flex items-center gap-1.5 bg-white/20 text-white text-xs font-semibold px-3 py-1.5 rounded-full backdrop-blur-sm">
               <Star size={12} />
               {displayLevelLabel}
-              {aiLevelForMonth && <span className="opacity-70">(AI)</span>}
             </div>
           </div>
           <div className="flex items-center gap-3">
@@ -301,66 +243,6 @@ export default function Home() {
         </ResponsiveContainer>
       </div>
 
-      {/* Level Kekayaan + AI Analysis — merged card */}
-      <div className="bg-white rounded-3xl border border-slate-100 p-6" style={{ boxShadow: "0 2px 20px 0 rgba(30,58,138,0.07)" }}>
-        {/* Header row */}
-        <div className="flex items-start justify-between gap-4">
-          <div>
-            <h2 className="text-base font-bold text-slate-800">Level Kekayaan &amp; Rekomendasi AI</h2>
-            <p className="text-sm text-slate-500 mt-1">
-              {displayLevelLabel}
-              {aiLevelForMonth && (
-                <span className="ml-2 text-xs text-blue-500 font-medium">(dari analisis AI)</span>
-              )}
-            </p>
-          </div>
-          <button
-            type="button"
-            onClick={triggerAIAnalysis}
-            disabled={aiLoading}
-            className="bg-[#1e3a8a] hover:bg-[#1e40af] disabled:opacity-60 text-white text-sm font-semibold px-4 py-2 rounded-xl shrink-0 transition"
-          >
-            {aiLoading ? "Menganalisis..." : "Analisis"}
-          </button>
-        </div>
-
-        {/* Level description / AI ringkasan */}
-        {aiRingkasan ? (
-          <pre className="mt-4 whitespace-pre-wrap text-sm leading-7 text-slate-700 font-sans">{aiRingkasan}</pre>
-        ) : (
-          <>
-            <p className="mt-4 text-sm leading-7 text-slate-700">
-              {levelDescriptions[displayLevel] || levelDescriptions[0]}
-            </p>
-            <div className="mt-3 bg-slate-50 border border-slate-100 rounded-xl p-3 text-xs text-slate-600">
-              Tips cepat: pastikan rasio tabungan bersih bulanan minimal 10-20% dari pendapatan agar level naik bertahap.
-            </div>
-          </>
-        )}
-
-        {aiError && (
-          <div className="mt-4 text-sm text-rose-600 bg-rose-50 border border-rose-100 rounded-xl p-3">
-            {aiError}
-          </div>
-        )}
-
-        {/* Saved analysis */}
-        <div className="mt-5">
-          <h3 className="text-sm font-semibold text-slate-700">Analisis Terakhir Tersimpan</h3>
-          {savedAnalysis ? (
-            <div className="mt-2 bg-slate-50 border border-slate-100 rounded-xl p-4 max-h-72 overflow-y-auto">
-              <p className="text-xs text-slate-500 mb-2">
-                Bulan {getMonthLabel(savedAnalysis.month)} • {new Date(savedAnalysis.generatedAt).toLocaleString("id-ID")}
-              </p>
-              <pre className="whitespace-pre-wrap text-sm leading-6 text-slate-700 font-sans">{savedAnalysis.analysis}</pre>
-            </div>
-          ) : (
-            <p className="mt-2 text-sm text-slate-400">
-              Belum ada analisis tersimpan. Klik <strong>Analisis</strong> untuk membuat data pertama.
-            </p>
-          )}
-        </div>
-      </div>
 
       {/* Pie + Budget */}
       <div className="grid md:grid-cols-2 gap-6">
