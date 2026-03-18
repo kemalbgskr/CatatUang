@@ -4,6 +4,7 @@ import { formatRupiah, formatDate } from "@/lib/utils";
 import { Plus, Trash2, Edit2, Check, X } from "lucide-react";
 import { CurrencyInput } from "@/components/CurrencyInput";
 import Modal from "@/components/Modal";
+import ConfirmModal from "@/components/ConfirmModal";
 
 interface DebtSource { id: number; name: string; initialAmount: number; loans: { id: number; date: string; amount: number; description: string }[]; payments: { id: number; date: string; amount: number; description: string }[] }
 
@@ -20,6 +21,8 @@ export default function UtangPage() {
   const [newDebt, setNewDebt] = useState({ name: "", initialAmount: "0" });
   const [editTx, setEditTx] = useState<{id: number, type: "Pinjaman" | "Bayar"} | null>(null);
   const [editForm, setEditForm] = useState({ date: "", amount: "", description: "" });
+
+  const [confirmDelete, setConfirmDelete] = useState<{ open: boolean; id?: number; type?: "Pinjaman" | "Bayar" | "source"; bulk?: boolean; name?: string }>({ open: false });
 
   const load = () => { fetch("/api/debts").then(r => r.json()).then(setDebts); };
   useEffect(() => { load(); }, []);
@@ -55,27 +58,34 @@ export default function UtangPage() {
   };
 
   const deleteDebtSource = async (id: number, name: string) => {
-    if (!confirm(`Hapus pemberi utang ${name} beserta seluruh histori utangnya?`)) return;
-    await fetch("/api/debts/" + id, { method: "DELETE" });
-    load();
+    setConfirmDelete({ open: true, id, type: "source", name });
   };
 
   const deleteTransaction = async (type: "Pinjaman" | "Bayar", id: number) => {
-    if (!confirm("Hapus transaksi utang ini?")) return;
-    const endpoint = type === "Pinjaman" ? "/api/debts/loans/" : "/api/debts/payments/";
-    await fetch(endpoint + id, { method: "DELETE" });
+    setConfirmDelete({ open: true, id, type });
+  };
+
+  const handleConfirmDelete = async () => {
+    if (confirmDelete.bulk) {
+      if (selectedIds.length === 0) return;
+      for (const item of selectedIds) {
+        const endpoint = item.type === "Pinjaman" ? "/api/debts/loans/" : "/api/debts/payments/";
+        await fetch(endpoint + item.id, { method: "DELETE" });
+      }
+      setSelectedIds([]);
+    } else if (confirmDelete.type === "source" && confirmDelete.id) {
+      await fetch("/api/debts/" + confirmDelete.id, { method: "DELETE" });
+    } else if (confirmDelete.id && confirmDelete.type) {
+      const endpoint = confirmDelete.type === "Pinjaman" ? "/api/debts/loans/" : "/api/debts/payments/";
+      await fetch(endpoint + confirmDelete.id, { method: "DELETE" });
+    }
+    setConfirmDelete({ open: false });
     load();
   };
 
   const bulkDelete = async () => {
     if (selectedIds.length === 0) return;
-    if (!confirm(`Hapus ${selectedIds.length} transaksi terpilih?`)) return;
-    for (const item of selectedIds) {
-      const endpoint = item.type === "Pinjaman" ? "/api/debts/loans/" : "/api/debts/payments/";
-      await fetch(endpoint + item.id, { method: "DELETE" });
-    }
-    setSelectedIds([]);
-    load();
+    setConfirmDelete({ open: true, bulk: true });
   };
 
   const toggleSelect = (id: number, type: "Pinjaman" | "Bayar") => {
@@ -328,6 +338,20 @@ export default function UtangPage() {
           <button type="submit" className="bg-emerald-600 text-white px-6 py-2 rounded-lg text-sm font-semibold w-full hover:bg-emerald-700">Bayar</button>
         </form>
       </Modal>
+      <ConfirmModal
+        open={confirmDelete.open}
+        onClose={() => setConfirmDelete({ open: false })}
+        onConfirm={handleConfirmDelete}
+        title="Konfirmasi Hapus"
+        message={
+          confirmDelete.bulk 
+            ? `Hapus ${selectedIds.length} transaksi utang terpilih?` 
+            : confirmDelete.type === "source" 
+              ? `Apakah Anda yakin ingin menghapus pemberi utang "${confirmDelete.name}" beserta seluruh histori transaksi utangnya? Tindakan ini tidak dapat dibatalkan.`
+              : "Apakah Anda yakin ingin menghapus transaksi utang ini?"
+        }
+        confirmLabel="Hapus Sekarang"
+      />
     </div>
   );
 }

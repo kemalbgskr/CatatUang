@@ -2,10 +2,11 @@
 import { useEffect, useState, useCallback } from "react";
 import { useRef } from "react";
 import { formatRupiah, formatDate, getCurrentMonth } from "@/lib/utils";
-import { Plus, Trash2, Upload, Loader2, Edit2, Check, X } from "lucide-react";
+import { Plus, Trash2, Upload, Loader2, Edit2, Check, X, AlertTriangle } from "lucide-react";
 import MonthYearPicker from "@/components/MonthYearPicker";
 import { CurrencyInput } from "@/components/CurrencyInput";
 import Modal from "@/components/Modal";
+import ConfirmModal from "@/components/ConfirmModal";
 
 interface Category { id: number; name: string }
 interface Expense { id: number; date: string; description: string; amount: number; category: Category }
@@ -29,6 +30,8 @@ export default function PengeluaranPage() {
   
   const [editId, setEditId] = useState<number | null>(null);
   const [editForm, setEditForm] = useState({ date: "", categoryId: "", description: "", amount: "" });
+
+  const [confirmDelete, setConfirmDelete] = useState<{ open: boolean; id?: number; bulk?: boolean }>({ open: false });
 
   const load = useCallback(() => {
     const queryMonth = viewAll ? "all" : month;
@@ -96,19 +99,26 @@ export default function PengeluaranPage() {
   };
 
   const remove = async (id: number) => {
-    if (!confirm("Hapus pengeluaran ini?")) return;
-    await fetch("/api/expenses/" + id, { method: "DELETE" });
+    setConfirmDelete({ open: true, id });
+  };
+
+  const handleConfirmDelete = async () => {
+    if (confirmDelete.bulk) {
+      if (selectedIds.length === 0) return;
+      for (const id of selectedIds) {
+        await fetch("/api/expenses/" + id, { method: "DELETE" });
+      }
+      setSelectedIds([]);
+    } else if (confirmDelete.id) {
+      await fetch("/api/expenses/" + confirmDelete.id, { method: "DELETE" });
+    }
+    setConfirmDelete({ open: false });
     load();
   };
 
   const bulkDelete = async () => {
     if (selectedIds.length === 0) return;
-    if (!confirm(`Hapus ${selectedIds.length} data terpilih?`)) return;
-    for (const id of selectedIds) {
-      await fetch("/api/expenses/" + id, { method: "DELETE" });
-    }
-    setSelectedIds([]);
-    load();
+    setConfirmDelete({ open: true, bulk: true });
   };
 
   const toggleSelect = (id: number) => {
@@ -335,6 +345,14 @@ export default function PengeluaranPage() {
           </table>
         </div>
       </div>
+      <ConfirmModal
+        open={confirmDelete.open}
+        onClose={() => setConfirmDelete({ open: false })}
+        onConfirm={handleConfirmDelete}
+        title="Konfirmasi Hapus"
+        message={confirmDelete.bulk ? `Apakah Anda yakin ingin menghapus ${selectedIds.length} data pengeluaran yang dipilih? Tindakan ini tidak dapat dibatalkan.` : "Apakah Anda yakin ingin menghapus data pengeluaran ini?"}
+        confirmLabel="Hapus Sekarang"
+      />
     </div>
   );
 }
