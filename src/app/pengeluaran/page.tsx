@@ -297,7 +297,7 @@ export default function PengeluaranPage() {
                   </select>
                 </div>
                 {selectedDebt && (
-                  <div className="flex items-center gap-2 text-orange-600 bg-white/50 rounded-lg p-2 border border-orange-100">
+                  <div className="flex items-center gap-2 text-white bg-white/10 rounded-lg p-2 border border-white/20">
                     <Info size={14} />
                     <p className="text-xs">Sisa Hutang: <span className="font-bold">{formatRupiah(balance)}</span></p>
                   </div>
