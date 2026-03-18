@@ -96,6 +96,10 @@ export default function UtangPage() {
     });
   };
 
+  const toggleSelectAll = () => {
+    setSelectedIds(selectedIds.length === allTransactions.length ? [] : allTransactions.map(t => ({ id: t.id, type: t.type })));
+  };
+
   const startEdit = (t: { id: number; date: string; amount: number; description: string; type: "Pinjaman" | "Bayar" }) => {
     setEditTx({ id: t.id, type: t.type });
     setEditForm({
@@ -270,7 +274,9 @@ export default function UtangPage() {
           <table className="w-full text-sm">
             <thead className="bg-slate-50 text-slate-600">
               <tr>
-                <th className="px-4 py-3 w-10"></th>
+                <th className="px-4 py-3 w-10">
+                  <input type="checkbox" checked={allTransactions.length > 0 && selectedIds.length === allTransactions.length} onChange={toggleSelectAll} className="rounded border-slate-300 text-blue-600 focus:ring-blue-500 w-4 h-4 cursor-pointer" />
+                </th>
                 <th className="text-left px-4 py-3">Tanggal</th>
                 <th className="text-left px-4 py-3">Pemberi</th>
                 <th className="text-left px-4 py-3">Tipe</th>

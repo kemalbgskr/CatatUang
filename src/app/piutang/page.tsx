@@ -4,6 +4,7 @@ import { formatRupiah, formatDate } from "@/lib/utils";
 import { Plus, Trash2, Edit2, Check, X } from "lucide-react";
 import { CurrencyInput } from "@/components/CurrencyInput";
 import Modal from "@/components/Modal";
+import ConfirmModal from "@/components/ConfirmModal";
 
 interface Receivable { id: number; date: string; amount: number; type: string }
 interface Person { id: number; name: string; receivables: Receivable[] }
@@ -20,6 +21,8 @@ export default function PiutangPage() {
   const [newPerson, setNewPerson] = useState("");
   const [editTx, setEditTx] = useState<{id: number, type: "given" | "received"} | null>(null);
   const [editForm, setEditForm] = useState({ date: "", amount: "" });
+
+  const [confirmDelete, setConfirmDelete] = useState<{ open: boolean; id?: number; type?: "person" | "receivable"; bulk?: boolean; name?: string }>({ open: false });
 
   const load = () => { fetch("/api/receivables").then(r => r.json()).then(setPersons); };
   useEffect(() => { load(); }, []);
@@ -50,29 +53,40 @@ export default function PiutangPage() {
   };
 
   const removeReceivable = async (id: number) => {
-    if (!confirm("Hapus transaksi piutang ini?")) return;
-    await fetch("/api/receivables/" + id, { method: "DELETE" });
+    setConfirmDelete({ open: true, id, type: "receivable" });
+  };
+
+  const removePerson = async (id: number, name: string) => {
+    setConfirmDelete({ open: true, id, type: "person", name });
+  };
+
+  const handleConfirmDelete = async () => {
+    if (confirmDelete.bulk) {
+      if (selectedIds.length === 0) return;
+      for (const id of selectedIds) {
+        await fetch("/api/receivables/" + id, { method: "DELETE" });
+      }
+      setSelectedIds([]);
+    } else if (confirmDelete.type === "person" && confirmDelete.id) {
+      await fetch("/api/receivables/persons/" + confirmDelete.id, { method: "DELETE" });
+    } else if (confirmDelete.type === "receivable" && confirmDelete.id) {
+      await fetch("/api/receivables/" + confirmDelete.id, { method: "DELETE" });
+    }
+    setConfirmDelete({ open: false });
     load();
   };
 
   const bulkDelete = async () => {
     if (selectedIds.length === 0) return;
-    if (!confirm(`Hapus ${selectedIds.length} transaksi terpilih?`)) return;
-    for (const id of selectedIds) {
-      await fetch("/api/receivables/" + id, { method: "DELETE" });
-    }
-    setSelectedIds([]);
-    load();
+    setConfirmDelete({ open: true, bulk: true });
   };
 
   const toggleSelect = (id: number) => {
     setSelectedIds(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]);
   };
 
-  const removePerson = async (id: number, name: string) => {
-    if (!confirm(`Hapus peminjam ${name} beserta semua histori piutang?`)) return;
-    await fetch("/api/receivables/persons/" + id, { method: "DELETE" });
-    load();
+  const toggleSelectAll = () => {
+    setSelectedIds(selectedIds.length === allTransactions.length ? [] : allTransactions.map(t => t.id));
   };
 
   const startEdit = (r: Receivable) => {
@@ -244,7 +258,9 @@ export default function PiutangPage() {
           <table className="w-full text-sm">
             <thead className="bg-slate-50 text-slate-600">
               <tr>
-                <th className="px-4 py-3 w-10"></th>
+                <th className="px-4 py-3 w-10">
+                  <input type="checkbox" checked={allTransactions.length > 0 && selectedIds.length === allTransactions.length} onChange={toggleSelectAll} className="rounded border-slate-300 text-blue-600 focus:ring-blue-500 w-4 h-4 cursor-pointer" />
+                </th>
                 <th className="text-left px-4 py-3">Tanggal</th>
                 <th className="text-left px-4 py-3">Peminjam</th>
                 <th className="text-left px-4 py-3">Tipe</th>
@@ -293,6 +309,20 @@ export default function PiutangPage() {
       <Modal open={showReceive} onClose={() => setShowReceive(false)} title="Terima Piutang">
         <FormPiutang type="received" />
       </Modal>
+      <ConfirmModal
+        open={confirmDelete.open}
+        onClose={() => setConfirmDelete({ open: false })}
+        onConfirm={handleConfirmDelete}
+        title="Konfirmasi Hapus"
+        message={
+          confirmDelete.bulk 
+            ? `Apakah Anda yakin ingin menghapus ${selectedIds.length} transaksi piutang terpilih?`
+            : confirmDelete.type === "person"
+              ? `Hapus peminjam "${confirmDelete.name}" beserta semua histori piutang? Tindakan ini tidak dapat dibatalkan.`
+              : "Hapus transaksi piutang ini?"
+        }
+        confirmLabel="Hapus Sekarang"
+      />
     </div>
   );
 }

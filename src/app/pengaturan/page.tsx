@@ -3,6 +3,7 @@ import { useEffect, useState, useCallback } from "react";
 import { formatRupiah } from "@/lib/utils";
 import { Plus, Trash2, Save, Edit2, X, Check, Sparkles, Loader2 } from "lucide-react";
 import { CurrencyInput } from "@/components/CurrencyInput";
+import ConfirmModal from "@/components/ConfirmModal";
 
 interface IncomeCategory { id: number; name: string; }
 interface ExpenseCategory { id: number; name: string; }
@@ -48,6 +49,7 @@ export default function PengaturanPage() {
   const [userForm, setUserForm] = useState({ username: "", password: "", role: "USER" });
   const [userLoading, setUserLoading] = useState(false);
   const [editingUserId, setEditingUserId] = useState<number | null>(null);
+  const [confirmDelete, setConfirmDelete] = useState<{ open: boolean, type: "incomeCat" | "expenseCat" | "budget" | "user" | null, id: number | null, name?: string }>({ open: false, type: null, id: null });
 
   const load = useCallback(() => {
     fetch("/api/income-categories").then(r => r.json()).then(setIncomeCats);
@@ -77,23 +79,26 @@ export default function PengaturanPage() {
     setNewExpenseCat(""); load();
   };
   const deleteIncomeCat = async (id: number) => {
-    if (!confirm("Hapus kategori pendapatan ini?")) return;
-    const res = await fetch("/api/income-categories/" + id, { method: "DELETE" });
-    if (!res.ok) {
-      const data = await res.json().catch(() => ({}));
-      alert(data.error || "Gagal menghapus kategori pendapatan.");
-      return;
-    }
-    load();
+    setConfirmDelete({ open: true, type: "incomeCat", id });
   };
   const deleteExpenseCat = async (id: number) => {
-    if (!confirm("Hapus kategori pengeluaran ini?")) return;
-    const res = await fetch("/api/expense-categories/" + id, { method: "DELETE" });
+    setConfirmDelete({ open: true, type: "expenseCat", id });
+  };
+  const handleConfirmDelete = async () => {
+    if (!confirmDelete.id || !confirmDelete.type) return;
+    const { id, type } = confirmDelete;
+    let url = "";
+    if (type === "incomeCat") url = "/api/income-categories/" + id;
+    else if (type === "expenseCat") url = "/api/expense-categories/" + id;
+    else if (type === "budget") url = "/api/budgets/" + id;
+    else if (type === "user") url = "/api/users/" + id;
+
+    const res = await fetch(url, { method: "DELETE" });
     if (!res.ok) {
       const data = await res.json().catch(() => ({}));
-      alert(data.error || "Gagal menghapus kategori pengeluaran.");
-      return;
+      alert(data.error || "Gagal menghapus data.");
     }
+    setConfirmDelete({ open: false, type: null, id: null });
     load();
   };
   const addBudget = async () => {
@@ -106,8 +111,7 @@ export default function PengaturanPage() {
     setEditBudgetId(null); load();
   };
   const deleteBudget = async (id: number) => {
-    await fetch("/api/budgets/" + id, { method: "DELETE" });
-    load();
+    setConfirmDelete({ open: true, type: "budget", id });
   };
   const saveProfile = async () => {
     await fetch("/api/profile", { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify(profile) });
@@ -148,14 +152,8 @@ export default function PengaturanPage() {
 
   const deleteUser = async (id: number) => {
     if (id === session?.userId) return alert("Anda tidak bisa menghapus diri sendiri.");
-    if (!confirm("Hapus user ini? Catatan keuangannya tidak akan ikut terhapus otomatis di sistem ini (perlu pembersihan manual di DB).")) return;
-    const res = await fetch(`/api/users/${id}`, { method: "DELETE" });
-    if (res.ok) {
-      fetch("/api/users").then(r => r.json()).then(setUsers);
-    } else {
-      const data = await res.json();
-      alert(data.error || "Gagal menghapus user");
-    }
+    const user = users.find(u => u.id === id);
+    setConfirmDelete({ open: true, type: "user", id, name: user?.username });
   };
 
   const generateAIBudget = async () => {
@@ -710,6 +708,20 @@ export default function PengaturanPage() {
           </div>
         </div>
       )}
+      <ConfirmModal
+        open={confirmDelete.open}
+        onClose={() => setConfirmDelete({ open: false, type: null, id: null })}
+        onConfirm={handleConfirmDelete}
+        title="Konfirmasi Hapus"
+        message={
+          confirmDelete.type === "user"
+            ? `Apakah Anda yakin ingin menghapus user "${confirmDelete.name}"? Catatan keuangannya tidak akan ikut terhapus otomatis di sistem ini (perlu pembersihan manual di DB).`
+            : confirmDelete.type === "budget"
+              ? "Hapus alokasi budget ini?"
+              : `Hapus kategori ${confirmDelete.type === "incomeCat" ? "pendapatan" : "pengeluaran"} ini?`
+        }
+        confirmLabel="Hapus Sekarang"
+      />
     </div>
   );
 }
