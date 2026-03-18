@@ -44,12 +44,30 @@ export async function POST(req: Request) {
     const body = await req.json();
     const categoryId = Number(body.categoryId);
     const amount = Number(body.amount);
+    const debtSourceId = body.debtSourceId ? Number(body.debtSourceId) : null;
 
     if (isNaN(categoryId)) {
       return NextResponse.json({ error: "Kategori tidak valid" }, { status: 400 });
     }
     if (isNaN(amount)) {
       return NextResponse.json({ error: "Nominal tidak valid" }, { status: 400 });
+    }
+
+    const category = await prisma.expenseCategory.findUnique({ where: { id: categoryId } });
+    const isDebtPayment = category?.name.toLowerCase().includes("utang") || category?.name.toLowerCase().includes("hutang");
+
+    let debtPaymentId = null;
+    if (isDebtPayment && debtSourceId) {
+      const debtPayment = await prisma.debtPayment.create({
+        data: {
+          userId: user.userId,
+          date: new Date(body.date || new Date()),
+          debtSourceId: debtSourceId,
+          amount: amount,
+          description: `Pembayaran via Pengeluaran: ${body.description || ""}`,
+        },
+      });
+      debtPaymentId = debtPayment.id;
     }
 
     const expense = await prisma.expense.create({
@@ -59,8 +77,9 @@ export async function POST(req: Request) {
         categoryId: categoryId,
         description: String(body.description || ""),
         amount: amount,
+        debtPaymentId: debtPaymentId,
       },
-      include: { category: true },
+      include: { category: true, debtPayment: true },
     });
     return NextResponse.json(expense);
   } catch (error: any) {
