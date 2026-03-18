@@ -2,25 +2,27 @@
 import { useEffect, useState, useCallback } from "react";
 import { useRef } from "react";
 import { formatRupiah, formatDate, getCurrentMonth } from "@/lib/utils";
-import { Plus, Trash2, Upload, Loader2, Edit2, Check, X, AlertTriangle } from "lucide-react";
+import { Plus, Trash2, Upload, Loader2, Edit2, Check, X, AlertTriangle, Info } from "lucide-react";
 import MonthYearPicker from "@/components/MonthYearPicker";
 import { CurrencyInput } from "@/components/CurrencyInput";
 import Modal from "@/components/Modal";
 import ConfirmModal from "@/components/ConfirmModal";
 
 interface Category { id: number; name: string }
-interface Expense { id: number; date: string; description: string; amount: number; category: Category }
+interface Expense { id: number; date: string; description: string; amount: number; category: Category; debtPayment?: any }
 interface Budget { id: number; categoryId: number; monthlyAmount: number; category: Category }
+interface DebtSource { id: number; name: string; initialAmount: number; loans: { amount: number }[]; payments: { amount: number }[] }
 
 export default function PengeluaranPage() {
   const [expenses, setExpenses] = useState<Expense[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [budgets, setBudgets] = useState<Budget[]>([]);
+  const [debtSources, setDebtSources] = useState<DebtSource[]>([]);
   const [month, setMonth] = useState(getCurrentMonth());
   const [viewAll, setViewAll] = useState(false);
   const [selectedIds, setSelectedIds] = useState<number[]>([]);
   const [showForm, setShowForm] = useState(false);
-  const [form, setForm] = useState({ date: new Date().toISOString().split("T")[0], categoryId: "", description: "", amount: "" });
+  const [form, setForm] = useState({ date: new Date().toISOString().split("T")[0], categoryId: "", description: "", amount: "", debtSourceId: "" });
   const [ocrLoading, setOcrLoading] = useState(false);
   const [ocrError, setOcrError] = useState("");
   const [receiptName, setReceiptName] = useState("");
@@ -29,7 +31,7 @@ export default function PengeluaranPage() {
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   
   const [editId, setEditId] = useState<number | null>(null);
-  const [editForm, setEditForm] = useState({ date: "", categoryId: "", description: "", amount: "" });
+  const [editForm, setEditForm] = useState({ date: "", categoryId: "", description: "", amount: "", debtSourceId: "" });
 
   const [confirmDelete, setConfirmDelete] = useState<{ open: boolean; id?: number; bulk?: boolean }>({ open: false });
 
@@ -42,6 +44,7 @@ export default function PengeluaranPage() {
   useEffect(() => {
     fetch("/api/expense-categories").then(r => r.json()).then(setCategories);
     fetch("/api/budgets").then(r => r.json()).then(setBudgets);
+    fetch("/api/debts").then(r => r.json()).then(setDebtSources);
   }, []);
 
   const submit = async (e: React.FormEvent) => {
@@ -50,16 +53,17 @@ export default function PengeluaranPage() {
     const res = await fetch("/api/expenses", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ ...form, categoryId: +form.categoryId, amount: +form.amount }),
+      body: JSON.stringify({ ...form, categoryId: +form.categoryId, amount: +form.amount, debtSourceId: form.debtSourceId ? +form.debtSourceId : undefined }),
     });
     if (!res.ok) {
       const data = await res.json().catch(() => ({}));
       setSubmitError(data.error || "Gagal menyimpan pengeluaran.");
       return;
     }
-    setForm({ date: new Date().toISOString().split("T")[0], categoryId: "", description: "", amount: "" });
+    setForm({ date: new Date().toISOString().split("T")[0], categoryId: "", description: "", amount: "", debtSourceId: "" });
     setShowForm(false);
     load();
+    fetch("/api/debts").then(r => r.json()).then(setDebtSources);
   };
 
   const triggerUpload = () => {
@@ -136,6 +140,7 @@ export default function PengeluaranPage() {
       categoryId: e.category.id.toString(),
       description: e.description,
       amount: e.amount.toString(),
+      debtSourceId: e.debtPayment?.debtSourceId?.toString() || ""
     });
   };
 
@@ -144,7 +149,7 @@ export default function PengeluaranPage() {
     const res = await fetch("/api/expenses/" + editId, {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ ...editForm, categoryId: +editForm.categoryId, amount: +editForm.amount }),
+      body: JSON.stringify({ ...editForm, categoryId: +editForm.categoryId, amount: +editForm.amount, debtSourceId: editForm.debtSourceId ? +editForm.debtSourceId : undefined }),
     });
     if (!res.ok) {
       alert("Gagal menyimpan perubahan.");
@@ -152,6 +157,7 @@ export default function PengeluaranPage() {
     }
     setEditId(null);
     load();
+    fetch("/api/debts").then(r => r.json()).then(setDebtSources);
   };
 
   const total = expenses.reduce((s, e) => s + e.amount, 0);
@@ -268,11 +274,37 @@ export default function PengeluaranPage() {
           </div>
           <div>
             <label className="block text-xs text-slate-500 mb-1">Kategori</label>
-            <select required value={form.categoryId} onChange={e => setForm({...form, categoryId: e.target.value})} className="w-full border rounded-lg px-3 py-2 text-sm">
+            <select required value={form.categoryId} onChange={e => setForm({...form, categoryId: e.target.value, debtSourceId: ""})} className="w-full border rounded-lg px-3 py-2 text-sm">
               <option value="">Pilih...</option>
               {categories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
             </select>
           </div>
+          {(() => {
+            const cat = categories.find(c => c.id === +form.categoryId);
+            const isDebt = cat?.name.toLowerCase().includes("utang") || cat?.name.toLowerCase().includes("hutang");
+            if (!isDebt) return null;
+            
+            const selectedDebt = debtSources.find(d => d.id === +form.debtSourceId);
+            const balance = selectedDebt ? (selectedDebt.initialAmount + selectedDebt.loans.reduce((s, l) => s + l.amount, 0) - selectedDebt.payments.reduce((s, p) => s + p.amount, 0)) : 0;
+
+            return (
+              <div className="bg-orange-50 border border-orange-100 rounded-xl p-4 space-y-3 animate-in fade-in zoom-in-95">
+                <div>
+                  <label className="block text-xs font-semibold text-orange-700 mb-1">Bayar Ke Utang Mana?</label>
+                  <select required value={form.debtSourceId} onChange={e => setForm({...form, debtSourceId: e.target.value})} className="w-full border-orange-200 rounded-lg px-3 py-2 text-sm bg-white">
+                    <option value="">Pilih Sumber Utang...</option>
+                    {debtSources.map(d => <option key={d.id} value={d.id}>{d.name}</option>)}
+                  </select>
+                </div>
+                {selectedDebt && (
+                  <div className="flex items-center gap-2 text-orange-600 bg-white/50 rounded-lg p-2 border border-orange-100">
+                    <Info size={14} />
+                    <p className="text-xs">Sisa Hutang: <span className="font-bold">{formatRupiah(balance)}</span></p>
+                  </div>
+                )}
+              </div>
+            );
+          })()}
           <div>
             <label className="block text-xs text-slate-500 mb-1">Rincian</label>
             <input type="text" required value={form.description} onChange={e => setForm({...form, description: e.target.value})} className="w-full border rounded-lg px-3 py-2 text-sm" placeholder="Deskripsi" />
@@ -315,7 +347,21 @@ export default function PengeluaranPage() {
                           {categories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
                         </select>
                       </td>
-                      <td className="px-4 py-2"><input type="text" value={editForm.description} onChange={ev => setEditForm(f => ({ ...f, description: ev.target.value }))} className="w-full border rounded px-2 py-1 text-sm bg-white" /></td>
+                      <td className="px-4 py-2">
+                        <input type="text" value={editForm.description} onChange={ev => setEditForm(f => ({ ...f, description: ev.target.value }))} className="w-full border rounded px-2 py-1 text-sm bg-white mb-1" placeholder="Deskripsi" />
+                        {(() => {
+                          const cat = categories.find(c => c.id === +editForm.categoryId);
+                          if (cat?.name.toLowerCase().includes("utang") || cat?.name.toLowerCase().includes("hutang")) {
+                            return (
+                              <select value={editForm.debtSourceId} onChange={ev => setEditForm(f => ({ ...f, debtSourceId: ev.target.value }))} className="w-full border border-orange-200 rounded px-2 py-1 text-[10px] bg-orange-50 appearance-none">
+                                <option value="">Pilih Utang...</option>
+                                {debtSources.map(d => <option key={d.id} value={d.id}>{d.name}</option>)}
+                              </select>
+                            );
+                          }
+                          return null;
+                        })()}
+                      </td>
                       <td className="px-4 py-2"><CurrencyInput min={0} value={editForm.amount} onChangeValue={(val: string) => setEditForm(f => ({ ...f, amount: val }))} className="w-full border rounded px-2 py-1 text-sm bg-white text-right" /></td>
                       <td className="px-4 py-2">
                         <div className="flex items-center gap-2">

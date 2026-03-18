@@ -30,7 +30,7 @@ export async function GET(req: Request) {
 
   const expenses = await prisma.expense.findMany({
     where,
-    include: { category: true },
+    include: { category: true, debtPayment: true },
     orderBy: { date: "desc" },
   });
   return NextResponse.json(expenses);
