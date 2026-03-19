@@ -43,9 +43,19 @@ export async function GET(req: Request) {
   const totalPendapatan = monthlyIncomes.reduce((s, i) => s + i.amount, 0);
   const totalPengeluaran = monthlyExpenses.reduce((s, e) => s + e.amount, 0);
   const sisaPendapatan = totalPendapatan - totalPengeluaran;
-
   const totalPendapatanAll = incomes.reduce((s, i) => s + i.amount, 0);
   const totalPengeluaranAll = expenses.reduce((s, e) => s + e.amount, 0);
+
+  // === DAILY DATA (for Top Hero) ===
+  const todayStr = new Date().toISOString().split('T')[0];
+  const todayIncomes = monthlyIncomes.filter(i => i.date.toISOString().split('T')[0] === todayStr);
+  const todayExpenses = monthlyExpenses.filter(e => e.date.toISOString().split('T')[0] === todayStr);
+  const topPemasukan = todayIncomes.reduce((s, i) => s + i.amount, 0);
+  const topPengeluaran = todayExpenses.reduce((s, e) => s + e.amount, 0);
+
+  const daysInMonth = new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0).getDate();
+  const remainingDays = Math.max(daysInMonth - new Date().getDate(), 1);
+  const dailyBudget = Math.max(sisaPendapatan, 0) / remainingDays;
 
   // === UTANG ===
   const debtSummary = debtSources.map((ds) => {
@@ -80,6 +90,23 @@ export async function GET(req: Request) {
     const k = expenses.filter((exp) => filterMonth(exp.date, m)).reduce((s, exp) => s + exp.amount, 0);
     labaRugiBulanan.push({ month: m, pendapatan: p, pengeluaran: k, sisa: p - k });
   }
+
+  // === GROWTH COMPARISON (Last Month) ===
+  const lastMonthDate = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+  const lmStr = lastMonthDate.getFullYear() + "-" + String(lastMonthDate.getMonth() + 1).padStart(2, "0");
+  const lmIncomes = incomes.filter(i => {
+    const d = new Date(i.date);
+    return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") <= lmStr;
+  });
+  const lmExpenses = expenses.filter(e => {
+    const d = new Date(e.date);
+    return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") <= lmStr;
+  });
+  const lmSaldo = lmIncomes.reduce((s, i) => s + i.amount, 0) - lmExpenses.reduce((s, e) => s + e.amount, 0);
+  // Simple approximation: assuming debt/piutang is same or we use total at that point if we had snapshots. 
+  // For now, let's just compare Net Wealth (kekayaanBersih) trends.
+  const lastMonthNetWealth = lmSaldo + totalPiutang - totalUtang; 
+  const netWealthGrowth = lastMonthNetWealth !== 0 ? ((kekayaanBersih - lastMonthNetWealth) / Math.abs(lastMonthNetWealth)) * 100 : 0;
 
   // === PENGELUARAN PER KATEGORI ===
   const expenseByCategory: Record<string, number> = {};
@@ -203,6 +230,10 @@ export async function GET(req: Request) {
     profile,
     recentTransactions,
     dailyExpenses,
-    catProgress
+    catProgress,
+    topPemasukan,
+    topPengeluaran,
+    dailyBudget,
+    netWealthGrowth
   });
 }

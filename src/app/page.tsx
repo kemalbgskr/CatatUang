@@ -107,54 +107,44 @@ export default function Home() {
            <MonthYearPicker value={month} onChange={setMonth} className="text-sm font-bold border-none shadow-none bg-transparent" />
         </div>
       </div>
-
-      {/* Main Hero Card (Dark) */}
-      <div className="bg-[#2C2C2C] rounded-[32px] p-8 text-white relative overflow-hidden shadow-sm mb-6">
-        <div className="flex flex-col md:flex-row md:justify-between mb-8 relative z-10">
-          <div>
-            <p className="text-[#A19FA6] text-[10px] font-extrabold tracking-widest mb-3 flex items-center gap-2">
-              <span className="text-rose-400">⚡</span> SEKILAS BULAN INI
+      {/* Top Summaries & Runway */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+        <Link href="/pendapatan" className="bg-white rounded-[32px] border border-slate-100 p-6 shadow-[0_4px_24px_rgba(0,0,0,0.01)] hover:bg-slate-50 transition-colors group">
+          <p className="text-[10px] font-black tracking-widest text-[#A19FA6] uppercase mb-1">Total Pemasukan</p>
+          <h3 className="text-2xl font-black text-[#2C2C2C] tracking-tight">{formatRupiah(data.totalPendapatan)}</h3>
+        </Link>
+        <Link href="/pengeluaran" className="bg-white rounded-[32px] border border-slate-100 p-6 shadow-[0_4px_24px_rgba(0,0,0,0.01)] hover:bg-slate-50 transition-colors group">
+          <p className="text-[10px] font-black tracking-widest text-[#A19FA6] uppercase mb-1">Total Pengeluaran</p>
+          <h3 className="text-2xl font-black text-[#2C2C2C] tracking-tight">{formatRupiah(data.totalPengeluaran)}</h3>
+        </Link>
+        <div className="bg-white rounded-[32px] border border-slate-100 p-6 shadow-[0_4px_24px_rgba(0,0,0,0.01)] flex flex-col justify-between">
+          <div className="flex items-center justify-between">
+            <p className="text-[10px] font-black tracking-widest text-rose-400 uppercase flex items-center gap-1">
+              <AlertCircle size={10} /> RUNWAY DANA DARURAT
             </p>
-            <h2 className="text-4xl md:text-5xl font-black mb-2 tracking-tight">{formatRupiah(data.sisaPendapatan)}</h2>
-            <p className="text-[#A19FA6] text-xs font-semibold flex items-center gap-1.5 mt-2">sisa pendapatan bulan ini</p>
+            <Eye size={14} className="text-slate-200" />
           </div>
-          <div className="flex gap-12 mt-6 md:mt-0 md:text-right">
-            <div>
-              <p className="text-[#A19FA6] text-[10px] font-extrabold tracking-widest mb-2">PEMASUKAN</p>
-              <p className="text-white font-bold text-lg">{formatRupiah(data.totalPendapatan)}</p>
+          <div className="mt-2">
+            <h3 className="text-3xl font-black text-[#2C2C2C] tracking-tighter">
+              {data.totalPengeluaran > 0 ? (data.saldoBersih / data.totalPengeluaran).toFixed(1) : '∞'} <span className="text-sm text-slate-400 font-bold">Bulan</span>
+            </h3>
+            <div className="w-full bg-slate-50 h-1.5 rounded-full mt-3 overflow-hidden">
+              <div className="bg-rose-200 h-full" style={{ width: '40%' }} />
             </div>
-            <div>
-              <p className="text-[#A19FA6] text-[10px] font-extrabold tracking-widest mb-2">PENGELUARAN</p>
-              <p className="text-white font-bold text-lg">{formatRupiah(data.totalPengeluaran)}</p>
-            </div>
+            <p className="text-[9px] font-bold text-slate-300 mt-2 uppercase">Termasuk {formatRupiah(data.saldoBersih)} dana likuid</p>
           </div>
         </div>
       </div>
 
-      {/* Debt & Receivable Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-        <Link href="/utang" className="bg-white rounded-[32px] border border-slate-100 p-6 shadow-[0_4px_24px_rgba(0,0,0,0.01)] hover:bg-slate-50 transition-colors group">
-          <div className="flex items-center gap-4">
-            <div className="w-14 h-14 bg-orange-50 text-orange-500 rounded-[20px] flex items-center justify-center transition-transform group-hover:scale-110">
-              <HandCoins size={28} />
-            </div>
-            <div>
-              <p className="text-[10px] font-black tracking-widest text-[#A19FA6] uppercase mb-1">Total Sisa Utang</p>
-              <h3 className="text-2xl font-black text-[#2C2C2C] tracking-tight">{formatRupiah(data.totalUtang)}</h3>
-            </div>
+      {/* Main Hero Card (Dark) - Upcoming Bills Style */}
+      <div className="bg-[#2C2C2C] rounded-[32px] p-6 text-white shadow-sm mb-6 flex items-center justify-between">
+        <div className="flex items-center gap-4">
+          <div className="w-10 h-10 bg-white/10 rounded-xl flex items-center justify-center">
+            <Clock size={20} className="text-rose-400" />
           </div>
-        </Link>
-        <Link href="/piutang" className="bg-white rounded-[32px] border border-slate-100 p-6 shadow-[0_4px_24px_rgba(0,0,0,0.01)] hover:bg-slate-50 transition-colors group">
-          <div className="flex items-center gap-4">
-            <div className="w-14 h-14 bg-indigo-50 text-indigo-500 rounded-[20px] flex items-center justify-center transition-transform group-hover:scale-110">
-              <TrendingUp size={28} />
-            </div>
-            <div>
-              <p className="text-[10px] font-black tracking-widest text-[#A19FA6] uppercase mb-1">Total Sisa Piutang</p>
-              <h3 className="text-2xl font-black text-[#2C2C2C] tracking-tight">{formatRupiah(data.totalPiutang)}</h3>
-            </div>
-          </div>
-        </Link>
+          <p className="text-sm font-bold">Tagihan Mendatang</p>
+        </div>
+        <p className="text-white/40 text-[11px] font-medium">Tidak ada tagihan mendatang.</p>
       </div>
 
       {/* Progres Pengeluaran Section */}
@@ -271,6 +261,27 @@ export default function Home() {
             )}
             
             <Link href="/pengeluaran" className="block text-center pt-4 text-[12px] font-black text-[#A19FA6] hover:text-[#2C2C2C] transition-colors uppercase tracking-widest">Lihat Semua Riwayat</Link>
+          </div>
+        </div>
+      </div>
+      {/* Unified Utang Piutang Section (Below Activities) */}
+      <div className="bg-white rounded-[32px] border border-slate-100 p-8 shadow-[0_4px_24px_rgba(0,0,0,0.02)] mt-6">
+        <div className="mb-8">
+          <h2 className="text-lg font-bold text-[#2C2C2C]">Utang Piutang</h2>
+        </div>
+        
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+          <Link href="/utang" className="group block">
+            <p className="text-[10px] font-black tracking-widest text-[#A19FA6] uppercase mb-2 group-hover:text-rose-400 transition-colors">UTANG</p>
+            <p className="text-xl font-black text-rose-500 tracking-tight group-hover:scale-105 transition-transform origin-left">{formatRupiah(data.totalUtang)}</p>
+          </Link>
+          <Link href="/piutang" className="group block">
+            <p className="text-[10px] font-black tracking-widest text-[#A19FA6] uppercase mb-2 group-hover:text-emerald-400 transition-colors">PIUTANG</p>
+            <p className="text-xl font-black text-emerald-500 tracking-tight group-hover:scale-105 transition-transform origin-left">{formatRupiah(data.totalPiutang)}</p>
+          </Link>
+          <div className="group block">
+            <p className="text-[10px] font-black tracking-widest text-[#A19FA6] uppercase mb-2">POSISI BERSIH</p>
+            <p className="text-xl font-black text-[#2C2C2C] tracking-tight">{formatRupiah(data.kekayaanBersih)}</p>
           </div>
         </div>
       </div>
