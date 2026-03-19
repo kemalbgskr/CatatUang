@@ -1,132 +1,30 @@
 @import url("https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap");
 @import "tailwindcss";
 
-/* ============================
-   Dark mode as DEFAULT
-   ============================ */
 :root {
-  --primary: #3b82f6;
-  --surface: #0f172a;
-  --surface-2: #111827;
-  --surface-3: #1e293b;
-  --border: #1e293b;
-  --border-2: #334155;
-  --text-1: #ffffff;
-  --text-2: #e2e8f0;
-  --text-3: #cbd5e1;
-  --shadow-card: 0 2px 20px 0 rgba(0,0,0,0.40);
   --radius-lg: 1.5rem;
 }
 
 * { box-sizing: border-box; }
 
-html, body { background: #060c18; }
-
 body {
   font-family: "Plus Jakarta Sans", Arial, Helvetica, sans-serif;
   font-size: 15px;
-  color: var(--text-1);
+  background-color: #FAFAFA;
+  color: #1e293b;
   min-height: 100vh;
   -webkit-font-smoothing: antialiased;
 }
 
-/* ============================
-   Form Elements — dark by default
-   ============================ */
-input, select, textarea {
-  font-family: inherit;
-  font-size: 0.9rem;
-  border-radius: 0.75rem;
-  border: 1.5px solid var(--border-2);
-  background: var(--surface-3);
-  color: var(--text-1);
-  transition: border-color 0.15s, box-shadow 0.15s;
-  outline: none;
-}
-
-input::placeholder, textarea::placeholder { color: var(--text-3); }
-
-input:focus, select:focus, textarea:focus {
-  border-color: var(--primary);
-  box-shadow: 0 0 0 3px rgba(59,130,246,0.20);
-}
-
-/* ============================
-   Scrollbar
-   ============================ */
 ::-webkit-scrollbar { width: 5px; height: 5px; }
 ::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: #334155; border-radius: 99px; }
-::-webkit-scrollbar-thumb:hover { background: #475569; }
+::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 99px; }
+::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
 
-/* ============================
-   Tailwind overrides — force dark
-   ============================ */
-.bg-white,
-.bg-white\/90,
-.bg-white\/95 {
-  background-color: #0f172a !important;
-  border-color: #1e293b !important;
-  color: #e2e8f0 !important;
-}
-
-.bg-slate-50,
-.bg-slate-100 {
-  background-color: #111827 !important;
-  color: #e2e8f0 !important;
-}
-
-.bg-slate-200 { background-color: #1e293b !important; }
-
-.text-slate-900 { color: #ffffff !important; }
-.text-slate-800 { color: #f1f5f9 !important; }
-.text-slate-700 { color: #e2e8f0 !important; }
-.text-slate-600 { color: #cbd5e1 !important; }
-.text-slate-500 { color: #94a3b8 !important; }
-.text-slate-400 { color: #94a3b8 !important; }
-
-.border-slate-100,
-.border-slate-200,
-.border-slate-300,
-.border { border-color: #1e293b !important; }
-
-table thead,
-table thead tr { background-color: #111827 !important; }
-
-table tbody tr:hover { background-color: #0c1220 !important; }
-
-/* Category tags */
-.bg-red-100 { background-color: #450a0a !important; }
-.bg-emerald-100 { background-color: #022c22 !important; }
-.bg-blue-100 { background-color: #0c1a3b !important; }
-.bg-indigo-100 { background-color: #1e1b4b !important; }
-.bg-amber-100 { background-color: #451a03 !important; }
-.bg-orange-100 { background-color: #431407 !important; }
-
-/* Info/error banners */
-.bg-blue-50 { background-color: #0c1a3b !important; }
-.bg-rose-50 { background-color: #2d0808 !important; }
-.bg-orange-50 { background-color: #2c0f03 !important; }
-.bg-amber-50 { background-color: #2c1003 !important; }
-.bg-indigo-50 { background-color: #1e1b4b !important; }
-
-.border-blue-200 { border-color: #1e3a8a !important; }
-.border-rose-100 { border-color: #7f1d1d !important; }
-
-/* Progress bar track */
-.bg-slate-100.rounded-full { background-color: #1e293b !important; }
-
-/* Card component */
 .card {
-  background: #0f172a;
+  background: white;
   border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-card);
-  border: 1.5px solid var(--border);
+  box-shadow: 0 4px 20px rgba(0,0,0,0.03);
   padding: 1.5rem;
 }
 
-/* Text color overrides for blue shades */
-.text-blue-600 { color: #60a5fa !important; }
-.text-blue-700 { color: #93c5fd !important; }
-.text-indigo-700 { color: #a5b4fc !important; }
-.text-blue-200 { color: #bfdbfe !important; }

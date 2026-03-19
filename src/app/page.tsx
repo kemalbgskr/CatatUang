@@ -21,6 +21,9 @@ import {
   AlertCircle,
   HandCoins,
   Star,
+  Eye,
+  Clock,
+  Calendar,
 } from "lucide-react";
 import MonthYearPicker from "@/components/MonthYearPicker";
 

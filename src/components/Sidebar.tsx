@@ -41,8 +41,7 @@ export default function Sidebar() {
     <>
       {/* Mobile toggle */}
       <button
-        className="fixed top-4 left-4 z-50 md:hidden text-white p-2.5 rounded-2xl shadow-lg"
-        style={{ background: "#1e3a8a" }}
+        className="fixed top-4 left-4 z-50 md:hidden text-slate-900 bg-white border border-slate-200 p-2.5 rounded-2xl shadow-sm"
         onClick={() => setOpen(!open)}
         aria-label="Toggle sidebar"
       >
@@ -51,27 +50,21 @@ export default function Sidebar() {
 
       {/* Sidebar */}
       <aside
-        className={`fixed inset-y-0 left-0 z-40 w-64 flex flex-col transform transition-transform duration-200 ease-in-out
+        className={`fixed inset-y-0 left-0 z-40 w-64 flex flex-col transform transition-transform duration-200 ease-in-out bg-white border-r border-slate-100
           ${open ? "translate-x-0" : "-translate-x-full"} md:translate-x-0`}
-        style={{
-          background: "linear-gradient(180deg, #0a1628 0%, #0d1f3c 50%, #0f2348 100%)",
-          borderRight: "1px solid #1e293b",
-        }}
       >
         {/* Logo */}
-        <div className="px-6 py-6 flex items-center gap-3" style={{ borderBottom: "1px solid rgba(255,255,255,0.07)" }}>
-          <div className="w-9 h-9 rounded-2xl flex items-center justify-center text-xl"
-            style={{ background: "linear-gradient(135deg, #1d4ed8, #3b82f6)" }}>
-            💰
+        <div className="px-8 py-8 flex items-center gap-3">
+          <div className="w-8 h-8 rounded-full bg-rose-100 flex items-center justify-center text-rose-700 font-extrabold text-lg">
+            C.
           </div>
           <div>
-            <p className="text-white font-extrabold text-sm leading-none">CatatUang</p>
-            <p className="text-blue-300 font-bold text-sm leading-none mt-0.5">Project</p>
+            <p className="text-slate-900 font-extrabold text-2xl tracking-tight leading-none">CatatUang.</p>
           </div>
         </div>
 
         {/* Nav */}
-        <nav className="flex-1 px-3 py-4 space-y-0.5 overflow-y-auto">
+        <nav className="flex-1 px-4 py-2 space-y-1 overflow-y-auto">
           {navItems.map((item) => {
             const isActive = pathname === item.href;
             return (
@@ -79,13 +72,13 @@ export default function Sidebar() {
                 key={item.href}
                 href={item.href}
                 onClick={() => setOpen(false)}
-                className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all
+                className={`flex items-center gap-4 px-4 py-3.5 rounded-2xl text-[15px] font-semibold transition-all
                   ${isActive
-                    ? "bg-white text-[#1e3a8a] shadow-lg"
-                    : "text-slate-400 hover:bg-white/8 hover:text-white"
+                    ? "bg-[#FFE4DE] text-gray-900"
+                    : "text-slate-500 hover:bg-slate-50 hover:text-gray-900"
                   }`}
               >
-                <item.icon size={17} className={isActive ? "text-[#1e3a8a]" : "text-slate-500"} />
+                <item.icon size={20} strokeWidth={isActive ? 2.5 : 2} className={isActive ? "text-gray-900" : "text-slate-400"} />
                 {item.label}
               </Link>
             );
@@ -93,20 +86,34 @@ export default function Sidebar() {
         </nav>
 
         {/* Bottom */}
-        <div className="px-3 py-4" style={{ borderTop: "1px solid rgba(255,255,255,0.07)" }}>
+        <div className="px-4 py-6 space-y-1 border-t border-slate-50">
+          <Link
+            href="/yang-baru"
+            className="flex items-center gap-4 px-4 py-3 rounded-2xl text-[15px] font-semibold text-slate-500 hover:bg-slate-50 hover:text-gray-900 transition-all"
+          >
+            <span className="w-5 flex justify-center">✨</span>
+            Yang Baru
+          </Link>
+          <button
+            type="button"
+            className="w-full flex items-center gap-4 px-4 py-3 rounded-2xl text-[15px] font-semibold text-slate-500 hover:bg-slate-50 hover:text-gray-900 transition-all"
+          >
+            <span className="w-5 flex justify-center">🌙</span>
+            Mode Gelap
+          </button>
           <button
             type="button"
             onClick={logout}
-            className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-red-400 hover:bg-red-950/40 hover:text-red-300 transition"
+            className="w-full flex items-center gap-4 px-4 py-3 rounded-2xl text-[15px] font-semibold text-red-500 hover:bg-red-50 transition-all"
           >
-            <LogOut size={17} className="text-red-400" />
+            <LogOut size={20} className="text-red-500" />
             Logout
           </button>
         </div>
       </aside>
 
       {/* Overlay */}
-      {open && <div className="fixed inset-0 z-30 bg-black/60 md:hidden" onClick={() => setOpen(false)} />}
+      {open && <div className="fixed inset-0 z-30 bg-black/40 md:hidden" onClick={() => setOpen(false)} />}
     </>
   );
 }
