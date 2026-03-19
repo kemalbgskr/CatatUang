@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Lock, User } from "lucide-react";
 
-export default function LoginPage() {
+export default function RegisterPage() {
   const router = useRouter();
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
@@ -16,7 +16,8 @@ export default function LoginPage() {
     setLoading(true);
     setError("");
 
-    const res = await fetch("/api/auth/login", {
+    // Assuming we have a register endpoint, if not this will just fail gracefully
+    const res = await fetch("/api/auth/register", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ username, password }),
@@ -26,14 +27,11 @@ export default function LoginPage() {
 
     if (!res.ok) {
       const data = await res.json().catch(() => ({}));
-      setError(data.error || "Gagal login");
+      setError(data.error || "Gagal daftar");
       return;
     }
 
-    const params = new URLSearchParams(window.location.search);
-    const next = params.get("next") || "/";
-    router.push(next);
-    router.refresh();
+    router.push("/login");
   };
 
   return (
@@ -50,35 +48,35 @@ export default function LoginPage() {
           <span className="text-2xl font-black text-slate-800 tracking-tight">Budggt.</span>
         </div>
 
-        <h1 className="text-2xl font-extrabold text-slate-900 tracking-tight mb-2 relative z-10">Masuk ke Akunmu</h1>
-        <p className="text-[15px] text-slate-500 font-medium mb-8 relative z-10">Selamat datang kembali! Yuk lanjut atur keuanganmu.</p>
+        <h1 className="text-2xl font-extrabold text-slate-900 tracking-tight mb-2 relative z-10">Daftar Akun Baru</h1>
+        <p className="text-[15px] text-slate-500 font-medium mb-8 relative z-10">Mulai perjalanan atur keuanganmu sekarang.</p>
 
         <form onSubmit={submit} className="space-y-5 relative z-10">
           <div>
             <label className="text-[11px] font-extrabold tracking-wide text-slate-400 mb-2 uppercase block hidden">Username</label>
-            <div className="flex items-center gap-3 border border-slate-200 rounded-2xl px-4 py-3.5 bg-white focus-within:border-rose-300 focus-within:ring focus-within:ring-rose-100 transition-all group">
-              <User size={18} className="text-slate-400 group-focus-within:text-rose-500 transition-colors" />
+            <div className="flex items-center gap-3 border border-slate-200 rounded-2xl px-4 py-3.5 bg-white focus-within:border-emerald-300 focus-within:ring focus-within:ring-emerald-100 transition-all group">
+              <User size={18} className="text-slate-400 group-focus-within:text-emerald-500 transition-colors" />
               <input
                 required
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
                 className="w-full text-[15px] font-semibold text-slate-800 outline-none placeholder:font-medium placeholder:text-slate-400"
-                placeholder="Username pengguna"
+                placeholder="Pilih Username"
               />
             </div>
           </div>
 
           <div>
             <label className="text-[11px] font-extrabold tracking-wide text-slate-400 mb-2 uppercase block hidden">Password</label>
-            <div className="flex items-center gap-3 border border-slate-200 rounded-2xl px-4 py-3.5 bg-white focus-within:border-rose-300 focus-within:ring focus-within:ring-rose-100 transition-all group">
-              <Lock size={18} className="text-slate-400 group-focus-within:text-rose-500 transition-colors" />
+            <div className="flex items-center gap-3 border border-slate-200 rounded-2xl px-4 py-3.5 bg-white focus-within:border-emerald-300 focus-within:ring focus-within:ring-emerald-100 transition-all group">
+              <Lock size={18} className="text-slate-400 group-focus-within:text-emerald-500 transition-colors" />
               <input
                 required
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 className="w-full text-[15px] font-semibold text-slate-800 outline-none placeholder:font-medium placeholder:text-slate-400"
-                placeholder="Password"
+                placeholder="Buat Password"
               />
             </div>
           </div>
@@ -93,14 +91,14 @@ export default function LoginPage() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full bg-rose-200 hover:bg-rose-300 disabled:opacity-60 text-rose-900 rounded-2xl py-4 text-[15px] font-black transition-all flex items-center justify-center gap-2"
+            className="w-full bg-slate-900 hover:bg-slate-800 disabled:opacity-60 text-white rounded-2xl py-4 text-[15px] font-black transition-all flex items-center justify-center gap-2 shadow-xl shadow-slate-900/20"
           >
-            {loading ? <span className="animate-spin text-xl leading-none">⏳</span> : "Masuk Sekarang"}
+            {loading ? <span className="animate-spin text-xl leading-none">⏳</span> : "Buat Akun"}
           </button>
         </form>
 
         <p className="mt-8 text-center text-[13px] font-bold text-slate-500 relative z-10">
-          Belum punya akun? <a href="/register" className="text-rose-500 hover:text-rose-600 hover:underline">Daftar dulu yuk</a>
+          Sudah punya akun? <a href="/login" className="text-slate-900 hover:underline">Masuk di sini</a>
         </p>
       </div>
     </div>

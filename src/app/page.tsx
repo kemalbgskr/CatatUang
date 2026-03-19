@@ -165,172 +165,157 @@ export default function Home() {
 
   return (
     <div className="space-y-6">
-      {/* Hero Header Card */}
-      <div
-        className="rounded-3xl p-6 md:p-8 text-white relative overflow-hidden"
-        style={{ background: "linear-gradient(135deg, #1e3a8a 0%, #1d4ed8 60%, #3b82f6 100%)" }}
-      >
-        {/* Decorative circles */}
-        <div className="absolute -top-10 -right-10 w-48 h-48 rounded-full bg-white/5" />
-        <div className="absolute -bottom-8 -right-4 w-32 h-32 rounded-full bg-white/8" />
-        <div className="absolute top-4 right-20 w-16 h-16 rounded-full bg-white/5" />
+      {/* Header */}
+      <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4 mb-2">
+        <div className="flex flex-col">
+          <div className="flex items-center gap-2">
+            <h1 className="text-3xl font-extrabold tracking-tight text-slate-900">Dashboard</h1>
+            <button className="text-slate-400 hover:text-slate-600 mt-1"><Eye size={18} /></button>
+          </div>
+          <p className="text-slate-500 font-medium text-[15px]">Halo, Pengguna <span className="bg-amber-100 text-amber-600 px-2 py-0.5 rounded-md text-xs ml-1 font-bold">{displayLevelLabel}</span></p>
+        </div>
+        <div className="flex items-center gap-3">
+          <div className="hidden md:flex items-center gap-2 px-4 py-2 border border-slate-200 rounded-full text-xs font-bold text-slate-400 bg-white shadow-sm">
+            <Clock size={14} className="text-rose-400" />
+            <div className="text-left leading-tight">
+              <div>ACTIVE PERIOD</div>
+              <span className="text-slate-800">{getMonthLabel(data.currentMonth)}</span>
+            </div>
+          </div>
+          <div className="bg-white rounded-full px-2 py-1 border border-slate-200 shadow-sm flex items-center">
+             <Calendar size={16} className="text-rose-400 ml-2 mr-1" />
+             <MonthYearPicker value={month} onChange={setMonth} className="text-sm font-bold border-none shadow-none bg-transparent" />
+          </div>
+        </div>
+      </div>
 
-        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 relative z-10">
+      {/* Main Hero Card (Dark) */}
+      <div className="bg-[#302C34] rounded-[24px] p-6 md:p-8 text-white relative overflow-hidden shadow-sm">
+        <div className="flex flex-col md:flex-row md:justify-between mb-8 relative z-10">
           <div>
-            <p className="text-blue-200 text-sm font-medium mb-1">Selamat datang</p>
-            <h1 className="text-2xl md:text-3xl font-black tracking-tight leading-tight">Dashboard Keuangan</h1>
-            <div className="mt-2 inline-flex items-center gap-1.5 bg-white/20 text-white text-xs font-semibold px-3 py-1.5 rounded-full backdrop-blur-sm">
-              <Star size={12} />
-              {displayLevelLabel}
+            <p className="text-[#A19FA6] text-[10px] font-extrabold tracking-widest mb-3 flex items-center gap-2">
+              <span className="text-rose-400">⚡</span> SEKILAS BULAN INI
+            </p>
+            <h2 className="text-4xl md:text-5xl font-black mb-2 tracking-tight">{formatRupiah(data.sisaPendapatan)}</h2>
+            <p className="text-[#A19FA6] text-xs font-semibold flex items-center gap-1.5 mt-2">👇🏻 sisa pendapatan bulan ini</p>
+          </div>
+          <div className="flex gap-8 mt-6 md:mt-0 md:text-right">
+            <div>
+              <p className="text-[#A19FA6] text-[10px] font-extrabold tracking-widest mb-2">PEMASUKAN</p>
+              <p className="text-white font-bold text-lg">{formatRupiah(data.totalPendapatan)}</p>
+            </div>
+            <div>
+              <p className="text-[#A19FA6] text-[10px] font-extrabold tracking-widest mb-2">PENGELUARAN</p>
+              <p className="text-white font-bold text-lg">{formatRupiah(data.totalPengeluaran)}</p>
             </div>
           </div>
-          <div className="flex items-center gap-3">
-            <MonthYearPicker value={month} onChange={setMonth} />
-          </div>
         </div>
+        
+        {/* Decorative footer text */}
+        <div className="pt-5 border-t border-white/10 relative z-10">
+          <p className="text-[#A19FA6] text-[13px] font-medium tracking-wide">Tetap semangat atur keuanganmu! 🚀</p>
+        </div>
+      </div>
 
-        {/* Mini stats row 1 */}
-        <div className="mt-6 grid grid-cols-3 gap-4 relative z-10">
-          <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-3 text-center">
-            <p className="text-blue-200 text-xs font-medium">Pendapatan</p>
-            <p className="text-white font-black text-base mt-0.5">{formatRupiah(data.totalPendapatan)}</p>
-          </div>
-          <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-3 text-center">
-            <p className="text-blue-200 text-xs font-medium">Pengeluaran</p>
-            <p className="text-white font-black text-base mt-0.5">{formatRupiah(data.totalPengeluaran)}</p>
-          </div>
-          <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-3 text-center">
-            <p className="text-blue-200 text-xs font-medium">Sisa</p>
-            <p className="text-white font-black text-base mt-0.5">{formatRupiah(data.sisaPendapatan)}</p>
-          </div>
+      {/* Budggt Stats Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="bg-white rounded-[24px] p-6 shadow-[0_2px_10px_rgba(0,0,0,0.02)] border border-slate-100/50 flex flex-col justify-between">
+          <p className="text-slate-400 font-extrabold text-[10px] tracking-widest mb-2">TOTAL SALDO BERSIH</p>
+          <h3 className="text-[22px] font-black text-slate-800 tracking-tight">{formatRupiah(data.saldoBersih)}</h3>
+          <p className="text-emerald-600 font-bold text-[10px] mt-4 bg-emerald-50 content-fit self-start px-2.5 py-1 rounded-md">+ {displayLevelLabel}</p>
         </div>
-        {/* Mini stats row 2 */}
-        <div className="mt-3 grid grid-cols-3 gap-4 relative z-10">
-          <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-3 text-center">
-            <p className="text-blue-200 text-xs font-medium">Saldo Bersih</p>
-            <p className="text-white font-black text-base mt-0.5">{formatRupiah(data.saldoBersih)}</p>
+        <div className="bg-white rounded-[24px] p-6 shadow-[0_2px_10px_rgba(0,0,0,0.02)] border border-slate-100/50 flex flex-col justify-between relative overflow-hidden">
+          <div className="relative z-10">
+            <p className="text-slate-400 font-extrabold text-[10px] tracking-widest mb-2">TOTAL UTANG</p>
+            <h3 className="text-[22px] font-black text-slate-800 tracking-tight">{formatRupiah(data.totalUtang)}</h3>
+            <p className={`font-bold text-[10px] mt-4 self-start px-2.5 py-1 rounded-md inline-block
+                ${data.totalUtang > 0 ? "text-rose-600 bg-rose-50" : "text-slate-400 bg-slate-50"}`}>
+              {data.totalUtang > 0 ? "Harus Dibayar!" : "Aman 👍"}
+            </p>
           </div>
-          <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-3 text-center">
-            <p className="text-blue-200 text-xs font-medium">Total Utang</p>
-            <p className={`font-black text-base mt-0.5 ${data.totalUtang > 0 ? "text-red-300" : "text-white"}`}>{formatRupiah(data.totalUtang)}</p>
-          </div>
-          <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-3 text-center">
-            <p className="text-blue-200 text-xs font-medium">Total Piutang</p>
-            <p className={`font-black text-base mt-0.5 ${data.totalPiutang > 0 ? "text-yellow-200" : "text-white"}`}>{formatRupiah(data.totalPiutang)}</p>
+          {data.totalUtang > 0 && <div className="absolute -bottom-6 -right-6 w-24 h-24 bg-rose-50 rounded-full opacity-50 z-0"></div>}
+        </div>
+        <div className="bg-white rounded-[24px] p-6 shadow-[0_2px_10px_rgba(0,0,0,0.02)] border border-slate-100/50 flex flex-col justify-between relative overflow-hidden">
+          <div className="relative z-10">
+            <p className="text-slate-400 font-extrabold text-[10px] tracking-widest mb-2 flex items-center gap-1.5"><AlertCircle size={12} className="text-amber-500" /> TOTAL PIUTANG</p>
+            <h3 className="text-[22px] font-black text-slate-800 tracking-tight">{formatRupiah(data.totalPiutang)}</h3>
+            <p className={`font-bold text-[10px] mt-4 self-start px-2.5 py-1 rounded-md inline-block
+               ${data.totalPiutang > 0 ? "text-amber-600 bg-amber-50" : "text-slate-400 bg-slate-50"}`}>
+              {data.totalPiutang > 0 ? "Belum Dibayar" : "Aman 👍"}
+            </p>
           </div>
         </div>
       </div>
 
-      {/* Laba Rugi Chart */}
-      <div className="bg-white rounded-3xl border border-slate-100 p-6" style={{ boxShadow: "0 2px 20px 0 rgba(30,58,138,0.07)" }}>
-        <h2 className="text-base font-bold text-slate-800">Laba Rugi Bulanan</h2>
-        <p className="text-sm text-slate-400 mt-0.5 mb-5">Pendapatan vs pengeluaran 12 bulan terakhir</p>
-        <ResponsiveContainer width="100%" height={260}>
-          <BarChart data={chartData} margin={{ top: 0, right: 0, left: 0, bottom: 0 }}>
-            <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" vertical={false} />
-            <XAxis dataKey="month" tick={{ fontSize: 11, fill: "#94a3b8", fontWeight: 500 }} axisLine={false} tickLine={false} />
-            <YAxis tickFormatter={(v) => (v / 1_000_000).toFixed(0) + "jt"} tick={{ fontSize: 11, fill: "#94a3b8" }} axisLine={false} tickLine={false} />
-            <Tooltip
-              formatter={(v) => formatRupiah(Number(v))}
-              contentStyle={{
-                borderRadius: 12,
-                border: "1px solid #e2e8f0",
-                fontSize: 13,
-                boxShadow: "0 4px 16px rgba(0,0,0,0.08)",
-              }}
-            />
-            <Legend wrapperStyle={{ fontSize: 13, paddingTop: 12 }} />
-            <Bar dataKey="pendapatan" fill="#3b82f6" name="Pendapatan" radius={[6, 6, 0, 0]} />
-            <Bar dataKey="pengeluaran" fill="#f43f5e" name="Pengeluaran" radius={[6, 6, 0, 0]} />
-          </BarChart>
-        </ResponsiveContainer>
+      <div className="bg-[#3A3335] rounded-[24px] p-6 md:px-8 flex flex-col md:flex-row md:items-center justify-between mt-2">
+        <div className="flex items-center gap-3 mb-2 md:mb-0">
+          <Calendar size={18} className="text-rose-300" />
+          <p className="text-white font-bold text-[15px] tracking-tight">Tagihan Mendatang</p>
+        </div>
+        <p className="text-[#A19FA6] text-[13px] font-medium">Tidak ada tagihan mendatang.</p>
       </div>
 
-
-      {/* Pie + Budget */}
-      <div className="grid md:grid-cols-2 gap-6">
-        {/* Pie */}
-        <div className="bg-white rounded-3xl border border-slate-100 p-6" style={{ boxShadow: "0 2px 20px 0 rgba(30,58,138,0.07)" }}>
-          <h2 className="text-base font-bold text-slate-800">Pengeluaran per Kategori</h2>
-          <p className="text-sm text-slate-400 mt-0.5 mb-4">{getMonthLabel(data.currentMonth)}</p>
-          {pieData.length > 0 ? (
-            <>
-              <ResponsiveContainer width="100%" height={200}>
-                <PieChart>
-                  <Pie
-                    data={pieData}
-                    dataKey="value"
-                    nameKey="name"
-                    cx="50%"
-                    cy="50%"
-                    outerRadius={85}
-                    innerRadius={42}
-                    paddingAngle={3}
-                  >
-                    {pieData.map((_, i) => (
-                      <Cell key={i} fill={COLORS[i % COLORS.length]} />
-                    ))}
-                  </Pie>
-                  <Tooltip
-                    formatter={(v) => formatRupiah(Number(v))}
-                    contentStyle={{ borderRadius: 12, fontSize: 13 }}
-                  />
-                </PieChart>
-              </ResponsiveContainer>
-              <div className="flex flex-wrap gap-2 mt-3">
-                {pieData.map((d, i) => (
-                  <span
-                    key={d.name}
-                    className="flex items-center gap-1.5 text-xs font-medium text-slate-600 bg-slate-50 border border-slate-100 rounded-full px-2.5 py-1"
-                  >
-                    <span
-                      className="w-2 h-2 rounded-full flex-shrink-0"
-                      style={{ background: COLORS[i % COLORS.length] }}
-                    />
-                    {d.name}
-                  </span>
-                ))}
-              </div>
-            </>
-          ) : (
-            <div className="flex flex-col items-center justify-center py-12 text-slate-400">
-              <TrendingDown size={40} className="mb-2 opacity-30" />
-              <p className="text-sm">Belum ada data pengeluaran</p>
-            </div>
-          )}
+      {/* Laba Rugi / Aktivitas Bulan Ini */}
+      <div className="grid md:grid-cols-2 gap-6 mt-2">
+        <div className="bg-white rounded-[24px] p-6 md:p-8 shadow-[0_2px_10px_rgba(0,0,0,0.02)]">
+          <h2 className="text-[17px] font-bold text-slate-800 mb-1">Aktivitas Bulan Ini</h2>
+          <p className="text-[10px] font-extrabold tracking-widest text-[#A19FA6] mb-8 uppercase">
+            12 BULAN TERAKHIR
+          </p>
+          <ResponsiveContainer width="100%" height={260}>
+            <BarChart data={chartData} margin={{ top: 0, right: 0, left: 0, bottom: 0 }} barGap={2} barCategoryGap="20%">
+              <CartesianGrid strokeDasharray="3 3" stroke="#f8fafc" vertical={false} />
+              <XAxis dataKey="month" tick={{ fontSize: 10, fill: "#94a3b8", fontWeight: 700 }} axisLine={false} tickLine={false} />
+              <YAxis tickFormatter={(v) => (v / 1_000_000).toFixed(0) + "jt"} tick={{ fontSize: 10, fill: "#94a3b8", fontWeight: 600 }} axisLine={false} tickLine={false} width={40} />
+              <Tooltip
+                formatter={(v) => formatRupiah(Number(v))}
+                cursor={{ fill: '#f8fafc' }}
+                contentStyle={{
+                  borderRadius: 16,
+                  border: "none",
+                  boxShadow: "0 10px 40px rgba(0,0,0,0.08)",
+                  fontSize: 13,
+                  fontWeight: 600,
+                  padding: "12px 16px"
+                }}
+              />
+              <Legend wrapperStyle={{ fontSize: 11, fontWeight: 700, paddingTop: 16, color: '#64748b' }} iconType="circle" iconSize={8} />
+              <Bar dataKey="pendapatan" fill="#93c5fd" name="Pendapatan" radius={[4, 4, 0, 0]} />
+              <Bar dataKey="pengeluaran" fill="#FFC1B6" name="Pengeluaran" radius={[4, 4, 0, 0]} />
+            </BarChart>
+          </ResponsiveContainer>
         </div>
 
-        {/* Budget */}
-        <div className="bg-white rounded-3xl border border-slate-100 p-6" style={{ boxShadow: "0 2px 20px 0 rgba(30,58,138,0.07)" }}>
-          <h2 className="text-base font-bold text-slate-800">Budget vs Aktual</h2>
-          <p className="text-sm text-slate-400 mt-0.5 mb-5">{getMonthLabel(data.currentMonth)}</p>
+        {/* Budget Realisasi */}
+        <div className="bg-white rounded-[24px] p-6 md:p-8 shadow-[0_2px_10px_rgba(0,0,0,0.02)]">
+          <h2 className="text-[17px] font-bold text-slate-800 mb-1">Realisasi Anggaran</h2>
+          <p className="text-[10px] font-extrabold tracking-widest text-[#A19FA6] mb-8 uppercase">
+            {getMonthLabel(data.currentMonth)}
+          </p>
+          
           {data.budgetComparison.length > 0 ? (
-            <div className="space-y-4 max-h-72 overflow-y-auto pr-1">
+            <div className="space-y-6 max-h-[250px] overflow-y-auto pr-2">
               {data.budgetComparison.map((b) => {
-                const pct =
-                  b.rencana > 0
-                    ? Math.min((b.aktual / b.rencana) * 100, 100)
-                    : 0;
+                const pct = b.rencana > 0 ? Math.min((b.aktual / b.rencana) * 100, 100) : 0;
                 const over = b.rencana > 0 && b.aktual > b.rencana;
                 return (
                   <div key={b.category}>
-                    <div className="flex justify-between items-center text-sm mb-1.5">
-                      <span className="font-semibold text-slate-700">
-                        {b.category}
-                      </span>
-                      <span
-                        className={`text-xs font-bold ${over ? "text-rose-500" : "text-slate-400"}`}
-                      >
-                        {over ? "Melebihi!" : `${pct.toFixed(0)}%`}
+                    <div className="flex justify-between items-center text-[13px] mb-2">
+                      <div className="flex items-center gap-2">
+                        <span className={`w-2 h-2 rounded-full ${over ? "bg-rose-400" : "bg-indigo-400"}`} />
+                        <span className="font-bold text-slate-700">{b.category}</span>
+                      </div>
+                      <span className={`text-[10px] font-extrabold tracking-wide ${over ? "text-rose-500" : "text-slate-400"}`}>
+                        {over ? "MELEBIHI!" : `${pct.toFixed(0)}%`}
                       </span>
                     </div>
-                    <div className="w-full bg-slate-100 rounded-full h-2">
+                    <div className="w-full bg-slate-100 rounded-full h-1.5 mb-1.5">
                       <div
-                        className={`h-2 rounded-full transition-all ${over ? "bg-rose-400" : "bg-indigo-400"}`}
+                        className={`h-1.5 rounded-full transition-all ${over ? "bg-rose-400" : "bg-indigo-400"}`}
                         style={{ width: pct + "%" }}
                       />
                     </div>
-                    <div className="flex justify-between text-xs text-slate-400 mt-1">
+                    <div className="flex justify-between text-[11px] font-bold text-slate-400 mt-1.5">
                       <span>{formatRupiah(b.aktual)}</span>
                       <span>/ {formatRupiah(b.rencana)}</span>
                     </div>
@@ -339,73 +324,17 @@ export default function Home() {
               })}
             </div>
           ) : (
-            <div className="flex flex-col items-center justify-center py-12 text-slate-400">
-              <Wallet size={40} className="mb-2 opacity-30" />
-              <p className="text-sm">
-                Belum ada budget. Tambahkan di Pengaturan.
-              </p>
+            <div className="flex flex-col items-center justify-center h-[200px] text-slate-400 text-center">
+              <div className="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center mb-3">
+                <Wallet size={24} className="text-slate-300" />
+              </div>
+              <p className="text-[13px] font-bold text-slate-600 mb-1">Belum Ada Anggaran</p>
+              <p className="text-[11px]">Atur budget di menu Pengaturan.</p>
             </div>
           )}
         </div>
       </div>
 
-      {/* Debt & Receivable */}
-      <div className="grid md:grid-cols-2 gap-6">
-        <div className="bg-white rounded-3xl border border-slate-100 p-6" style={{ boxShadow: "0 2px 20px 0 rgba(30,58,138,0.07)" }}>
-          <h2 className="text-base font-bold text-slate-800 mb-4">Ringkasan Utang</h2>
-          {data.debtSummary.filter((d) => d.remaining > 0).length > 0 ? (
-            <div className="space-y-2">
-              {data.debtSummary
-                .filter((d) => d.remaining > 0)
-                .map((d) => (
-                  <div
-                    key={d.name}
-                    className="flex justify-between items-center bg-orange-50 border border-orange-100 rounded-xl px-4 py-3"
-                  >
-                    <span className="text-sm font-semibold text-slate-700">
-                      {d.name}
-                    </span>
-                    <span className="text-sm font-bold text-orange-600">
-                      {formatRupiah(d.remaining)}
-                    </span>
-                  </div>
-                ))}
-            </div>
-          ) : (
-            <div className="flex flex-col items-center justify-center py-8 text-slate-400">
-              <span className="text-3xl mb-1">🎉</span>
-              <p className="text-sm font-medium">Tidak ada utang aktif</p>
-            </div>
-          )}
-        </div>
-        <div className="bg-white rounded-3xl border border-slate-100 p-6" style={{ boxShadow: "0 2px 20px 0 rgba(30,58,138,0.07)" }}>
-          <h2 className="text-base font-bold text-slate-800 mb-4">Ringkasan Piutang</h2>
-          {data.receivableSummary.filter((r) => r.remaining > 0).length > 0 ? (
-            <div className="space-y-2">
-              {data.receivableSummary
-                .filter((r) => r.remaining > 0)
-                .map((r) => (
-                  <div
-                    key={r.name}
-                    className="flex justify-between items-center bg-amber-50 border border-amber-100 rounded-xl px-4 py-3"
-                  >
-                    <span className="text-sm font-semibold text-slate-700">
-                      {r.name}
-                    </span>
-                    <span className="text-sm font-bold text-amber-600">
-                      {formatRupiah(r.remaining)}
-                    </span>
-                  </div>
-                ))}
-            </div>
-          ) : (
-            <div className="flex flex-col items-center justify-center py-8 text-slate-400">
-              <span className="text-3xl mb-1">🎉</span>
-              <p className="text-sm font-medium">Tidak ada piutang aktif</p>
-            </div>
-          )}
-        </div>
-      </div>
     </div>
   );
 }

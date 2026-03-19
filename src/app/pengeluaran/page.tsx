@@ -168,47 +168,54 @@ export default function PengeluaranPage() {
     <div className="space-y-6 pt-12 md:pt-0">
       <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleReceiptUpload} disabled={ocrLoading} />
 
-      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+      {/* Header aligned to Budggt Transaksi style */}
+      <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-slate-800">Catat Pengeluaran</h1>
-          <div className="flex items-center gap-3 flex-wrap">
-            <p className="text-slate-500 text-sm">Total: <span className="font-bold text-red-600">{formatRupiah(total)}</span></p>
-            {viewAll && <span className="bg-blue-100 text-blue-700 px-2.5 py-1 rounded-full text-xs font-bold">Mode: Semua Data</span>}
-          </div>
+          <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight">Pengeluaran</h1>
+          <p className="text-slate-500 font-medium text-[15px] mt-1">Uangmu lari ke mana aja?</p>
         </div>
-        <div className="flex gap-3 flex-wrap">
+        <div className="flex gap-3 flex-wrap items-center">
           <button 
             onClick={() => setViewAll(!viewAll)} 
-            className={`px-4 py-2 rounded-xl text-sm font-semibold transition ${viewAll ? "bg-slate-200 text-slate-700 hover:bg-slate-300" : "bg-blue-50 text-blue-600 hover:bg-blue-100 border border-blue-200"}`}
+            className={`px-4 py-2.5 rounded-2xl text-[13px] font-bold transition flex items-center gap-2 border shadow-sm
+              ${viewAll ? "bg-slate-100 text-slate-700 border-slate-200" : "bg-white text-slate-600 border-slate-200 hover:bg-slate-50"}`}
           >
-            {viewAll ? "Tutup Semua" : "Lihat Semua"}
+            {viewAll ? "Tutup Semua Waktu" : "Semua Waktu"}
           </button>
-          {!viewAll && <MonthYearPicker value={month} onChange={setMonth} />}
-          <button onClick={triggerUpload} className="bg-indigo-600 text-white px-4 py-2 rounded-lg text-sm flex items-center gap-2 hover:bg-indigo-700">
+          
+          {!viewAll && (
+            <div className="bg-white rounded-2xl px-2 py-1.5 border border-slate-200 shadow-sm flex items-center">
+              <MonthYearPicker value={month} onChange={setMonth} className="text-[13px] font-bold border-none shadow-none bg-transparent" />
+            </div>
+          )}
+
+          <button onClick={triggerUpload} className="bg-white border border-slate-200 shadow-sm text-slate-700 px-4 py-2.5 rounded-2xl text-[13px] font-bold flex items-center gap-2 hover:bg-slate-50 transition-all">
             <Upload size={16} /> Upload Nota
           </button>
-          <button onClick={() => setShowForm(true)} className="bg-red-600 text-white px-4 py-2 rounded-lg text-sm flex items-center gap-2 hover:bg-red-700">
-            <Plus size={16} /> Tambah
+          
+          <button onClick={() => setShowForm(true)} className="bg-rose-200 text-rose-900 px-4 py-2.5 rounded-2xl text-[13px] font-bold flex items-center gap-2 hover:bg-rose-300 transition-all">
+            <Plus size={16} /> Tambah Baru
           </button>
         </div>
       </div>
 
       {selectedIds.length > 0 && (
-        <div className="bg-indigo-50 border border-indigo-100 rounded-xl p-3 flex items-center justify-between animate-in fade-in slide-in-from-top-2">
-          <p className="text-sm font-medium text-indigo-700">{selectedIds.length} data dipilih</p>
+        <div className="bg-rose-50 border border-rose-100 rounded-[20px] p-4 flex items-center justify-between animate-in fade-in slide-in-from-top-2">
+          <p className="text-[13px] font-bold text-rose-800">{selectedIds.length} data dipilih</p>
           <div className="flex gap-2">
-            <button onClick={bulkDelete} className="bg-red-600 hover:bg-red-700 text-white px-4 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1.5 transition">
+            <button onClick={bulkDelete} className="bg-rose-500 hover:bg-rose-600 text-white px-4 py-2 rounded-xl text-xs font-bold flex items-center gap-1.5 transition">
               <Trash2 size={14} /> Hapus Terpilih
             </button>
-            <button onClick={() => setSelectedIds([])} className="bg-white hover:bg-slate-50 text-slate-500 border border-slate-200 px-4 py-1.5 rounded-lg text-xs font-bold transition">
+            <button onClick={() => setSelectedIds([])} className="bg-white border border-rose-200 text-rose-700 px-4 py-2 rounded-xl text-xs font-bold hover:bg-rose-50 transition">
               Batal
             </button>
           </div>
         </div>
       )}
 
+      {/* Categories Summary row, slightly lighter */}
       {!viewAll && Object.keys(byCategory).length > 0 && (
-        <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3">
+        <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
           {Object.entries(byCategory).sort((a, b) => b[1] - a[1]).map(([cat, amt]) => {
             const budget = budgets.find(b => b.category.name === cat);
             const isOver = budget ? amt > budget.monthlyAmount : false;
@@ -216,69 +223,160 @@ export default function PengeluaranPage() {
             return (
               <div
                 key={cat}
-                className="rounded-xl p-3 relative overflow-hidden"
-                style={{
-                  background: isOver ? "#2d0808" : "#0f172a",
-                  border: isOver ? "1.5px solid #7f1d1d" : "1.5px solid #1e293b",
-                }}
+                className="bg-white rounded-[20px] p-4 border border-slate-100 shadow-[0_2px_10px_rgba(0,0,0,0.02)] flex flex-col justify-between"
               >
-                <p className="text-xs text-white/60 mb-1">{cat}</p>
-                <p className={`text-sm font-bold ${isOver ? "text-red-400" : "text-white"}`}>
-                  {formatRupiah(amt)}
-                </p>
+                <div className="mb-3">
+                  <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wide mb-1 flex items-center gap-1.5">
+                    {cat}
+                  </p>
+                  <p className={`text-lg font-black tracking-tight ${isOver ? "text-rose-500" : "text-slate-800"}`}>
+                    {formatRupiah(amt)}
+                  </p>
+                </div>
                 {budget && (
-                  <>
-                    <div className="mt-2 h-1 rounded-full bg-white/10">
+                  <div className="mt-auto">
+                    <div className="h-[6px] rounded-full bg-slate-100 w-full mb-1.5">
                       <div
-                        className="h-1 rounded-full transition-all"
-                        style={{ width: `${pct}%`, background: isOver ? "#ef4444" : "#3b82f6" }}
+                        className={`h-[6px] rounded-full transition-all ${isOver ? "bg-rose-400" : "bg-indigo-400"}`}
+                        style={{ width: `${pct}%` }}
                       />
                     </div>
-                    <p className={`text-[10px] mt-1 ${isOver ? "text-red-400" : "text-white/40"}`}>
+                    <p className={`text-[10px] font-bold ${isOver ? "text-rose-500" : "text-slate-400"}`}>
                       {isOver
-                        ? `⚠ Melebihi ${formatRupiah(amt - budget.monthlyAmount)}`
+                        ? `Melebihi ${formatRupiah(amt - budget.monthlyAmount)}`
                         : `Sisa ${formatRupiah(budget.monthlyAmount - amt)}`}
                     </p>
-                  </>
+                  </div>
                 )}
-                {!budget && <p className="text-[10px] text-white/30 mt-1">Tanpa budget</p>}
+                {!budget && <p className="text-[10px] text-slate-400 font-bold mt-auto">Tanpa budget</p>}
               </div>
             );
           })}
         </div>
       )}
 
+      {/* Main List */}
+      <div className="bg-white rounded-[24px] shadow-[0_2px_10px_rgba(0,0,0,0.02)] border border-slate-100/50 overflow-hidden p-6 md:p-8">
+        <div className="flex items-center justify-between mb-6">
+          <div className="flex items-center gap-3">
+            <h2 className="text-[17px] font-bold text-slate-800">Semua Pengeluaran</h2>
+            <span className="bg-slate-100 text-slate-500 text-[11px] font-bold px-2.5 py-1 rounded-md">{expenses.length} trans</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <label className="text-[13px] font-bold text-slate-500 cursor-pointer flex items-center gap-2 select-none hover:text-slate-800 transition">
+              <input type="checkbox" checked={expenses.length > 0 && selectedIds.length === expenses.length} onChange={toggleSelectAll} className="w-4 h-4 rounded border-slate-200 text-rose-500 focus:ring-rose-500" />
+              Pilih Semua
+            </label>
+          </div>
+        </div>
+
+        <div className="space-y-0">
+          {expenses.map(e => (
+            <div key={e.id} className={`group flex flex-col md:flex-row md:items-center justify-between p-4 md:p-5 border-b border-slate-50 last:border-0 hover:bg-slate-50/50 transition-all rounded-2xl ${selectedIds.includes(e.id) ? "bg-rose-50/30" : ""}`}>
+              {editId === e.id ? (
+                <div className="w-full flex flex-col md:flex-row gap-4 items-start md:items-center">
+                   <input type="date" value={editForm.date} onChange={ev => setEditForm(f => ({ ...f, date: ev.target.value }))} className="w-full md:w-32 border border-slate-200 rounded-xl px-3 py-2 text-sm bg-white focus:border-rose-300 focus:ring focus:ring-rose-100" />
+                   <select value={editForm.categoryId} onChange={ev => setEditForm(f => ({ ...f, categoryId: ev.target.value }))} className="w-full md:w-40 border border-slate-200 rounded-xl px-3 py-2 text-sm bg-white focus:border-rose-300 focus:ring focus:ring-rose-100">
+                     {categories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+                   </select>
+                   <div className="w-full flex-1">
+                     <input type="text" value={editForm.description} onChange={ev => setEditForm(f => ({ ...f, description: ev.target.value }))} className="w-full border border-slate-200 rounded-xl px-3 py-2 text-sm bg-white mb-1.5 focus:border-rose-300 focus:ring focus:ring-rose-100" placeholder="Deskripsi" />
+                      {(() => {
+                        const cat = categories.find(c => c.id === +editForm.categoryId);
+                        if (cat?.name.toLowerCase().includes("utang") || cat?.name.toLowerCase().includes("hutang")) {
+                          return (
+                            <select value={editForm.debtSourceId} onChange={ev => setEditForm(f => ({ ...f, debtSourceId: ev.target.value }))} className="w-full border border-orange-200 rounded-lg px-2 py-1.5 text-xs bg-orange-50 appearance-none text-orange-900 font-medium">
+                              <option value="">Pilih Utang...</option>
+                              {debtSources.map(d => <option key={d.id} value={d.id}>{d.name}</option>)}
+                            </select>
+                          );
+                        }
+                        return null;
+                      })()}
+                   </div>
+                   <CurrencyInput min={0} value={editForm.amount} onChangeValue={(val: string) => setEditForm(f => ({ ...f, amount: val }))} className="w-full md:w-36 border border-slate-200 rounded-xl px-3 py-2 text-sm bg-white focus:border-rose-300 focus:ring focus:ring-rose-100" />
+                   <div className="flex items-center gap-2 w-full md:w-auto mt-3 md:mt-0 justify-end">
+                      <button onClick={saveEdit} className="bg-emerald-500 text-white p-2 rounded-xl hover:bg-emerald-600 transition shadow-sm" title="Simpan"><Check size={16} /></button>
+                      <button onClick={() => setEditId(null)} className="bg-white border border-slate-200 text-slate-500 p-2 rounded-xl hover:bg-slate-50 transition shadow-sm" title="Batal"><X size={16} /></button>
+                   </div>
+                </div>
+              ) : (
+                <>
+                  <div className="flex items-center gap-4 flex-1">
+                    <input type="checkbox" checked={selectedIds.includes(e.id)} onChange={() => toggleSelect(e.id)} className="w-4 h-4 rounded border-slate-200 text-rose-500 focus:ring-rose-500 shrink-0" />
+                    <div className="w-12 h-12 shrink-0 rounded-[14px] bg-slate-50 border border-slate-100 flex items-center justify-center text-xl shadow-sm">
+                      💸
+                    </div>
+                    <div>
+                      <h3 className="text-[15px] font-bold text-slate-800 tracking-tight leading-tight">{e.description}</h3>
+                      <div className="flex items-center gap-2 mt-1 flex-wrap">
+                         <p className="text-[11px] font-bold text-slate-400">{formatDate(e.date)}</p>
+                         <span className="w-1 h-1 rounded-full bg-slate-200" />
+                         <span className="bg-slate-100 text-slate-600 px-2 py-0.5 rounded-[6px] text-[10px] font-bold tracking-wide uppercase">{e.category.name}</span>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div className="flex flex-col md:items-end mt-4 md:mt-0 pl-16 md:pl-0">
+                    <p className="text-[15px] font-black text-slate-800 tracking-tight mb-2 md:mb-1">
+                      - {formatRupiah(e.amount)}
+                    </p>
+                    <div className="flex items-center gap-2 opacity-100 md:opacity-0 group-hover:opacity-100 transition-opacity">
+                      <button onClick={() => startEdit(e)} className="bg-white border border-slate-200 text-slate-500 p-1.5 rounded-lg hover:bg-slate-50 hover:text-slate-700 transition" title="Edit"><Edit2 size={14} strokeWidth={2.5}/></button>
+                      <button onClick={() => remove(e.id)} className="bg-white border border-rose-200 text-rose-500 p-1.5 rounded-lg hover:bg-rose-50 hover:text-rose-600 transition" title="Hapus"><Trash2 size={14} strokeWidth={2.5}/></button>
+                    </div>
+                  </div>
+                </>
+              )}
+            </div>
+          ))}
+
+          {expenses.length === 0 && (
+            <div className="py-16 flex flex-col items-center justify-center text-slate-400">
+               <div className="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center mb-4 text-2xl">
+                 📭
+               </div>
+               <p className="text-[15px] font-bold text-slate-600 mb-1">Belum Ada Transaksi</p>
+               <p className="text-[13px] font-medium">Pengeluaran kamu masih kosong {viewAll ? "sama sekali" : "bulan ini"}.</p>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Form Modal */}
       <Modal open={showForm} onClose={() => setShowForm(false)} title="Tambah Pengeluaran">
         <form onSubmit={submit} className="flex flex-col gap-4">
-          {/* OCR Section */}
-          <div className="bg-slate-50 border border-slate-200 rounded-xl p-4">
-            <div className="flex flex-wrap items-center gap-3">
-              <button type="button" onClick={triggerUpload} className="inline-flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg text-sm font-medium">
-                {ocrLoading ? <Loader2 size={16} className="animate-spin" /> : <Upload size={16} />}
-                {ocrLoading ? "Menganalisis nota..." : "Upload Nota / Resi"}
-              </button>
-              {receiptName && <span className="text-xs text-slate-600">File: {receiptName}</span>}
+          <div className="bg-[#FAFAFA] border border-dashed border-slate-200 rounded-2xl p-6 text-center">
+            <div className="flex justify-center mb-3 text-slate-300">
+               <Upload size={32} />
             </div>
-            <p className="text-xs text-slate-500 mt-2">Upload nota untuk mengisi form otomatis via OCR + AI.</p>
-            {ocrError && <p className="text-xs text-rose-600 mt-2">{ocrError}</p>}
+            <p className="text-[13px] font-bold text-slate-600 mb-4">Foto struk <span className="text-rose-400">untuk otomatis</span> buat transaksi.</p>
+            <div className="flex flex-col md:flex-row justify-center gap-3">
+              <button type="button" onClick={triggerUpload} disabled={ocrLoading} className="bg-rose-200 text-rose-900 font-bold px-6 py-2.5 rounded-xl text-[13px] flex items-center justify-center gap-2 hover:bg-rose-300 transition-all flex-1">
+                {ocrLoading ? <Loader2 size={16} className="animate-spin" /> : "Ambil Foto"}
+              </button>
+              <button type="button" onClick={triggerUpload} disabled={ocrLoading} className="bg-white border border-slate-200 text-slate-700 font-bold px-6 py-2.5 rounded-xl text-[13px] flex items-center justify-center gap-2 hover:bg-slate-50 transition-all flex-1">
+                {ocrLoading ? <Loader2 size={16} className="animate-spin" /> : "Unggah Gambar"}
+              </button>
+            </div>
+            {receiptName && <p className="text-[11px] font-bold text-emerald-600 mt-3 flex justify-center items-center gap-1"><Check size={12}/> {receiptName}</p>}
+            {ocrError && <p className="text-[11px] font-bold text-rose-600 mt-3">{ocrError}</p>}
             {ocrPreview && (
-              <div className="mt-3 bg-white border border-slate-200 rounded-lg p-3">
-                <p className="text-xs font-medium text-slate-600 mb-1">Preview OCR:</p>
-                <p className="text-xs text-slate-500 whitespace-pre-wrap">{ocrPreview}</p>
+              <div className="mt-4 bg-white border border-slate-100 rounded-xl p-3 text-left">
+                <p className="text-[10px] font-bold tracking-widest text-[#A19FA6] mb-1.5 uppercase">Preview Teks:</p>
+                <p className="text-[11px] font-medium text-slate-600 whitespace-pre-wrap">{ocrPreview}</p>
               </div>
             )}
           </div>
+
           <div>
-            <label className="block text-xs text-slate-500 mb-1">Tanggal</label>
-            <input type="date" required value={form.date} onChange={e => setForm({...form, date: e.target.value})} className="w-full border rounded-lg px-3 py-2 text-sm" />
-          </div>
-          <div>
-            <label className="block text-xs text-slate-500 mb-1">Kategori</label>
-            <select required value={form.categoryId} onChange={e => setForm({...form, categoryId: e.target.value, debtSourceId: ""})} className="w-full border rounded-lg px-3 py-2 text-sm">
+            <label className="block text-[11px] font-extrabold tracking-wide text-slate-400 mb-1.5 uppercase">Kategori</label>
+            <select required value={form.categoryId} onChange={e => setForm({...form, categoryId: e.target.value, debtSourceId: ""})} className="w-full border-slate-200 rounded-xl px-4 py-3 text-[13px] font-semibold bg-white focus:border-rose-300 focus:ring focus:ring-rose-100 transition-all">
               <option value="">Pilih...</option>
               {categories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
             </select>
           </div>
+
           {(() => {
             const cat = categories.find(c => c.id === +form.categoryId);
             const isDebt = cat?.name.toLowerCase().includes("utang") || cat?.name.toLowerCase().includes("hutang");
@@ -288,116 +386,56 @@ export default function PengeluaranPage() {
             const balance = selectedDebt ? (selectedDebt.initialAmount + selectedDebt.loans.reduce((s, l) => s + l.amount, 0) - selectedDebt.payments.reduce((s, p) => s + p.amount, 0)) : 0;
 
             return (
-              <div className="bg-orange-50 border border-orange-100 rounded-xl p-4 space-y-3 animate-in fade-in zoom-in-95">
+              <div className="bg-orange-50 border border-orange-100 rounded-[20px] p-5 space-y-3 animate-in fade-in zoom-in-95">
                 <div>
-                  <label className="block text-xs font-semibold text-orange-700 mb-1">Bayar Ke Utang Mana?</label>
-                  <select required value={form.debtSourceId} onChange={e => setForm({...form, debtSourceId: e.target.value})} className="w-full border-orange-200 rounded-lg px-3 py-2 text-sm bg-white">
-                    <option value="">Pilih Sumber Utang...</option>
+                  <label className="block text-[11px] font-extrabold tracking-wide text-orange-600 mb-1.5 uppercase">Pilih Utang</label>
+                  <select required value={form.debtSourceId} onChange={e => setForm({...form, debtSourceId: e.target.value})} className="w-full border-orange-200 rounded-xl px-4 py-3 text-[13px] font-bold bg-white focus:border-orange-300 focus:ring focus:ring-orange-100 transition-all text-orange-900">
+                    <option value="">Sumber Utang...</option>
                     {debtSources.map(d => <option key={d.id} value={d.id}>{d.name}</option>)}
                   </select>
                 </div>
                 {selectedDebt && (
-                  <div className="flex items-center gap-2 text-white bg-white/10 rounded-lg p-2 border border-white/20">
-                    <Info size={14} />
-                    <p className="text-xs">Sisa Hutang: <span className="font-bold">{formatRupiah(balance)}</span></p>
+                  <div className="flex items-center gap-2 bg-orange-100/50 rounded-xl p-3 border border-orange-200/50">
+                    <AlertTriangle size={16} className="text-orange-600" />
+                    <p className="text-[13px] font-medium text-orange-800">Sisa Hutang: <span className="font-extrabold">{formatRupiah(balance)}</span></p>
                   </div>
                 )}
               </div>
             );
           })()}
+
           <div>
-            <label className="block text-xs text-slate-500 mb-1">Rincian</label>
-            <input type="text" required value={form.description} onChange={e => setForm({...form, description: e.target.value})} className="w-full border rounded-lg px-3 py-2 text-sm" placeholder="Deskripsi" />
+            <label className="block text-[11px] font-extrabold tracking-wide text-slate-400 mb-1.5 uppercase">Rincian Transaksi</label>
+            <input type="text" required value={form.description} onChange={e => setForm({...form, description: e.target.value})} className="w-full border-slate-200 rounded-xl px-4 py-3 text-[13px] font-semibold bg-white focus:border-rose-300 focus:ring focus:ring-rose-100 transition-all" placeholder="Contoh: Beli makan siang, Ongkos grab..." />
           </div>
-          <div>
-            <label className="block text-xs text-slate-500 mb-1">Nominal (Rp)</label>
-            <CurrencyInput required min={0} value={form.amount} onChangeValue={(val: string) => setForm({...form, amount: val})} className="w-full border rounded-lg px-3 py-2 text-sm" placeholder="0" />
+
+          <div className="grid grid-cols-2 gap-4">
+             <div>
+               <label className="block text-[11px] font-extrabold tracking-wide text-slate-400 mb-1.5 uppercase">Tanggal</label>
+               <input type="date" required value={form.date} onChange={e => setForm({...form, date: e.target.value})} className="w-full border-slate-200 rounded-xl px-4 py-3 text-[13px] font-semibold bg-white focus:border-rose-300 focus:ring focus:ring-rose-100 transition-all" />
+             </div>
+             <div>
+               <label className="block text-[11px] font-extrabold tracking-wide text-slate-400 mb-1.5 uppercase">Nominal</label>
+               <CurrencyInput required min={0} value={form.amount} onChangeValue={(val: string) => setForm({...form, amount: val})} className="w-full border-slate-200 rounded-xl px-4 py-3 text-[13px] font-extrabold bg-white focus:border-rose-300 focus:ring focus:ring-rose-100 transition-all text-slate-800" placeholder="0" />
+             </div>
           </div>
-          {submitError && <p className="text-sm text-rose-600">{submitError}</p>}
-          <button type="submit" className="bg-red-600 text-white px-6 py-2 rounded-lg text-sm hover:bg-red-700 w-full font-semibold">Simpan</button>
+
+          {submitError && <div className="bg-rose-50 text-rose-600 p-3 rounded-xl border border-rose-100 text-[13px] font-bold flex items-center gap-2"><AlertTriangle size={16}/> {submitError}</div>}
+          <div className="pt-2">
+            <button type="submit" className="bg-rose-500 text-white px-6 py-3.5 rounded-xl text-[14px] font-black w-full hover:bg-rose-600 transition-all shadow-md shadow-rose-200">
+              Simpan Pengeluaran
+            </button>
+          </div>
         </form>
       </Modal>
 
-      <div className="bg-white rounded-xl shadow-sm border overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm">
-            <thead className="bg-slate-50 text-slate-600">
-              <tr>
-                <th className="px-4 py-3 w-10">
-                   <input type="checkbox" checked={expenses.length > 0 && selectedIds.length === expenses.length} onChange={toggleSelectAll} className="rounded border-slate-300 text-blue-600 focus:ring-blue-500 w-4 h-4 cursor-pointer" />
-                </th>
-                <th className="text-left px-4 py-3">Tanggal</th>
-                <th className="text-left px-4 py-3">Kategori</th>
-                <th className="text-left px-4 py-3">Rincian</th>
-                <th className="text-right px-4 py-3">Nominal</th>
-                <th className="px-4 py-3"></th>
-              </tr>
-            </thead>
-            <tbody className="divide-y">
-              {expenses.map(e => (
-                <tr key={e.id} className={`hover:bg-slate-50 transition-colors ${selectedIds.includes(e.id) ? "bg-red-50/50" : ""}`}>
-                  <td className="px-4 py-3 text-center">
-                    <input type="checkbox" checked={selectedIds.includes(e.id)} onChange={() => toggleSelect(e.id)} className="rounded border-slate-300 text-blue-600 focus:ring-blue-500 w-4 h-4 cursor-pointer" />
-                  </td>
-                  {editId === e.id ? (
-                    <>
-                      <td className="px-4 py-2"><input type="date" value={editForm.date} onChange={ev => setEditForm(f => ({ ...f, date: ev.target.value }))} className="w-full border rounded px-2 py-1 text-sm bg-white" /></td>
-                      <td className="px-4 py-2">
-                        <select value={editForm.categoryId} onChange={ev => setEditForm(f => ({ ...f, categoryId: ev.target.value }))} className="w-full border rounded px-2 py-1 text-sm bg-white">
-                          {categories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
-                        </select>
-                      </td>
-                      <td className="px-4 py-2">
-                        <input type="text" value={editForm.description} onChange={ev => setEditForm(f => ({ ...f, description: ev.target.value }))} className="w-full border rounded px-2 py-1 text-sm bg-white mb-1" placeholder="Deskripsi" />
-                        {(() => {
-                          const cat = categories.find(c => c.id === +editForm.categoryId);
-                          if (cat?.name.toLowerCase().includes("utang") || cat?.name.toLowerCase().includes("hutang")) {
-                            return (
-                              <select value={editForm.debtSourceId} onChange={ev => setEditForm(f => ({ ...f, debtSourceId: ev.target.value }))} className="w-full border border-orange-200 rounded px-2 py-1 text-[10px] bg-orange-50 appearance-none">
-                                <option value="">Pilih Utang...</option>
-                                {debtSources.map(d => <option key={d.id} value={d.id}>{d.name}</option>)}
-                              </select>
-                            );
-                          }
-                          return null;
-                        })()}
-                      </td>
-                      <td className="px-4 py-2"><CurrencyInput min={0} value={editForm.amount} onChangeValue={(val: string) => setEditForm(f => ({ ...f, amount: val }))} className="w-full border rounded px-2 py-1 text-sm bg-white text-right" /></td>
-                      <td className="px-4 py-2">
-                        <div className="flex items-center gap-2">
-                          <button onClick={saveEdit} className="text-emerald-600 hover:text-emerald-800" title="Simpan"><Check size={16} /></button>
-                          <button onClick={() => setEditId(null)} className="text-slate-400 hover:text-slate-600" title="Batal"><X size={16} /></button>
-                        </div>
-                      </td>
-                    </>
-                  ) : (
-                    <>
-                      <td className="px-4 py-3 text-slate-700 font-medium">{formatDate(e.date)}</td>
-                      <td className="px-4 py-3"><span className="bg-blue-900/50 text-blue-200 border border-blue-800/40 px-2 py-0.5 rounded-full text-xs">{e.category.name}</span></td>
-                      <td className="px-4 py-3 text-slate-700">{e.description}</td>
-                      <td className="px-4 py-3 text-right font-medium text-red-600">{formatRupiah(e.amount)}</td>
-                      <td className="px-4 py-3">
-                        <div className="flex items-center gap-2">
-                          <button onClick={() => startEdit(e)} className="text-blue-400 hover:text-blue-600" title="Edit"><Edit2 size={16} /></button>
-                          <button onClick={() => remove(e.id)} className="text-red-400 hover:text-red-600" title="Hapus"><Trash2 size={16} /></button>
-                        </div>
-                      </td>
-                    </>
-                  )}
-                </tr>
-              ))}
-              {expenses.length === 0 && <tr><td colSpan={6} className="px-4 py-8 text-center text-slate-400">Belum ada pengeluaran {viewAll ? "sama sekali" : "bulan ini"}</td></tr>}
-            </tbody>
-          </table>
-        </div>
-      </div>
       <ConfirmModal
         open={confirmDelete.open}
         onClose={() => setConfirmDelete({ open: false })}
         onConfirm={handleConfirmDelete}
         title="Konfirmasi Hapus"
-        message={confirmDelete.bulk ? `Apakah Anda yakin ingin menghapus ${selectedIds.length} data pengeluaran yang dipilih? Tindakan ini tidak dapat dibatalkan.` : "Apakah Anda yakin ingin menghapus data pengeluaran ini?"}
-        confirmLabel="Hapus Sekarang"
+        message={confirmDelete.bulk ? `Yakin mau menghapus ${selectedIds.length} pengeluaran sekaligus? Aksi ini permanen.` : "Yakin mau menghapus riwayat pengeluaran ini?"}
+        confirmLabel="Hapus Permanen"
       />
     </div>
   );
