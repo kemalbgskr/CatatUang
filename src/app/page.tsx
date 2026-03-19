@@ -120,9 +120,9 @@ export default function Home() {
             <p className="text-[#A19FA6] text-[10px] font-extrabold tracking-widest mb-3 flex items-center gap-2 uppercase">
               <span className="text-rose-400">⚡</span> Sekilas Bulan Ini
             </p>
-            <h2 className="text-4xl md:text-5xl font-black mb-2 tracking-tight">{formatRupiah(data.dailyBudget)}</h2>
+            <h2 className="text-4xl md:text-5xl font-black mb-2 tracking-tight">{formatRupiah(data.sisaPendapatan)}</h2>
             <p className="text-[#A19FA6] text-xs font-semibold flex items-center gap-1.5 mt-2">
-              <span className="text-amber-400">👇</span> budget harian yang tersisa
+              <span className="text-amber-400">👇</span> budget bulanan yang tersisa
             </p>
           </div>
           <div className="flex gap-12 mt-6 md:mt-0 items-center">
@@ -147,7 +147,7 @@ export default function Home() {
               <div className="h-full bg-white/20" style={{ width: `${Math.min((data.topPengeluaran / (data.topPemasukan || 1)) * 100, 100)}%` }} />
            </div>
            <p className="text-[10px] text-white/40 font-bold italic">
-             {data.dailyBudget > 100000 ? 'Suppeerrrr! Budget harianmu masih sangat aman.' : 'Semangat! Jaga pengeluaranmu bulan ini.'}
+             {data.sisaPendapatan > 1000000 ? 'Suppeerrrr! Budget bulananmu masih sangat aman.' : 'Semangat! Jaga pengeluaranmu bulan ini.'}
            </p>
         </div>
       </div>
