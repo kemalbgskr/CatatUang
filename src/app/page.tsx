@@ -58,6 +58,10 @@ interface DashboardData {
     keinginan: { rencana: number; aktual: number };
     tabungan: { rencana: number; aktual: number };
   };
+  topPemasukan: number;
+  topPengeluaran: number;
+  dailyBudget: number;
+  netWealthGrowth: number;
 }
 
 export default function Home() {
@@ -107,44 +111,67 @@ export default function Home() {
            <MonthYearPicker value={month} onChange={setMonth} className="text-sm font-bold border-none shadow-none bg-transparent" />
         </div>
       </div>
-      {/* Top Summaries & Runway */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
-        <Link href="/pendapatan" className="bg-white rounded-[32px] border border-slate-100 p-6 shadow-[0_4px_24px_rgba(0,0,0,0.01)] hover:bg-slate-50 transition-colors group">
-          <p className="text-[10px] font-black tracking-widest text-[#A19FA6] uppercase mb-1">Total Pemasukan</p>
-          <h3 className="text-2xl font-black text-[#2C2C2C] tracking-tight">{formatRupiah(data.totalPendapatan)}</h3>
-        </Link>
-        <Link href="/pengeluaran" className="bg-white rounded-[32px] border border-slate-100 p-6 shadow-[0_4px_24px_rgba(0,0,0,0.01)] hover:bg-slate-50 transition-colors group">
-          <p className="text-[10px] font-black tracking-widest text-[#A19FA6] uppercase mb-1">Total Pengeluaran</p>
-          <h3 className="text-2xl font-black text-[#2C2C2C] tracking-tight">{formatRupiah(data.totalPengeluaran)}</h3>
-        </Link>
+      {/* Premium Hero Card - Sekilas Hari Ini */}
+      <div className="bg-[#2C2C2C] rounded-[32px] p-8 text-white relative overflow-hidden shadow-sm mb-6">
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between relative z-10">
+          <div>
+            <p className="text-[#A19FA6] text-[10px] font-extrabold tracking-widest mb-3 flex items-center gap-2 uppercase">
+              <span className="text-rose-400">⚡</span> Sekilas Hari Ini
+            </p>
+            <h2 className="text-4xl md:text-5xl font-black mb-2 tracking-tight">{formatRupiah(data.dailyBudget)}</h2>
+            <p className="text-[#A19FA6] text-xs font-semibold flex items-center gap-1.5 mt-2">
+              <span className="text-amber-400">👇</span> budget harian yang tersisa
+            </p>
+          </div>
+          <div className="flex gap-12 mt-6 md:mt-0 items-center">
+            <Link href="/pendapatan" className="text-right group">
+              <p className="text-[#A19FA6] text-[10px] font-extrabold tracking-widest mb-1 uppercase">PEMASUKAN</p>
+              <p className="text-orange-300 font-bold text-lg group-hover:scale-105 transition-transform">{formatRupiah(data.topPemasukan)}</p>
+            </Link>
+            <Link href="/pengeluaran" className="text-right group">
+              <p className="text-[#A19FA6] text-[10px] font-extrabold tracking-widest mb-1 uppercase">PENGELUARAN</p>
+              <p className="text-rose-400 font-bold text-lg group-hover:scale-105 transition-transform">{formatRupiah(data.topPengeluaran)}</p>
+            </Link>
+          </div>
+        </div>
+        <div className="mt-8 pt-6 border-t border-white/5 flex flex-col gap-2">
+           <div className="w-full bg-white/5 h-1.5 rounded-full overflow-hidden">
+              <div className="bg-white/20 h-full" style={{ width: '30%' }} />
+           </div>
+           <p className="text-[10px] text-white/40 font-bold italic">
+             {data.topPengeluaran === 0 ? 'Suppeerrrr! Belum ada pengeluaran hari ini.' : 'Semangat! Jaga pengeluaranmu hari ini.'}
+           </p>
+        </div>
+      </div>
+
+      {/* Runway & Upcoming Section */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
         <div className="bg-white rounded-[32px] border border-slate-100 p-6 shadow-[0_4px_24px_rgba(0,0,0,0.01)] flex flex-col justify-between">
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between mb-4">
             <p className="text-[10px] font-black tracking-widest text-rose-400 uppercase flex items-center gap-1">
               <AlertCircle size={10} /> RUNWAY DANA DARURAT
             </p>
             <Eye size={14} className="text-slate-200" />
           </div>
-          <div className="mt-2">
+          <div>
             <h3 className="text-3xl font-black text-[#2C2C2C] tracking-tighter">
               {data.totalPengeluaran > 0 ? (data.saldoBersih / data.totalPengeluaran).toFixed(1) : '∞'} <span className="text-sm text-slate-400 font-bold">Bulan</span>
             </h3>
             <div className="w-full bg-slate-50 h-1.5 rounded-full mt-3 overflow-hidden">
               <div className="bg-rose-200 h-full" style={{ width: '40%' }} />
             </div>
-            <p className="text-[9px] font-bold text-slate-300 mt-2 uppercase">Termasuk {formatRupiah(data.saldoBersih)} dana likuid</p>
+            <p className="text-[9px] font-bold text-slate-300 mt-2 uppercase tracking-tight">Termasuk {formatRupiah(data.saldoBersih)} dana likuid</p>
           </div>
         </div>
-      </div>
-
-      {/* Main Hero Card (Dark) - Upcoming Bills Style */}
-      <div className="bg-[#2C2C2C] rounded-[32px] p-6 text-white shadow-sm mb-6 flex items-center justify-between">
-        <div className="flex items-center gap-4">
-          <div className="w-10 h-10 bg-white/10 rounded-xl flex items-center justify-center">
-            <Clock size={20} className="text-rose-400" />
+        <div className="bg-[#2C2C2C] rounded-[32px] p-6 text-white shadow-sm flex flex-col justify-center">
+          <div className="flex items-center gap-4 mb-4">
+            <div className="w-10 h-10 bg-white/10 rounded-xl flex items-center justify-center">
+              <Clock size={20} className="text-rose-400" />
+            </div>
+            <p className="text-sm font-bold">Tagihan Mendatang</p>
           </div>
-          <p className="text-sm font-bold">Tagihan Mendatang</p>
+          <p className="text-white/40 text-[11px] font-medium italic">Tidak ada tagihan mendatang.</p>
         </div>
-        <p className="text-white/40 text-[11px] font-medium">Tidak ada tagihan mendatang.</p>
       </div>
 
       {/* Progres Pengeluaran Section */}
@@ -274,14 +301,72 @@ export default function Home() {
           <Link href="/utang" className="group block">
             <p className="text-[10px] font-black tracking-widest text-[#A19FA6] uppercase mb-2 group-hover:text-rose-400 transition-colors">UTANG</p>
             <p className="text-xl font-black text-rose-500 tracking-tight group-hover:scale-105 transition-transform origin-left">{formatRupiah(data.totalUtang)}</p>
+            <span className="text-[9px] font-bold text-slate-300 uppercase">+0% vs periode lalu</span>
           </Link>
           <Link href="/piutang" className="group block">
             <p className="text-[10px] font-black tracking-widest text-[#A19FA6] uppercase mb-2 group-hover:text-emerald-400 transition-colors">PIUTANG</p>
             <p className="text-xl font-black text-emerald-500 tracking-tight group-hover:scale-105 transition-transform origin-left">{formatRupiah(data.totalPiutang)}</p>
+            <span className="text-[9px] font-bold text-slate-300 uppercase">+0% vs periode lalu</span>
           </Link>
           <div className="group block">
             <p className="text-[10px] font-black tracking-widest text-[#A19FA6] uppercase mb-2">POSISI BERSIH</p>
             <p className="text-xl font-black text-[#2C2C2C] tracking-tight">{formatRupiah(data.kekayaanBersih)}</p>
+            <span className={`text-[9px] font-bold uppercase ${data.netWealthGrowth >= 0 ? 'text-emerald-500' : 'text-rose-500'}`}>
+              {data.netWealthGrowth >= 0 ? '+' : ''}{data.netWealthGrowth.toFixed(1)}% vs periode lalu
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
+        {/* Pengeluaran Terbesar Section */}
+        <div className="bg-white rounded-[32px] border border-slate-100 p-8 shadow-[0_4px_24px_rgba(0,0,0,0.02)]">
+          <h2 className="text-lg font-bold text-[#2C2C2C] mb-8">Pengeluaran Terbesar</h2>
+          <div className="space-y-4">
+            {recentTransactions.filter(tx => tx.type === 'expense').slice(0, 5).map((tx, idx) => (
+              <div key={idx} className="flex items-center justify-between p-3 rounded-2xl border border-slate-50 hover:bg-slate-50 transition-colors group">
+                <div className="flex items-center gap-4">
+                  <div className="w-10 h-10 bg-slate-50 rounded-xl flex items-center justify-center group-hover:bg-white transition-colors">
+                    <TrendingDown size={18} className="text-slate-400" />
+                  </div>
+                  <div>
+                    <h4 className="text-sm font-bold text-[#2C2C2C]">{tx.description}</h4>
+                    <span className="text-[10px] font-black tracking-widest text-[#A19FA6] uppercase">{tx.category?.name || 'UMUM'}</span>
+                  </div>
+                </div>
+                <p className="text-sm font-black text-[#2C2C2C]">{formatRupiah(tx.amount)}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Realisasi Anggaran Section (Doughnut Style) */}
+        <div className="bg-white rounded-[32px] border border-slate-100 p-8 shadow-[0_4px_24px_rgba(0,0,0,0.02)] flex flex-col">
+          <h2 className="text-lg font-bold text-[#2C2C2C] mb-4">Realisasi Anggaran</h2>
+          <div className="flex-1 flex flex-col items-center justify-center relative min-h-[250px]">
+            <ResponsiveContainer width="100%" height={250}>
+              <PieChart>
+                <Pie
+                  data={[
+                    { name: 'Aktual', value: data.totalPengeluaran },
+                    { name: 'Sisa', value: Math.max(data.sisaPendapatan, 0) }
+                  ]}
+                  innerRadius={70}
+                  outerRadius={90}
+                  paddingAngle={5}
+                  dataKey="value"
+                  stroke="none"
+                >
+                  <Cell fill="#C7D2FE" />
+                  <Cell fill="#FEF3C7" />
+                </Pie>
+                <Tooltip />
+              </PieChart>
+            </ResponsiveContainer>
+            <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+                <span className="text-[10px] font-black tracking-widest text-[#A19FA6] uppercase">SISA</span>
+                <span className="text-xl font-black text-[#2C2C2C] tracking-tight">{formatRupiah(data.sisaPendapatan)}</span>
+            </div>
           </div>
         </div>
       </div>
