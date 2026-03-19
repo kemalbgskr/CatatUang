@@ -109,7 +109,7 @@ export default function Home() {
       </div>
 
       {/* Main Hero Card (Dark) */}
-      <div className="bg-[#2C2C2C] rounded-[32px] p-8 text-white relative overflow-hidden shadow-sm">
+      <div className="bg-[#2C2C2C] rounded-[32px] p-8 text-white relative overflow-hidden shadow-sm mb-6">
         <div className="flex flex-col md:flex-row md:justify-between mb-8 relative z-10">
           <div>
             <p className="text-[#A19FA6] text-[10px] font-extrabold tracking-widest mb-3 flex items-center gap-2">
@@ -129,6 +129,32 @@ export default function Home() {
             </div>
           </div>
         </div>
+      </div>
+
+      {/* Debt & Receivable Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+        <Link href="/utang" className="bg-white rounded-[32px] border border-slate-100 p-6 shadow-[0_4px_24px_rgba(0,0,0,0.01)] hover:bg-slate-50 transition-colors group">
+          <div className="flex items-center gap-4">
+            <div className="w-14 h-14 bg-orange-50 text-orange-500 rounded-[20px] flex items-center justify-center transition-transform group-hover:scale-110">
+              <HandCoins size={28} />
+            </div>
+            <div>
+              <p className="text-[10px] font-black tracking-widest text-[#A19FA6] uppercase mb-1">Total Sisa Utang</p>
+              <h3 className="text-2xl font-black text-[#2C2C2C] tracking-tight">{formatRupiah(data.totalUtang)}</h3>
+            </div>
+          </div>
+        </Link>
+        <Link href="/piutang" className="bg-white rounded-[32px] border border-slate-100 p-6 shadow-[0_4px_24px_rgba(0,0,0,0.01)] hover:bg-slate-50 transition-colors group">
+          <div className="flex items-center gap-4">
+            <div className="w-14 h-14 bg-indigo-50 text-indigo-500 rounded-[20px] flex items-center justify-center transition-transform group-hover:scale-110">
+              <TrendingUp size={28} />
+            </div>
+            <div>
+              <p className="text-[10px] font-black tracking-widest text-[#A19FA6] uppercase mb-1">Total Sisa Piutang</p>
+              <h3 className="text-2xl font-black text-[#2C2C2C] tracking-tight">{formatRupiah(data.totalPiutang)}</h3>
+            </div>
+          </div>
+        </Link>
       </div>
 
       {/* Progres Pengeluaran Section */}
