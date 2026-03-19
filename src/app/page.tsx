@@ -62,6 +62,8 @@ interface DashboardData {
   topPengeluaran: number;
   dailyBudget: number;
   netWealthGrowth: number;
+  incomeGrowth: number;
+  expenseGrowth: number;
 }
 
 export default function Home() {
@@ -111,12 +113,12 @@ export default function Home() {
            <MonthYearPicker value={month} onChange={setMonth} className="text-sm font-bold border-none shadow-none bg-transparent" />
         </div>
       </div>
-      {/* Premium Hero Card - Sekilas Hari Ini */}
+      {/* Premium Hero Card - Sekilas Bulan Ini */}
       <div className="bg-[#2C2C2C] rounded-[32px] p-8 text-white relative overflow-hidden shadow-sm mb-6">
         <div className="flex flex-col md:flex-row md:items-center md:justify-between relative z-10">
           <div>
             <p className="text-[#A19FA6] text-[10px] font-extrabold tracking-widest mb-3 flex items-center gap-2 uppercase">
-              <span className="text-rose-400">⚡</span> Sekilas Hari Ini
+              <span className="text-rose-400">⚡</span> Sekilas Bulan Ini
             </p>
             <h2 className="text-4xl md:text-5xl font-black mb-2 tracking-tight">{formatRupiah(data.dailyBudget)}</h2>
             <p className="text-[#A19FA6] text-xs font-semibold flex items-center gap-1.5 mt-2">
@@ -127,19 +129,25 @@ export default function Home() {
             <Link href="/pendapatan" className="text-right group">
               <p className="text-[#A19FA6] text-[10px] font-extrabold tracking-widest mb-1 uppercase">PEMASUKAN</p>
               <p className="text-orange-300 font-bold text-lg group-hover:scale-105 transition-transform">{formatRupiah(data.topPemasukan)}</p>
+              <p className={`text-[9px] font-bold uppercase mt-1 ${data.incomeGrowth >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
+                {data.incomeGrowth >= 0 ? '+' : ''}{data.incomeGrowth.toFixed(1)}% vs bulan lalu
+              </p>
             </Link>
             <Link href="/pengeluaran" className="text-right group">
               <p className="text-[#A19FA6] text-[10px] font-extrabold tracking-widest mb-1 uppercase">PENGELUARAN</p>
               <p className="text-rose-400 font-bold text-lg group-hover:scale-105 transition-transform">{formatRupiah(data.topPengeluaran)}</p>
+              <p className={`text-[9px] font-bold uppercase mt-1 ${data.expenseGrowth <= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
+                {data.expenseGrowth >= 0 ? '+' : ''}{data.expenseGrowth.toFixed(1)}% vs bulan lalu
+              </p>
             </Link>
           </div>
         </div>
         <div className="mt-8 pt-6 border-t border-white/5 flex flex-col gap-2">
            <div className="w-full bg-white/5 h-1.5 rounded-full overflow-hidden">
-              <div className="bg-white/20 h-full" style={{ width: '30%' }} />
+              <div className="h-full bg-white/20" style={{ width: `${Math.min((data.topPengeluaran / (data.topPemasukan || 1)) * 100, 100)}%` }} />
            </div>
            <p className="text-[10px] text-white/40 font-bold italic">
-             {data.topPengeluaran === 0 ? 'Suppeerrrr! Belum ada pengeluaran hari ini.' : 'Semangat! Jaga pengeluaranmu hari ini.'}
+             {data.dailyBudget > 100000 ? 'Suppeerrrr! Budget harianmu masih sangat aman.' : 'Semangat! Jaga pengeluaranmu bulan ini.'}
            </p>
         </div>
       </div>
@@ -323,7 +331,7 @@ export default function Home() {
         <div className="bg-white rounded-[32px] border border-slate-100 p-8 shadow-[0_4px_24px_rgba(0,0,0,0.02)]">
           <h2 className="text-lg font-bold text-[#2C2C2C] mb-8">Pengeluaran Terbesar</h2>
           <div className="space-y-4">
-            {recentTransactions.filter(tx => tx.type === 'expense').slice(0, 5).map((tx, idx) => (
+            {data.recentTransactions.filter((tx: any) => tx.type === 'expense').slice(0, 5).map((tx: any, idx: number) => (
               <div key={idx} className="flex items-center justify-between p-3 rounded-2xl border border-slate-50 hover:bg-slate-50 transition-colors group">
                 <div className="flex items-center gap-4">
                   <div className="w-10 h-10 bg-slate-50 rounded-xl flex items-center justify-center group-hover:bg-white transition-colors">

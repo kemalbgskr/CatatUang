@@ -231,9 +231,11 @@ export async function GET(req: Request) {
     recentTransactions,
     dailyExpenses,
     catProgress,
-    topPemasukan,
-    topPengeluaran,
+    topPemasukan: totalPendapatan,
+    topPengeluaran: totalPengeluaran,
     dailyBudget,
-    netWealthGrowth
+    netWealthGrowth,
+    incomeGrowth: lmIncomes.length > 0 ? ((totalPendapatan - lmIncomes.filter(i => filterMonth(i.date, lmStr)).reduce((s, i) => s + i.amount, 0)) / Math.max(lmIncomes.filter(i => filterMonth(i.date, lmStr)).reduce((s, i) => s + i.amount, 0), 1)) * 100 : 0,
+    expenseGrowth: lmExpenses.length > 0 ? ((totalPengeluaran - lmExpenses.filter(e => filterMonth(e.date, lmStr)).reduce((s, e) => s + e.amount, 0)) / Math.max(lmExpenses.filter(e => filterMonth(e.date, lmStr)).reduce((s, e) => s + e.amount, 0), 1)) * 100 : 0,
   });
 }
