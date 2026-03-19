@@ -79,7 +79,7 @@ export default function PengaturanPage() {
   
   const saveUser = async (e: React.FormEvent) => {
     e.preventDefault(); setUserLoading(true);
-    const url = editingUserId ? \`/api/users/\${editingUserId}\` : "/api/users";
+    const url = editingUserId ? `/api/users/${editingUserId}` : "/api/users";
     const res = await fetch(url, { method: editingUserId ? "PUT" : "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(userForm) });
     if (!res.ok) alert((await res.json()).error || "Gagal menyimpan user");
     else { setUserForm({ username: "", password: "", role: "USER" }); setEditingUserId(null); load(); }
@@ -92,9 +92,9 @@ export default function PengaturanPage() {
   const SectionPill = ({ id, label, icon: Icon }: { id: string, label: string, icon: any }) => (
     <button 
       onClick={() => setActiveSection(id)}
-      className={\`flex flex-col items-center justify-center p-4 rounded-[20px] transition-all border-2 \${activeSection === id ? 'bg-rose-50 border-rose-200 text-rose-700' : 'bg-white border-slate-100 text-slate-500 hover:border-slate-200 hover:bg-slate-50'}\`}
+      className={`flex flex-col items-center justify-center p-4 rounded-[20px] transition-all border-2 ${activeSection === id ? 'bg-rose-50 border-rose-200 text-rose-700' : 'bg-white border-slate-100 text-slate-500 hover:border-slate-200 hover:bg-slate-50'}`}
     >
-      <Icon size={24} className={\`mb-2 \${activeSection === id ? 'text-rose-500' : 'text-slate-400'}\`} />
+      <Icon size={24} className={`mb-2 ${activeSection === id ? 'text-rose-500' : 'text-slate-400'}`} />
       <span className="text-[13px] font-bold text-center leading-tight">{label}</span>
     </button>
   );
@@ -107,7 +107,7 @@ export default function PengaturanPage() {
         <div className="flex items-center gap-6 relative z-10">
           <div className="w-24 h-24 rounded-full bg-slate-100 flex items-center justify-center border-4 border-white shadow-lg overflow-hidden shrink-0">
              {/* eslint-disable-next-line @next/next/no-img-element */}
-             <img src={\`https://api.dicebear.com/9.x/notionists/svg?seed=\${session?.username || 'user'}\`} alt="Avatar" className="w-full h-full object-cover" />
+             <img src={`https://api.dicebear.com/9.x/notionists/svg?seed=${session?.username || 'user'}`} alt="Avatar" className="w-full h-full object-cover" />
           </div>
           <div>
             <h1 className="text-2xl font-black text-slate-800 tracking-tight">{session?.username || "Pengguna"}</h1>
@@ -334,7 +334,7 @@ export default function PengaturanPage() {
                           <td className="px-4 py-3 font-medium text-slate-600 whitespace-nowrap">{new Date(h.createdAt).toLocaleDateString("id-ID")} {new Date(h.createdAt).getHours()}:{new Date(h.createdAt).getMinutes()}</td>
                           <td className="px-4 py-3 font-semibold text-slate-800 capitalize">{h.type.replace("incomes", "Pemasukan").replace("expenses", "Pengeluaran")} <br/><span className="text-[10px] text-slate-400 font-normal">{h.rowsProcessed} Baris</span></td>
                           <td className="px-4 py-3">
-                            <span className={\`font-black px-2 py-1 rounded-md text-[10px] uppercase \${h.status === "success" ? "bg-emerald-100 text-emerald-700" : h.status === "partial" ? "bg-amber-100 text-amber-700" : "bg-red-100 text-red-700"}\`}>{h.status}</span>
+                            <span className={`font-black px-2 py-1 rounded-md text-[10px] uppercase ${h.status === "success" ? "bg-emerald-100 text-emerald-700" : h.status === "partial" ? "bg-amber-100 text-amber-700" : "bg-red-100 text-red-700"}`}>{h.status}</span>
                             {h.message && <p className="text-[10px] text-slate-500 mt-1 line-clamp-2 leading-tight" title={h.message}>{h.message}</p>}
                           </td>
                         </tr>
@@ -392,7 +392,7 @@ export default function PengaturanPage() {
                         <div className="flex items-center gap-3">
                           <div className="w-8 h-8 rounded-full bg-slate-200 shrink-0">
                             {/* eslint-disable-next-line @next/next/no-img-element */}
-                            <img src={\`https://api.dicebear.com/9.x/notionists/svg?seed=\${u.username}\`} alt="Avatar" className="w-full h-full object-cover rounded-full" />
+                            <img src={`https://api.dicebear.com/9.x/notionists/svg?seed=${u.username}`} alt="Avatar" className="w-full h-full object-cover rounded-full" />
                           </div>
                           <div>
                             <p className="font-extrabold text-slate-800 text-[14px]">{u.username}</p>
@@ -401,7 +401,7 @@ export default function PengaturanPage() {
                         </div>
                       </td>
                       <td className="px-6 py-4">
-                        <span className={\`text-[10px] font-black px-2 py-1 rounded-md \${u.role === "ADMIN" ? "bg-indigo-100 text-indigo-700" : "bg-slate-100 text-slate-700"}\`}>{u.role}</span>
+                        <span className={`text-[10px] font-black px-2 py-1 rounded-md ${u.role === "ADMIN" ? "bg-indigo-100 text-indigo-700" : "bg-slate-100 text-slate-700"}`}>{u.role}</span>
                       </td>
                       <td className="px-6 py-4 text-right space-x-1">
                         <button onClick={() => { setEditingUserId(u.id); setUserForm({ username: u.username, password: "", role: u.role }); }} className="bg-slate-100 hover:bg-slate-200 text-slate-600 p-2 rounded-lg transition"><Edit2 size={16} /></button>
