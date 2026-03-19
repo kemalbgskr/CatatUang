@@ -67,6 +67,22 @@ export async function validateLogin(username: string, password: unknown) {
   return { id: user.id, username: user.username, role: user.role };
 }
 
+export async function registerUser(username: string, password: unknown) {
+  const existing = await prisma.user.findUnique({ where: { username } });
+  if (existing) throw new Error("Username sudah terdaftar");
+
+  const hashedPassword = await bcrypt.hash(String(password), 10);
+  const user = await prisma.user.create({
+    data: {
+      username,
+      password: hashedPassword,
+      role: "USER"
+    }
+  });
+
+  return { id: user.id, username: user.username, role: user.role };
+}
+
 export function getAuthenticatedUser(req: Request) {
   const cookieHeader = req.headers.get("cookie") || "";
   const token = cookieHeader
