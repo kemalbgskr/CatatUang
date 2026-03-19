@@ -260,7 +260,7 @@ export default function PengeluaranPage() {
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center gap-3">
             <h2 className="text-[17px] font-bold text-slate-800">Semua Pengeluaran</h2>
-            <span className="bg-slate-100 text-slate-500 text-[11px] font-bold px-2.5 py-1 rounded-md">{expenses.length} trans</span>
+            <span className="bg-slate-100 text-slate-500 text-[11px] font-bold px-2.5 py-1 rounded-md">{expenses.length} data</span>
           </div>
           <div className="flex items-center gap-2">
             <label className="text-[13px] font-bold text-slate-500 cursor-pointer flex items-center gap-2 select-none hover:text-slate-800 transition">
