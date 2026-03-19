@@ -26,6 +26,7 @@ model User {
   financialProfile  FinancialProfile?
   aiSettings        AISettings?
   bulkUploadHistory BulkUploadHistory[]
+  wallets           Wallet[]
 }
 
 model IncomeCategory {
@@ -185,4 +186,16 @@ model BulkUploadHistory {
   status        String   // "success" | "partial" | "failed"
   message       String?
   user          User     @relation(fields: [userId], references: [id])
+}
+
+model Wallet {
+  id             Int      @id @default(autoincrement())
+  userId         Int
+  type           String
+  name           String
+  accountNumber  String?
+  balance        Float    @default(0)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  user           User     @relation(fields: [userId], references: [id])
 }

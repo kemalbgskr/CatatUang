@@ -219,7 +219,7 @@ export default function AnalisaPage() {
                   <Tooltip 
                     cursor={{ fill: "#F1F5F9" }}
                     contentStyle={{ borderRadius: '16px', border: 'none', boxShadow: '0 10px 25px rgba(0,0,0,0.1)', fontWeight: 'bold' }}
-                    formatter={(v: number) => [formatRupiah(v), ""]}
+                    formatter={(v: any) => [formatRupiah(v), ""]}
                   />
                   <Legend iconType="circle" wrapperStyle={{ paddingTop: '20px', fontSize: '13px', fontWeight: 600 }} />
                   <Bar dataKey="pendapatan" name="Pemasukan" fill="#10B981" radius={[4, 4, 0, 0]} barSize={20} />

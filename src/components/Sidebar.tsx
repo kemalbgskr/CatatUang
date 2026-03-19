@@ -40,7 +40,7 @@ export default function Sidebar() {
   const menuItems = [
     { href: "/", label: "Home", icon: <LayoutDashboard size={20} /> },
     { href: "#dompet", label: "Dompet", icon: <CreditCard size={20} /> },
-    { href: "/pengeluaran", label: "Trans", icon: <TrendingDown size={20} /> },
+    { href: "/pengeluaran", label: "Pengeluaran", icon: <TrendingDown size={20} /> },
     { href: "/pendapatan", label: "Pemasukan", icon: <TrendingUp size={20} /> },
     { href: "/budget", label: "Budget", icon: <BarChart3 size={20} /> },
     { href: "/scanner", label: "Scanner", icon: <span className="text-[20px] leading-none">📷</span> },

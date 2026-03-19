@@ -168,7 +168,7 @@ export default function PengeluaranPage() {
     <div className="space-y-6 pt-12 md:pt-0">
       <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleReceiptUpload} disabled={ocrLoading} />
 
-      {/* Header aligned to Budggt Transaksi style */}
+      {/* Header aligned to Budggt Pengeluaran style */}
       <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
         <div>
           <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight">Pengeluaran</h1>
@@ -336,7 +336,7 @@ export default function PengeluaranPage() {
                <div className="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center mb-4 text-2xl">
                  📭
                </div>
-               <p className="text-[15px] font-bold text-slate-600 mb-1">Belum Ada Transaksi</p>
+               <p className="text-[15px] font-bold text-slate-600 mb-1">Belum Ada Pengeluaran</p>
                <p className="text-[13px] font-medium">Pengeluaran kamu masih kosong {viewAll ? "sama sekali" : "bulan ini"}.</p>
             </div>
           )}
@@ -405,7 +405,7 @@ export default function PengeluaranPage() {
           })()}
 
           <div>
-            <label className="block text-[11px] font-extrabold tracking-wide text-slate-400 mb-1.5 uppercase">Rincian Transaksi</label>
+            <label className="block text-[11px] font-extrabold tracking-wide text-slate-400 mb-1.5 uppercase">Rincian Pengeluaran</label>
             <input type="text" required value={form.description} onChange={e => setForm({...form, description: e.target.value})} className="w-full border-slate-200 rounded-xl px-4 py-3 text-[13px] font-semibold bg-white focus:border-rose-300 focus:ring focus:ring-rose-100 transition-all" placeholder="Contoh: Beli makan siang, Ongkos grab..." />
           </div>
 

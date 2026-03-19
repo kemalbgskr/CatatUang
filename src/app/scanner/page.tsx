@@ -1,6 +1,6 @@
 "use client";
 import { useState, useRef } from "react";
-import { Camera, Upload, Check, Loader2, ArrowLeft, Image as ImageIcon } from "lucide-react";
+import { Camera, Upload, Check, Loader2, ArrowLeft, Image as ImageIcon, Sparkles } from "lucide-react";
 import { formatRupiah } from "@/lib/utils";
 import Link from "next/link";
 import { useRouter } from "next/navigation";

@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useState, useCallback } from "react";
 import { formatRupiah } from "@/lib/utils";
-import { Plus, Trash2, Edit2, X, Check, Sparkles, Loader2, ArrowLeft } from "lucide-react";
+import { Plus, Trash2, Edit2, X, Check, Sparkles, Loader2, ArrowLeft, BarChart3 } from "lucide-react";
 import { CurrencyInput } from "@/components/CurrencyInput";
 import ConfirmModal from "@/components/ConfirmModal";
 import Link from "next/link";

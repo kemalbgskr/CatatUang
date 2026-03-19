@@ -128,6 +128,60 @@ export async function GET(req: Request) {
     "Level 6 - Punya Warisan",
   ];
 
+  // === RECENT TRANSACTIONS ===
+  const recentIncomes = monthlyIncomes.slice(-5).map(i => ({ ...i, type: 'income' }));
+  const recentExpenses = monthlyExpenses.slice(-5).map(e => ({ ...e, type: 'expense' }));
+  const recentTransactions = [...recentIncomes, ...recentExpenses]
+    .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+    .slice(0, 10);
+
+  // === DAILY EXPENSES (for Calendar) ===
+  const dailyExpenses: Record<string, { expense: number, income: number }> = {};
+  monthlyIncomes.forEach(i => {
+    const d = i.date.toISOString().split('T')[0];
+    if (!dailyExpenses[d]) dailyExpenses[d] = { expense: 0, income: 0 };
+    dailyExpenses[d].income += i.amount;
+  });
+  monthlyExpenses.forEach(e => {
+    const d = e.date.toISOString().split('T')[0];
+    if (!dailyExpenses[d]) dailyExpenses[d] = { expense: 0, income: 0 };
+    dailyExpenses[d].expense += e.amount;
+  });
+
+  // === CATEGORIZED BUDGET (Simplified for Demo) ===
+  // We'll map categories to Kebutuhan, Keinginan, Tabungan if they match keywords
+  const kebutuhanKeywords = ['makan', 'listrik', 'air', 'transport', 'sewa', 'kos', 'belanja', 'pangan'];
+  const keinginanKeywords = ['hiburan', 'hobi', 'jajan', 'nongkrong', 'shopee', 'tokopedia', 'game'];
+  
+  const catProgress = {
+    kebutuhan: { rencana: 0, aktual: 0 },
+    keinginan: { rencana: 0, aktual: 0 },
+    tabungan: { rencana: 0, aktual: 0 }
+  };
+
+  budgets.forEach(b => {
+    const name = b.category.name.toLowerCase();
+    const isKebutuhan = kebutuhanKeywords.some(k => name.includes(k));
+    const isKeinginan = keinginanKeywords.some(k => name.includes(k));
+    
+    if (isKebutuhan) {
+      catProgress.kebutuhan.rencana += b.monthlyAmount;
+      catProgress.kebutuhan.aktual += expenseByCategory[b.category.name] || 0;
+    } else if (isKeinginan) {
+      catProgress.keinginan.rencana += b.monthlyAmount;
+      catProgress.keinginan.aktual += expenseByCategory[b.category.name] || 0;
+    } else {
+      catProgress.tabungan.rencana += b.monthlyAmount;
+      catProgress.tabungan.aktual += expenseByCategory[b.category.name] || 0;
+    }
+  });
+
+  // If no budget for tabungan, we use sisaPendapatan as "aktual"
+  if (catProgress.tabungan.rencana === 0) {
+    catProgress.tabungan.rencana = totalPendapatan * 0.2; // 20% rule
+    catProgress.tabungan.aktual = Math.max(sisaPendapatan, 0);
+  }
+
   return NextResponse.json({
     totalUtang,
     totalPiutang,
@@ -147,5 +201,8 @@ export async function GET(req: Request) {
     level,
     levelLabel: levelLabels[level],
     profile,
+    recentTransactions,
+    dailyExpenses,
+    catProgress
   });
 }
