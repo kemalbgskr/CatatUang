@@ -33,26 +33,22 @@ export default function Modal({ open, onClose, title, children }: ModalProps) {
       />
       {/* Card */}
       <div
-        className="relative z-10 bg-white rounded-3xl w-full max-w-lg max-h-[90vh] overflow-y-auto"
-        style={{ boxShadow: "0 24px 64px 0 rgba(30,58,138,0.22)" }}
+        className="relative z-10 bg-white rounded-[32px] w-full max-w-lg max-h-[90vh] overflow-y-auto shadow-[0_32px_128px_rgba(0,0,0,0.1)] border border-slate-100"
       >
         {/* Header */}
-        <div
-          className="flex items-center justify-between px-6 pt-5 pb-4"
-          style={{ background: "linear-gradient(135deg, #1e3a8a 0%, #1d4ed8 100%)", borderRadius: "1.5rem 1.5rem 0 0" }}
-        >
-          <h2 className="text-base font-bold text-white">{title}</h2>
+        <div className="flex items-center justify-between px-8 pt-8 pb-4">
+          <h2 className="text-xl font-black text-slate-900 tracking-tight">{title}</h2>
           <button
             type="button"
             onClick={onClose}
-            className="w-8 h-8 rounded-xl bg-white/15 hover:bg-white/30 flex items-center justify-center text-white transition"
+            className="w-10 h-10 rounded-full bg-slate-50 hover:bg-slate-100 flex items-center justify-center text-slate-400 hover:text-slate-600 transition-all border border-slate-100"
             aria-label="Tutup"
           >
-            <X size={16} />
+            <X size={20} />
           </button>
         </div>
         {/* Body */}
-        <div className="px-6 py-5">{children}</div>
+        <div className="px-8 pb-8 pt-2">{children}</div>
       </div>
     </div>
   );
