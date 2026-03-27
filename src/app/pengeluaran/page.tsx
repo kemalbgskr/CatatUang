@@ -189,12 +189,12 @@ export default function PengeluaranPage() {
             </div>
           )}
 
-          <button onClick={triggerUpload} className="bg-white border border-slate-200 shadow-sm text-slate-700 px-4 py-2.5 rounded-2xl text-[13px] font-bold flex items-center gap-2 hover:bg-slate-50 transition-all">
+          <button onClick={triggerUpload} className="bg-white border border-slate-200 shadow-sm text-slate-700 px-6 py-2.5 rounded-full text-[13px] font-bold flex items-center gap-2 hover:bg-slate-50 transition-all">
             <Upload size={16} /> Upload Nota
           </button>
           
-          <button onClick={() => setShowForm(true)} className="bg-rose-200 text-rose-900 px-4 py-2.5 rounded-2xl text-[13px] font-bold flex items-center gap-2 hover:bg-rose-300 transition-all">
-            <Plus size={16} /> Tambah Baru
+          <button onClick={() => setShowForm(true)} className="bg-rose-100 text-rose-900 px-6 py-2.5 rounded-full text-[13px] font-extrabold flex items-center gap-2 hover:bg-rose-200 transition-all">
+            <Plus size={16} /> Transaksi Baru
           </button>
         </div>
       </div>
@@ -343,90 +343,54 @@ export default function PengeluaranPage() {
         </div>
       </div>
 
-      {/* Form Modal */}
-      <Modal open={showForm} onClose={() => setShowForm(false)} title="Tambah Pengeluaran">
-        <form onSubmit={submit} className="flex flex-col gap-4">
-          <div className="bg-[#FAFAFA] border border-dashed border-slate-200 rounded-2xl p-6 text-center">
-            <div className="flex justify-center mb-3 text-slate-300">
-               <Upload size={32} />
-            </div>
-            <p className="text-[13px] font-bold text-slate-600 mb-4">Foto struk <span className="text-rose-400">untuk otomatis</span> buat transaksi.</p>
-            <div className="flex flex-col md:flex-row justify-center gap-3">
-              <button type="button" onClick={triggerUpload} disabled={ocrLoading} className="bg-rose-200 text-rose-900 font-bold px-6 py-2.5 rounded-xl text-[13px] flex items-center justify-center gap-2 hover:bg-rose-300 transition-all flex-1">
-                {ocrLoading ? <Loader2 size={16} className="animate-spin" /> : "Ambil Foto"}
+      {/* Transaction Modal (Redesigned) */}
+      <Modal open={showForm} onClose={() => setShowForm(false)} title="Transaksi Baru">
+        <div className="flex flex-col gap-6">
+          {/* Tabs */}
+          <div className="flex p-1 bg-slate-50 rounded-2xl">
+            {['Pengeluaran', 'Pemasukan', 'Tabungan', 'Transfer'].map((tab) => (
+              <button
+                key={tab}
+                className={`flex-1 py-2 text-[11px] font-black uppercase tracking-tight rounded-xl transition-all
+                  ${tab === 'Pengeluaran' ? 'bg-white shadow-sm text-slate-900' : 'text-slate-400 hover:text-slate-600'}`}
+              >
+                {tab}
               </button>
-              <button type="button" onClick={triggerUpload} disabled={ocrLoading} className="bg-white border border-slate-200 text-slate-700 font-bold px-6 py-2.5 rounded-xl text-[13px] flex items-center justify-center gap-2 hover:bg-slate-50 transition-all flex-1">
-                {ocrLoading ? <Loader2 size={16} className="animate-spin" /> : "Unggah Gambar"}
-              </button>
-            </div>
-            {receiptName && <p className="text-[11px] font-bold text-emerald-600 mt-3 flex justify-center items-center gap-1"><Check size={12}/> {receiptName}</p>}
-            {ocrError && <p className="text-[11px] font-bold text-rose-600 mt-3">{ocrError}</p>}
-            {ocrPreview && (
-              <div className="mt-4 bg-white border border-slate-100 rounded-xl p-3 text-left">
-                <p className="text-[10px] font-bold tracking-widest text-[#A19FA6] mb-1.5 uppercase">Preview Teks:</p>
-                <p className="text-[11px] font-medium text-slate-600 whitespace-pre-wrap">{ocrPreview}</p>
-              </div>
-            )}
+            ))}
           </div>
 
-          <div>
-            <label className="block text-[11px] font-extrabold tracking-wide text-slate-400 mb-1.5 uppercase">Kategori</label>
-            <select required value={form.categoryId} onChange={e => setForm({...form, categoryId: e.target.value, debtSourceId: ""})} className="w-full border-slate-200 rounded-xl px-4 py-3 text-[13px] font-semibold bg-white focus:border-rose-300 focus:ring focus:ring-rose-100 transition-all">
-              <option value="">Pilih...</option>
-              {categories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
-            </select>
-          </div>
+          <form onSubmit={submit} className="flex flex-col gap-6">
+            <div>
+              <label className="block text-[10px] font-black tracking-widest text-[#A19FA6] mb-2 uppercase">KATEGORI</label>
+              <select required value={form.categoryId} onChange={e => setForm({...form, categoryId: e.target.value, debtSourceId: ""})} className="w-full border-slate-100 bg-slate-50 rounded-2xl px-4 py-4 text-[14px] font-bold text-slate-900 focus:bg-white focus:border-rose-200 focus:ring-4 focus:ring-rose-50 transition-all outline-none appearance-none">
+                <option value="">Pilih...</option>
+                {categories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+              </select>
+            </div>
 
-          {(() => {
-            const cat = categories.find(c => c.id === +form.categoryId);
-            const isDebt = cat?.name.toLowerCase().includes("utang") || cat?.name.toLowerCase().includes("hutang");
-            if (!isDebt) return null;
+            <div>
+              <label className="block text-[10px] font-black tracking-widest text-[#A19FA6] mb-2 uppercase">RINCIAN PENGELUARAN</label>
+              <input type="text" required value={form.description} onChange={e => setForm({...form, description: e.target.value})} className="w-full border-slate-100 bg-slate-50 rounded-2xl px-4 py-4 text-[14px] font-bold text-slate-900 focus:bg-white focus:border-rose-200 focus:ring-4 focus:ring-rose-50 transition-all outline-none placeholder:text-slate-400" placeholder="Contoh: Kopi Kenangan" />
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+               <div>
+                 <label className="block text-[10px] font-black tracking-widest text-[#A19FA6] mb-2 uppercase">TANGGAL</label>
+                 <input type="date" required value={form.date} onChange={e => setForm({...form, date: e.target.value})} className="w-full border-slate-100 bg-slate-50 rounded-2xl px-4 py-4 text-[14px] font-bold text-slate-900 focus:bg-white focus:border-rose-200 focus:ring-4 focus:ring-rose-50 transition-all outline-none" />
+               </div>
+               <div className="relative">
+                 <label className="block text-[10px] font-black tracking-widest text-[#A19FA6] mb-2 uppercase">NOMINAL</label>
+                 <CurrencyInput required min={0} value={form.amount} onChangeValue={(val: string) => setForm({...form, amount: val})} className="w-full border-slate-100 bg-slate-50 rounded-2xl px-4 py-4 text-[14px] font-extrabold text-[#2C2C2C] focus:bg-white focus:border-rose-200 focus:ring-4 focus:ring-rose-50 transition-all outline-none placeholder:text-slate-400" placeholder="Rp 0" />
+               </div>
+            </div>
+
+            {submitError && <div className="bg-rose-50 text-rose-600 p-4 rounded-2xl border border-rose-100 text-[13px] font-bold flex items-center gap-2"><AlertTriangle size={16}/> {submitError}</div>}
             
-            const selectedDebt = debtSources.find(d => d.id === +form.debtSourceId);
-            const balance = selectedDebt ? (selectedDebt.initialAmount + selectedDebt.loans.reduce((s, l) => s + l.amount, 0) - selectedDebt.payments.reduce((s, p) => s + p.amount, 0)) : 0;
-
-            return (
-              <div className="bg-orange-50 border border-orange-100 rounded-[20px] p-5 space-y-3 animate-in fade-in zoom-in-95">
-                <div>
-                  <label className="block text-[11px] font-extrabold tracking-wide text-orange-600 mb-1.5 uppercase">Pilih Utang</label>
-                  <select required value={form.debtSourceId} onChange={e => setForm({...form, debtSourceId: e.target.value})} className="w-full border-orange-200 rounded-xl px-4 py-3 text-[13px] font-bold bg-white focus:border-orange-300 focus:ring focus:ring-orange-100 transition-all text-orange-900">
-                    <option value="">Sumber Utang...</option>
-                    {debtSources.map(d => <option key={d.id} value={d.id}>{d.name}</option>)}
-                  </select>
-                </div>
-                {selectedDebt && (
-                  <div className="flex items-center gap-2 bg-orange-100/50 rounded-xl p-3 border border-orange-200/50">
-                    <AlertTriangle size={16} className="text-orange-600" />
-                    <p className="text-[13px] font-medium text-orange-800">Sisa Hutang: <span className="font-extrabold">{formatRupiah(balance)}</span></p>
-                  </div>
-                )}
-              </div>
-            );
-          })()}
-
-          <div>
-            <label className="block text-[11px] font-extrabold tracking-wide text-slate-400 mb-1.5 uppercase">Rincian Pengeluaran</label>
-            <input type="text" required value={form.description} onChange={e => setForm({...form, description: e.target.value})} className="w-full border-slate-200 rounded-xl px-4 py-3 text-[13px] font-semibold bg-white focus:border-rose-300 focus:ring focus:ring-rose-100 transition-all" placeholder="Contoh: Beli makan siang, Ongkos grab..." />
-          </div>
-
-          <div className="grid grid-cols-2 gap-4">
-             <div>
-               <label className="block text-[11px] font-extrabold tracking-wide text-slate-400 mb-1.5 uppercase">Tanggal</label>
-               <input type="date" required value={form.date} onChange={e => setForm({...form, date: e.target.value})} className="w-full border-slate-200 rounded-xl px-4 py-3 text-[13px] font-semibold bg-white focus:border-rose-300 focus:ring focus:ring-rose-100 transition-all" />
-             </div>
-             <div>
-               <label className="block text-[11px] font-extrabold tracking-wide text-slate-400 mb-1.5 uppercase">Nominal</label>
-               <CurrencyInput required min={0} value={form.amount} onChangeValue={(val: string) => setForm({...form, amount: val})} className="w-full border-slate-200 rounded-xl px-4 py-3 text-[13px] font-extrabold bg-white focus:border-rose-300 focus:ring focus:ring-rose-100 transition-all text-slate-800" placeholder="0" />
-             </div>
-          </div>
-
-          {submitError && <div className="bg-rose-50 text-rose-600 p-3 rounded-xl border border-rose-100 text-[13px] font-bold flex items-center gap-2"><AlertTriangle size={16}/> {submitError}</div>}
-          <div className="pt-2">
-            <button type="submit" className="bg-rose-500 text-white px-6 py-3.5 rounded-xl text-[14px] font-black w-full hover:bg-rose-600 transition-all shadow-md shadow-rose-200">
-              Simpan Pengeluaran
+            <button type="submit" className="bg-rose-100 hover:bg-rose-200 text-rose-900 px-6 py-5 rounded-[24px] text-[15px] font-black w-full transition-all mt-4">
+              Simpan Transaksi
             </button>
-          </div>
-        </form>
+          </form>
+        </div>
       </Modal>
 
       <ConfirmModal
