@@ -44,8 +44,8 @@ export default function Sidebar() {
     { href: "/pendapatan", label: "Pemasukan", icon: <TrendingUp size={20} /> },
     { href: "/budget", label: "Budget", icon: <BarChart3 size={20} /> },
     { href: "/scanner", label: "Scanner", icon: <span className="text-[20px] leading-none">📷</span> },
-    { href: "/dompet", label: "Goals", icon: <span className="text-[20px] leading-none">🎯</span> },
-    { href: "/dompet", label: "Aset", icon: <span className="text-[20px] leading-none">🏛️</span> },
+    { href: "/goals", label: "Goals", icon: <span className="text-[20px] leading-none">🎯</span> },
+    { href: "/aset", label: "Aset", icon: <span className="text-[20px] leading-none">🏛️</span> },
     { href: "/utang", label: "Utang", icon: <TrendingUp size={20} className="rotate-180" /> },
     { href: "/piutang", label: "Piutang", icon: <HandCoins size={20} /> },
   ];
