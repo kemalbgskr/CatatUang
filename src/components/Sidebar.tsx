@@ -18,8 +18,7 @@ import { useRouter } from "next/navigation";
 
 const navItems = [
   { href: "/", label: "Dashboard", icon: LayoutDashboard },
-  { href: "/pendapatan", label: "Pendapatan", icon: TrendingUp },
-  { href: "/pengeluaran", label: "Pengeluaran", icon: TrendingDown },
+  { href: "/transaksi", label: "Transaksi", icon: TrendingUp },
   { href: "/utang", label: "Utang", icon: CreditCard },
   { href: "/piutang", label: "Piutang", icon: HandCoins },
   { href: "/analisa", label: "Analisa", icon: BarChart3 },
@@ -40,8 +39,7 @@ export default function Sidebar() {
   const menuItems = [
     { href: "/", label: "Home", icon: <LayoutDashboard size={20} /> },
     { href: "/dompet", label: "Dompet", icon: <CreditCard size={20} /> },
-    { href: "/pengeluaran", label: "Pengeluaran", icon: <TrendingDown size={20} /> },
-    { href: "/pendapatan", label: "Pemasukan", icon: <TrendingUp size={20} /> },
+    { href: "/transaksi", label: "Transaksi", icon: <span className="text-[20px] leading-none">💸</span> },
     { href: "/budget", label: "Budget", icon: <BarChart3 size={20} /> },
     { href: "/scanner", label: "Scanner", icon: <span className="text-[20px] leading-none">📷</span> },
     { href: "/goals", label: "Goals", icon: <span className="text-[20px] leading-none">🎯</span> },
