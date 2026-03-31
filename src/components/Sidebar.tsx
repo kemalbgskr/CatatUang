@@ -12,6 +12,12 @@ import {
   Menu,
   X,
   LogOut,
+  ArrowRightLeft,
+  ScanLine,
+  Target,
+  Landmark,
+  Sparkles,
+  Moon
 } from "lucide-react";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
@@ -39,11 +45,11 @@ export default function Sidebar() {
   const menuItems = [
     { href: "/", label: "Home", icon: <LayoutDashboard size={20} /> },
     { href: "/dompet", label: "Dompet", icon: <CreditCard size={20} /> },
-    { href: "/transaksi", label: "Transaksi", icon: <span className="text-[20px] leading-none">💸</span> },
+    { href: "/transaksi", label: "Transaksi", icon: <ArrowRightLeft size={20} /> },
     { href: "/budget", label: "Budget", icon: <BarChart3 size={20} /> },
-    { href: "/scanner", label: "Scanner", icon: <span className="text-[20px] leading-none">📷</span> },
-    { href: "/goals", label: "Goals", icon: <span className="text-[20px] leading-none">🎯</span> },
-    { href: "/aset", label: "Aset", icon: <span className="text-[20px] leading-none">🏛️</span> },
+    { href: "/scanner", label: "Scanner", icon: <ScanLine size={20} /> },
+    { href: "/goals", label: "Goals", icon: <Target size={20} /> },
+    { href: "/aset", label: "Aset", icon: <Landmark size={20} /> },
     { href: "/utang", label: "Utang", icon: <TrendingUp size={20} className="rotate-180" /> },
     { href: "/piutang", label: "Piutang", icon: <HandCoins size={20} /> },
   ];
@@ -146,14 +152,14 @@ export default function Sidebar() {
             href="/yang-baru"
             className="flex items-center gap-4 px-4 py-3 rounded-2xl text-[13px] font-bold text-slate-400 hover:bg-slate-50 hover:text-gray-900 transition-all"
           >
-            <span className="w-5 flex justify-center opacity-70">✨</span>
+            <span className="w-5 flex justify-center opacity-70"><Sparkles size={16} /></span>
             Yang Baru
           </Link>
           <button
             type="button"
             className="w-full flex items-center gap-4 px-4 py-3 rounded-2xl text-[13px] font-bold text-slate-400 hover:bg-slate-50 hover:text-gray-900 transition-all"
           >
-            <span className="w-5 flex justify-center opacity-70">🌙</span>
+            <span className="w-5 flex justify-center opacity-70"><Moon size={16} /></span>
             Mode Gelap
           </button>
           <button
