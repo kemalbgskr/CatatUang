@@ -33,6 +33,39 @@ interface SavedAIAnalysis {
   analysis: string;
 }
 
+const SimpleMarkdown = ({ text }: { text: string }) => {
+  return (
+    <div className="text-[13px] text-slate-300 font-medium leading-[1.6] flex flex-col gap-[6px]">
+      {text.split('\n').filter(p => p.trim() !== '').map((part, i) => {
+        let content = part;
+        let isHeader = false;
+        let isList = false;
+
+        if (content.startsWith('### ')) {
+          content = content.replace('### ', '');
+          isHeader = true;
+        } else if (content.startsWith('- ')) {
+          content = content.replace('- ', '');
+          isList = true;
+        }
+
+        const boldParts = content.split(/(\*\*.*?\*\*)/g);
+        const rendered = boldParts.map((bp, j) => {
+          if (bp.startsWith('**') && bp.endsWith('**')) {
+            return <strong key={j} className="text-white font-black">{bp.slice(2, -2)}</strong>;
+          }
+          return bp;
+        });
+
+        if (isHeader) return <h3 key={i} className="text-[14px] font-extrabold text-white mt-4 first:mt-0 mb-1">{rendered}</h3>;
+        if (isList) return <div key={i} className="ml-3 pl-3 border-l-2 border-slate-600/50 mb-1">{rendered}</div>;
+        
+        return <p key={i} className="mb-0.5">{rendered}</p>;
+      })}
+    </div>
+  );
+};
+
 export default function AnalisaPage() {
   const [data, setData] = useState<DashboardData | null>(null);
   const [month, setMonth] = useState(getCurrentMonth());
@@ -137,38 +170,44 @@ export default function AnalisaPage() {
         {/* Left Column - AI Score & Summary */}
         <div className="lg:col-span-1 space-y-6">
           {/* Wealth Score */}
-          <div className="bg-gradient-to-br from-slate-900 to-slate-800 rounded-[32px] p-8 text-white shadow-xl shadow-slate-900/20 relative overflow-hidden">
-            <div className="absolute top-0 right-0 w-32 h-32 bg-rose-500 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob"></div>
-            <div className="absolute -bottom-8 -left-8 w-32 h-32 bg-indigo-500 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob animation-delay-2000"></div>
+          <div className="bg-gradient-to-br from-slate-900 to-slate-800 rounded-[32px] p-8 text-white shadow-xl shadow-slate-900/20 relative overflow-hidden flex flex-col max-h-[580px]">
+            <div className="absolute top-0 right-0 w-32 h-32 bg-rose-500 rounded-full mix-blend-multiply filter blur-3xl opacity-20 pointer-events-none"></div>
+            <div className="absolute -bottom-8 -left-8 w-32 h-32 bg-indigo-500 rounded-full mix-blend-multiply filter blur-3xl opacity-20 pointer-events-none"></div>
             
-            <div className="relative z-10 flex flex-col h-full justify-between">
-              <div>
-                <p className="text-slate-400 font-extrabold text-[12px] uppercase tracking-widest mb-1 flex items-center gap-2">
-                  <Sparkles size={14} className="text-rose-400" />
-                  Financial Health Score
-                </p>
-                <h2 className="text-2xl font-black mb-2">{displayLevelLabel}</h2>
-                <div className="w-full bg-slate-700 h-2 rounded-full overflow-hidden mb-4">
-                  <div className="bg-gradient-to-r from-rose-400 to-indigo-400 h-full rounded-full" style={{ width: `${(displayLevel / 6) * 100}%` }}></div>
-                </div>
-                {aiRingkasan ? (
-                  <p className="text-[13px] text-slate-300 font-medium leading-relaxed">{aiRingkasan}</p>
-                ) : (
-                  <p className="text-[13px] text-slate-300 font-medium leading-relaxed">
-                    {levelDescriptions[displayLevel] || levelDescriptions[0]}
+            <div className="relative z-10 flex flex-col h-full overflow-hidden">
+               {/* Header Teks */}
+               <div className="shrink-0 mb-5">
+                  <p className="text-slate-400 font-extrabold text-[12px] uppercase tracking-widest mb-1 flex items-center gap-2">
+                    <Sparkles size={14} className="text-rose-400" />
+                    Financial Health Score
                   </p>
-                )}
-              </div>
+                  <h2 className="text-2xl font-black mb-3">{displayLevelLabel}</h2>
+                  <div className="w-full bg-slate-700 h-2 rounded-full overflow-hidden">
+                    <div className="bg-gradient-to-r from-rose-400 to-indigo-400 h-full rounded-full" style={{ width: `${(displayLevel / 6) * 100}%` }}></div>
+                  </div>
+               </div>
 
-              <div className="pt-6">
-                <button
-                  onClick={triggerAIAnalysis}
-                  disabled={aiLoading}
-                  className="w-full bg-white/10 hover:bg-white/20 border border-white/10 text-white text-[14px] font-bold py-3.5 rounded-xl transition-all flex items-center justify-center gap-2 backdrop-blur-sm"
-                >
-                  {aiLoading ? <Loader2 size={16} className="animate-spin" /> : "Analisis Bulan Ini"}
-                </button>
-              </div>
+               {/* Scrollable Content Teks */}
+               <div className="flex-1 overflow-y-auto pr-3 scrollbar-thin scrollbar-thumb-slate-700 scrollbar-track-transparent mb-4">
+                  {aiRingkasan ? (
+                    <SimpleMarkdown text={aiRingkasan} />
+                  ) : (
+                    <p className="text-[13px] text-slate-300 font-medium leading-relaxed">
+                      {levelDescriptions[displayLevel] || levelDescriptions[0]}
+                    </p>
+                  )}
+               </div>
+
+               {/* Tombol Bawah */}
+               <div className="shrink-0 pt-5 mt-auto border-t border-slate-700/50">
+                  <button
+                    onClick={triggerAIAnalysis}
+                    disabled={aiLoading}
+                    className="w-full bg-white/10 hover:bg-white/20 border border-white/10 text-white text-[14px] font-bold py-3.5 rounded-xl transition-all flex items-center justify-center gap-2 backdrop-blur-sm"
+                  >
+                    {aiLoading ? <Loader2 size={16} className="animate-spin" /> : "Analisis Bulan Ini"}
+                  </button>
+               </div>
             </div>
           </div>
 
